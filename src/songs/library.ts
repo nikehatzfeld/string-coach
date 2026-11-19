@@ -77,6 +77,114 @@ export const LIBRARY: Song[] = [
       'D4:4@D F#4 A4@A G4 | F#4@Bm D4 F#4@F#m E4 | D4@G B3 D4@D A4 | G4@G B4 A4@A G4 | F#4:1@D',
   },
   {
+    id: 'menuet-sol-bach',
+    title: 'Menuet en Sol',
+    composer: 'Petit livre d’Anna Magdalena Bach',
+    style: 'Classique',
+    level: 2,
+    tempo: 110,
+    timeSignature: [3, 4],
+    notation:
+      'D5:4@G G4:8 A4 B4 C5 | D5:4 G4 G4 | E5:4@C C5:8 D5 E5 F#5 | G5:4@G G4 G4 | ' +
+      'C5:4@C D5:8 C5 B4 A4 | B4:4@G C5:8 B4 A4 G4 | F#4:4@D G4:8 A4 B4 G4 | A4:2.@D | ' +
+      'D5:4@G G4:8 A4 B4 C5 | D5:4 G4 G4 | E5:4@C C5:8 D5 E5 F#5 | G5:4@G G4 G4 | ' +
+      'C5:4@C D5:8 C5 B4 A4 | B4:4@G C5:8 B4 A4 G4 | A4:4@D B4:8 A4 G4 F#4 | G4:2.@G',
+  },
+  {
+    id: 'petite-musique-de-nuit',
+    title: 'Une petite musique de nuit (thème)',
+    composer: 'W. A. Mozart',
+    style: 'Classique',
+    level: 2,
+    tempo: 120,
+    timeSignature: [4, 4],
+    notation:
+      'G4:4@G r:8 D4 G4:4 r:8 D4 | G4:8 D4 G4 B4 D5:4 r:4 | C5:4@D7 r:8 A4 C5:4 r:8 A4 | C5:8 A4 F#4 A4 D4:4 r:4 | ' +
+      'G4:2@G r:4 B4:8 A4 | G4:4 G4 G4:8 F#4 E4 F#4 | G4:4 r:4 r:2',
+  },
+  {
+    id: 'berceuse-brahms',
+    title: 'Berceuse',
+    composer: 'J. Brahms',
+    style: 'Classique',
+    level: 1,
+    tempo: 80,
+    timeSignature: [3, 4],
+    notation:
+      'r:2 E4:8@C E4 | G4:2 E4:8 E4 | G4:2 E4:8 G4 | C5:4 B4:4.@G A4:8 | A4:4@F G4 D4:8@G E4 | ' +
+      'F4:4 D4 D4:8 E4 | F4:2 D4:8 F4 | B4:8 A4 G4:4 B4 | C5:2.@C',
+  },
+  {
+    id: 'lettre-a-elise',
+    title: 'Lettre à Élise (thème)',
+    composer: 'L. van Beethoven',
+    style: 'Classique',
+    level: 3,
+    tempo: 60,
+    timeSignature: [3, 8],
+    notation:
+      'r:4 E5:16 D#5 | E5@Am D#5 E5 B4 D5 C5 | A4:8 r:16 C4 E4 A4 | B4:8@E r:16 E4 G#4 B4 | C5:8@Am r:16 E4 E5 D#5 | ' +
+      'E5 D#5 E5 B4 D5 C5 | A4:8 r:16 C4 E4 A4 | B4:8@E r:16 E4 C5 B4 | A4:4.@Am',
+  },
+  {
+    id: 'largo-nouveau-monde',
+    title: 'Symphonie du Nouveau Monde (Largo)',
+    composer: 'A. Dvořák',
+    style: 'Classique',
+    level: 1,
+    tempo: 50,
+    timeSignature: [4, 4],
+    notation:
+      'E4:4.@C G4:8 G4:2 | E4:4.@G D4:8 C4:2@C | D4:4.@G E4:8 G4:4. E4:8 | D4:1@G | ' +
+      'E4:4.@C G4:8 G4:2 | E4:4.@G D4:8 C4:2@C | D4:4.@G E4:8 D4:4. C4:8 | C4:1@C',
+  },
+  {
+    id: 'roi-de-la-montagne',
+    title: 'Dans l’antre du roi de la montagne',
+    composer: 'E. Grieg',
+    style: 'Classique',
+    level: 2,
+    tempo: 100,
+    timeSignature: [4, 4],
+    notation:
+      'B3:8@Bm C#4 D4 E4 F#4 D4 F#4:4 | F4:8@C# C#4 F4:4 E4:8@C C4 E4:4 | B3:8@Bm C#4 D4 E4 F#4 D4 F#4 B4 | A4:8@F# F#4 D4 F#4 A4:2 | ' +
+      'B3:8@Bm C#4 D4 E4 F#4 D4 F#4:4 | F4:8@C# C#4 F4:4 E4:8@C C4 E4:4 | B3:8@Bm C#4 D4 E4 F#4 D4 F#4 B4 | A4:8@F# F#4 D4 F#4 B4:2@Bm',
+  },
+  {
+    id: 'marche-turque',
+    title: 'Marche turque (début)',
+    composer: 'W. A. Mozart',
+    style: 'Classique',
+    level: 3,
+    tempo: 110,
+    timeSignature: [2, 4],
+    notation:
+      'B4:16@Am A4 G#4 A4 C5:4 | D5:16@E C5 B4 C5 E5:4@Am | F5:16@Dm E5 D#5 E5 B5 A5 G#5 A5 | B5:16@E A5 G#5 A5 C6:4@Am | A5:2',
+  },
+  {
+    id: 'cinquieme-beethoven',
+    title: 'Symphonie n° 5 (motif)',
+    composer: 'L. van Beethoven',
+    style: 'Classique',
+    level: 1,
+    tempo: 108,
+    timeSignature: [2, 4],
+    notation: 'r:8 G4 G4 G4 | Eb4:2@Cm | r:8 F4 F4 F4 | D4:2@G | r:8 G4 G4 G4 | Eb4:2@Cm | r:8 Ab4 Ab4 Ab4 | G4:2',
+  },
+  {
+    id: 'greensleeves',
+    title: 'Greensleeves',
+    composer: 'Traditionnel anglais (Renaissance)',
+    style: 'Classique',
+    level: 2,
+    tempo: 90,
+    timeSignature: [3, 4],
+    notation:
+      'r:2 A4:4 | C5:2@Am D5:4 | E5:4.@C F5:8 E5:4 | D5:2@G B4:4 | G4:4.@Em A4:8 B4:4 | C5:2@Am A4:4 | ' +
+      'A4:4.@Dm G#4:8 A4:4 | B4:2@E G#4:4 | E4:2 A4:4 | C5:2@Am D5:4 | E5:4.@C F5:8 E5:4 | D5:2@G B4:4 | ' +
+      'G4:4.@Em A4:8 B4:4 | C5:4.@Am B4:8 A4:4 | G#4:4.@E F#4:8 G#4:4 | A4:2.@Am',
+  },
+  {
     id: 'frere-jacques',
     title: 'Frère Jacques',
     composer: 'Traditionnel',

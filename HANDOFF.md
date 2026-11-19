@@ -10,6 +10,11 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - Mode pas à pas au micro avec accordeur visuel, boutons précédente / suivante, tolérance réglable
 - Navigation télécommande, mise en page mobile, manifest PWA
 
+## v0.2 (19/11/2026)
+
+- 9 morceaux classiques ajoutés (22 au total, 78 tests verts)
+- Schéma du manche (violon et guitare) : note en cours + doigt conseillé, note suivante ; vue compacte 1re position sur mobile ; bouton « Manche » pour l'afficher / le masquer
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |
@@ -19,6 +24,8 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 | Pas à pas | Micro, détection de hauteur pitchy | Même logique que le futur manche LED |
 | Notes identiques consécutives | Il faut relâcher (silence 60 ms) avant de rejouer | Sinon une note tenue validerait les deux |
 | Morceaux | Domaine public + import de fichiers | Pas d'aspiration massive de sites de tablatures (conditions d'utilisation des sites) |
+| Pop | Uniquement par import local, jamais dans le repo | Repo et site publics : pas de musique sous droits dans la bibliothèque intégrée |
+| Manche | Sillet à gauche, corde aiguë en haut, géométrie réelle | Même orientation que la tablature, mêmes positions que les futures LEDs |
 
 ## Prochaines étapes proposées
 

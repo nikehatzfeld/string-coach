@@ -1,7 +1,8 @@
 import './style.css';
 import type * as alphaTab from '@coderline/alphatab';
 import { songToAlphaTex, type Song } from './songs/alphatex';
-import { INSTRUMENTS, type InstrumentId } from './songs/instruments';
+import { fingerNote, INSTRUMENTS, type InstrumentId } from './songs/instruments';
+import { Fingerboard, type BoardNote } from './ui/fingerboard';
 import { LIBRARY, STYLES } from './songs/library';
 import { midiName } from './songs/notation';
 import { MicPitchDetector } from './practice/pitch-detector';
@@ -16,10 +17,11 @@ interface Prefs {
   view: ViewMode;
   tolerance: number;
   speed: number;
+  showNeck: boolean;
 }
 const PREFS_KEY = 'string-coach:prefs';
 function loadPrefs(): Prefs {
-  const base: Prefs = { instrument: 'violin', view: 'score-tab', tolerance: 35, speed: 1 };
+  const base: Prefs = { instrument: 'violin', view: 'score-tab', tolerance: 35, speed: 1, showNeck: true };
   try {
     return { ...base, ...JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}') };
   } catch {
@@ -208,9 +210,11 @@ function openPlayer(source: Source) {
         <option value="score">Partition</option>
       </select>
       <select id="track" aria-label="Piste" hidden></select>
+      <button id="neckBtn" aria-pressed="${prefs.showNeck}">Manche</button>
       <button id="zoomOut" aria-label="Dézoomer">A−</button>
       <button id="zoomIn" aria-label="Zoomer">A+</button>
     </div>
+    <section id="neck" class="neck" ${prefs.showNeck ? '' : 'hidden'}></section>
     <section id="step" class="step" hidden>
       <div class="target">
         <span class="label">Note à jouer</span>
@@ -350,19 +354,53 @@ function openPlayer(source: Source) {
     showTarget();
   }
 
-  function stringLabel(beat: alphaTab.model.Beat): string {
-    const note = beat.notes.reduce((a, b) => (b.realValue > a.realValue ? b : a));
+  /** Corde (1 = la plus aiguë) et position de chaque note d'un beat, pour l'instrument choisi. */
+  function beatFingerings(beat: alphaTab.model.Beat | undefined): BoardNote[] {
+    if (!beat || beat.isRest) return [];
     const tuning = beat.voice.bar.staff.stringTuning.tunings;
-    if (!tuning.length || note.fret < 0) return '';
-    // Dans le modèle alphaTab, la corde 1 est la plus grave.
-    const strIdxFromHigh = tuning.length - note.string;
-    const names = INSTRUMENTS[prefs.instrument].stringNamesFr;
-    const sName = tuning.length === names.length ? `corde de ${names[strIdxFromHigh]}` : `corde ${strIdxFromHigh + 1}`;
-    if (note.fret === 0) return `${sName}, à vide`;
-    return prefs.instrument === 'violin' && tuning.length === 4
-      ? `${sName}, +${note.fret} demi-ton${note.fret > 1 ? 's' : ''}`
-      : `${sName}, case ${note.fret}`;
+    return beat.notes
+      .filter((n) => !n.isTieDestination || beat.notes.length === 1)
+      .map((n) => {
+        if (tuning.length === inst.tuning.length && n.fret >= 0 && n.string > 0) {
+          // Dans le modèle alphaTab, la corde 1 est la plus grave.
+          return { midi: n.realValue, string: tuning.length - n.string + 1, fret: n.fret };
+        }
+        try {
+          return { midi: n.realValue, ...fingerNote(n.realValue, inst) };
+        } catch {
+          return null;
+        }
+      })
+      .filter((x): x is BoardNote => x !== null);
   }
+
+  function stringLabel(beat: alphaTab.model.Beat): string {
+    const f = beatFingerings(beat).reduce<BoardNote | null>((a, b) => (!a || b.midi > a.midi ? b : a), null);
+    if (!f) return '';
+    const sName = `corde de ${inst.stringNamesFr[f.string - 1]}`;
+    if (f.fret === 0) return `${sName}, à vide`;
+    return inst.id === 'violin' ? `${sName}, +${f.fret} demi-ton${f.fret > 1 ? 's' : ''}` : `${sName}, case ${f.fret}`;
+  }
+
+  // Manche
+  const board = new Fingerboard($('neck'), inst);
+  $('neckBtn').addEventListener('click', () => {
+    prefs.showNeck = !prefs.showNeck;
+    savePrefs();
+    $('neckBtn').setAttribute('aria-pressed', String(prefs.showNeck));
+    $('neck').hidden = !prefs.showNeck;
+  });
+  const nextSounding = (beat: alphaTab.model.Beat) => {
+    const beats = v.trackBeats;
+    for (let i = beats.indexOf(beat) + 1; i < beats.length; i++) if (!beats[i].isRest) return beats[i];
+    return undefined;
+  };
+  api.playedBeatChanged.on((beat) => {
+    if (mode === 'live') board.show(beatFingerings(beat), beatFingerings(nextSounding(beat)));
+  });
+  api.playerStateChanged.on((e) => {
+    if (e.stopped && mode === 'live') board.show([]);
+  });
 
   function showTarget() {
     if (!trainer) return;
@@ -372,12 +410,14 @@ function openPlayer(source: Source) {
       $('tNote').textContent = 'Bravo !';
       $('tPos').textContent = 'Morceau terminé';
       setVerdict('Morceau terminé 🎉', 'ok');
+      board.show([]);
       return;
     }
     const beat = beatsByTarget[trainer.index];
     $('tNote').textContent = midiName(t.midi, 'fr');
     $('tPos').textContent = `${midiName(t.midi, 'en')} · ${stringLabel(beat)}`;
     v.focusBeat(beat);
+    board.show(beatFingerings(beat), beatFingerings(beatsByTarget[trainer.index + 1]));
   }
 
   function setVerdict(text: string, cls: string) {

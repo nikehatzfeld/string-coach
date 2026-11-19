@@ -24,8 +24,9 @@ Le micro nécessite HTTPS ou `localhost`. Pour tester sur mobile : `npm run buil
 | Lecture live | Son de synthèse (SoundFont SONiVOX), curseur synchronisé, tempo 25 à 150 %, boucle, métronome, décompte |
 | Affichage | Partition + tablature, tablature seule ou partition seule, zoom, accords au-dessus de la portée |
 | Pas à pas | La note suivante est indiquée (nom, corde, position) ; l'app n'avance que si la note jouée au micro est juste et tenue 80 ms (tolérance réglable ±10 à ±60 cents) |
-| Violon | Tablature en demi-tons par corde, c'est exactement ce que montreront les LEDs du manche DIY |
-| Bibliothèque | 13 morceaux : exercices, classique, folk français, folk anglo-saxon, gospel, blues, fêtes, au violon ou à la guitare |
+| Manche | Schéma du violon ou de la guitare (bouton « Manche ») : note en cours avec le doigt conseillé, note suivante en pointillés ; positions calculées sur la vraie géométrie de la corde, comme les LEDs du manche DIY |
+| Violon | Tablature en demi-tons par corde, repères type « rubans » de 1re position sur le manche |
+| Bibliothèque | 22 morceaux du domaine public : 12 classiques (Bach, Mozart, Beethoven, Brahms, Dvořák, Grieg, Pachelbel…), exercices, folk, gospel, blues, fêtes |
 | Import | Guitar Pro (.gp, .gp3-5, .gpx), MusicXML (.xml, .musicxml, .mxl), alphaTex ; stockés sur l'appareil (IndexedDB) |
 | TV / télécommande | Navigation aux flèches, Entrée, Espace = lecture, Échap/Retour = bibliothèque, N/P = note suivante/précédente |
 
@@ -41,6 +42,7 @@ src/
   practice/pitch-detector.ts  micro → hauteur (pitchy, algorithme McLeod)
   practice/step-trainer.ts    logique du pas à pas (testée sans micro)
   ui/score-view.ts        enveloppe alphaTab (rendu + lecture)
+  ui/fingerboard.ts       schéma du manche avec doigtés
   ui/spatial-nav.ts       navigation télécommande
   ui/imports-store.ts     stockage des fichiers importés
 tests/                    vitest
@@ -51,6 +53,8 @@ tests/                    vitest
 Dans `src/songs/library.ts`, en notation compacte : `F#4:8` (croche), `A4:4.` (noire pointée), `r:4` (silence), `-:4` (liaison), `D4@Am` (accord). Les tests vérifient automatiquement que chaque mesure a la bonne durée et que le morceau se charge pour les deux instruments.
 
 Les mélodies de la bibliothèque sont transcrites de mémoire : à vérifier à l'oreille.
+
+Le repo et le site étant publics, la bibliothèque intégrée ne contient que des œuvres du domaine public. La musique sous droits (pop, etc.) s'importe via « Mes fichiers » et reste sur l'appareil.
 
 ## Briques open source
 

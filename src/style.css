@@ -101,3 +101,29 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
   .target strong { font-size: 4.5rem; }
 }
 .needle[hidden]{display:none}
+
+/* Manche */
+.neck { background: var(--panel); padding: 0.4rem 1rem 0.2rem; border-top: 1px solid #2c303b; }
+.neck[hidden] { display: none; }
+.fingerboard { display: block; width: 100%; max-height: 190px; }
+.fb-wood { fill: #2a2018; }
+.guitar .fb-wood { fill: #3a2a1c; }
+.fb-tape { stroke: #e9ecf2; stroke-opacity: 0.55; stroke-width: 3; }
+.fb-tick { stroke: #e9ecf2; stroke-opacity: 0.25; stroke-width: 1.5; }
+.fb-fret { stroke: #c9ccd3; stroke-width: 2.5; }
+.fb-inlay { fill: #e9ecf2; fill-opacity: 0.25; }
+.fb-nut { fill: #f1ead8; }
+.fb-string { stroke: #d6d9e0; }
+.fb-label { fill: var(--muted); font-size: 15px; text-anchor: end; }
+.fb-num { fill: var(--muted); font-size: 12px; text-anchor: middle; }
+.fb-dot { fill: var(--accent); stroke: #1b1300; stroke-width: 2; }
+.fb-next { fill: none; stroke: var(--ok); stroke-width: 3; stroke-dasharray: 4 3; }
+.fb-finger { fill: #1b1300; font-size: 16px; font-weight: 700; text-anchor: middle; }
+.fb-note { fill: var(--text); font-size: 13px; font-weight: 600; text-anchor: middle; }
+.step:not([hidden]) ~ .score-scroll { height: calc(100vh - 420px); }
+.neck:not([hidden]) ~ .score-scroll { height: calc(100vh - 300px); }
+.neck:not([hidden]) ~ .step:not([hidden]) ~ .score-scroll { height: calc(100vh - 520px); min-height: 260px; }
+@media (max-width: 640px) {
+  .neck { padding: 0.25rem 0.5rem; }
+  .neck:not([hidden]) ~ .step:not([hidden]) ~ .score-scroll { height: 45vh; }
+}
