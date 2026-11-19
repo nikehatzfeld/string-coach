@@ -1,0 +1,11 @@
+{
+  "name": "String Coach",
+  "short_name": "String Coach",
+  "description": "Partitions et tablatures en live pour violon et guitare, mode pas à pas au micro.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#14161c",
+  "theme_color": "#14161c",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

@@ -1,0 +1,75 @@
+import { describe, expect, it } from 'vitest';
+import * as alphaTab from '@coderline/alphatab';
+import { LIBRARY } from '../src/songs/library';
+import { barBeats, midiName, noteToMidi, parseNotation } from '../src/songs/notation';
+import { fingerNote, INSTRUMENTS, instrumentRange } from '../src/songs/instruments';
+import { songToAlphaTex } from '../src/songs/alphatex';
+
+alphaTab.Logger.logLevel = alphaTab.LogLevel.None;
+
+describe('notation', () => {
+  it('convertit les notes en MIDI', () => {
+    expect(noteToMidi('C', '', 4)).toBe(60);
+    expect(noteToMidi('A', '', 4)).toBe(69);
+    expect(noteToMidi('F', '#', 4)).toBe(66);
+    expect(noteToMidi('B', 'b', 3)).toBe(58);
+    expect(midiName(62)).toBe('Ré4');
+  });
+  it('reprend la durée précédente et gère pointées, silences, liaisons', () => {
+    const [bar] = parseNotation('D4:8 E4 r:4. -:8 F#4:2');
+    expect(bar.map((e) => e.duration)).toEqual([8, 8, 4, 8, 2]);
+    expect(bar[2]).toMatchObject({ kind: 'rest', dotted: true });
+    expect(bar[3]).toMatchObject({ kind: 'tie', midi: 64 });
+    expect(barBeats(bar)).toBe(0.5 + 0.5 + 1.5 + 0.5 + 2);
+  });
+});
+
+describe('doigtés', () => {
+  it('violon : cordes à vide et 1re position', () => {
+    const v = INSTRUMENTS.violin;
+    expect(fingerNote(55, v)).toEqual({ string: 4, fret: 0 }); // Sol à vide
+    expect(fingerNote(66, v)).toEqual({ string: 3, fret: 4 }); // Fa# sur Ré
+    expect(fingerNote(76, v)).toEqual({ string: 1, fret: 0 }); // Mi à vide
+  });
+  it('guitare : Mi grave à vide', () => {
+    expect(fingerNote(40, INSTRUMENTS.guitar)).toEqual({ string: 6, fret: 0 });
+  });
+});
+
+describe('bibliothèque', () => {
+  it('identifiants uniques', () => {
+    expect(new Set(LIBRARY.map((s) => s.id)).size).toBe(LIBRARY.length);
+  });
+
+  for (const song of LIBRARY) {
+    describe(song.title, () => {
+      it('chaque mesure a la bonne durée', () => {
+        const [num, den] = song.timeSignature;
+        const expected = (num * 4) / den;
+        parseNotation(song.notation).forEach((bar, i) => {
+          expect(barBeats(bar), `mesure ${i + 1}`).toBeCloseTo(expected);
+        });
+      });
+
+      for (const inst of Object.values(INSTRUMENTS)) {
+        it(`se charge dans alphaTab (${inst.label}) avec les bonnes hauteurs`, () => {
+          const tex = songToAlphaTex(song, inst);
+          const score = alphaTab.importer.ScoreLoader.loadAlphaTex(tex);
+          const staff = score.tracks[0].staves[0];
+          const [low, high] = instrumentRange(inst);
+          const played = staff.bars.flatMap((b) => b.voices[0].beats).flatMap((b) => b.notes).map((n) => n.realValue);
+          const expected = parseNotation(song.notation).flat().filter((e) => e.kind !== 'rest').map((e) => e.midi!);
+          expect(played.length).toBe(expected.length);
+          // Même mélodie, éventuellement transposée d'octaves entières.
+          const shift = played[0] - expected[0];
+          expect(Math.abs(shift % 12)).toBe(0);
+          played.forEach((m, i) => expect(m).toBe(expected[i] + shift));
+          for (const m of played) {
+            expect(m).toBeGreaterThanOrEqual(low);
+            expect(m).toBeLessThanOrEqual(high + 12);
+          }
+        });
+      }
+    });
+  }
+});
