@@ -23,7 +23,7 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 ## Prochaines étapes proposées
 
 1. **Import ABC** depuis thesession.org (des milliers d'airs traditionnels irlandais, écossais, folk, avec API publique) : grosse bibliothèque légale par style.
-2. **Hébergement** sur Vercel ou Netlify pour ouvrir l'app sur le téléphone et la TV sans installer Node.
+2. **Hébergement Vercel** : config dans `vercel.json`, repo relié à Vercel, déploiement automatique à chaque push sur `main`.
 3. **Mode vitesse réelle avec score** : justesse + rythme dans une fenêtre de temps, comme prévu pour le manche.
 4. **Accompagnement** : piste d'accords / batterie générée sous la mélodie.
 5. **Empaquetage** : Tauri (desktop), Capacitor (Android, Android TV, iOS).
