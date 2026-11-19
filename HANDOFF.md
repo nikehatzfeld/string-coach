@@ -23,7 +23,7 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 ## Prochaines étapes proposées
 
 1. **Import ABC** depuis thesession.org (des milliers d'airs traditionnels irlandais, écossais, folk, avec API publique) : grosse bibliothèque légale par style.
-2. ~~Hébergement~~ fait : **GitHub Pages** (`.github/workflows/deploy-pages.yml`), tests + build + déploiement à chaque push sur `main` → https://nikehatzfeld.github.io/string-coach/ . `vercel.json` reste dispo si besoin.
+2. ~~Hébergement~~ fait : **GitHub Pages** (`.github/workflows/deploy-pages.yml`), tests + build + déploiement à chaque push sur `main` → https://nikehatzfeld.github.io/string-coach/ . Le repo est public (requis par Pages sur ce compte). `vercel.json` reste dispo si besoin.
 3. **Mode vitesse réelle avec score** : justesse + rythme dans une fenêtre de temps, comme prévu pour le manche.
 4. **Accompagnement** : piste d'accords / batterie générée sous la mélodie.
 5. **Empaquetage** : Tauri (desktop), Capacitor (Android, Android TV, iOS).
