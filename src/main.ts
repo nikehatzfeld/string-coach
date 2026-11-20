@@ -45,6 +45,7 @@ const LEVEL = ['', 'Débutant', 'Intermédiaire', 'Avancé'];
 
 // ---------- Bibliothèque ----------
 let styleFilter: string | null = null;
+let levelFilter: number | null = null;
 let search = '';
 
 async function renderLibrary() {
@@ -53,6 +54,7 @@ async function renderLibrary() {
   const songs = LIBRARY.filter(
     (s) =>
       (!styleFilter || s.style === styleFilter) &&
+      (!levelFilter || s.level === levelFilter) &&
       (!search || `${s.title} ${s.composer}`.toLowerCase().includes(search.toLowerCase())),
   );
   app.innerHTML = `
@@ -72,6 +74,10 @@ async function renderLibrary() {
         <input id="search" type="text" placeholder="Rechercher un morceau" value="${esc(search)}" />
         <button class="chip" data-style="" aria-pressed="${!styleFilter}">Tous</button>
         ${STYLES.map((s) => `<button class="chip" data-style="${esc(s)}" aria-pressed="${styleFilter === s}">${esc(s)}</button>`).join('')}
+      </div>
+      <div class="filters levels">
+        ${[0, 1, 2, 3].map((l) => `<button class="chip" data-level="${l}" aria-pressed="${(levelFilter ?? 0) === l}">${l ? LEVEL[l] : 'Tous niveaux'}</button>`).join('')}
+        <span class="count">${songs.length} morceau${songs.length > 1 ? 'x' : ''}</span>
       </div>
       <section class="grid">
         ${songs
@@ -114,6 +120,12 @@ async function renderLibrary() {
   app.querySelectorAll<HTMLButtonElement>('[data-style]').forEach((b) =>
     b.addEventListener('click', () => {
       styleFilter = b.dataset.style || null;
+      renderLibrary();
+    }),
+  );
+  app.querySelectorAll<HTMLButtonElement>('[data-level]').forEach((b) =>
+    b.addEventListener('click', () => {
+      levelFilter = Number(b.dataset.level) || null;
       renderLibrary();
     }),
   );

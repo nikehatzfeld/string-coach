@@ -15,6 +15,13 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - 9 morceaux classiques ajoutés (22 au total, 78 tests verts)
 - Schéma du manche (violon et guitare) : note en cours + doigt conseillé, note suivante ; vue compacte 1re position sur mobile ; bouton « Manche » pour l'afficher / le masquer
 
+## v0.3 (20/11/2026)
+
+- Bibliothèque à 98 morceaux (306 tests verts) : comptines, classique, Noël, folk du monde, gospel, gammes et arpèges générés
+- Filtre par niveau, armures à la clé
+- `docs/pop-a-importer.md` : 106 chansons pop/variété faciles (violon et guitare) avec liens de recherche ; à importer par l'utilisateur
+- Objectif initial : 200 morceaux. Au-delà d'une centaine, les transcriptions de mémoire ne seraient plus fiables ; le complément vient de la liste pop à importer
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |
@@ -25,6 +32,7 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 | Notes identiques consécutives | Il faut relâcher (silence 60 ms) avant de rejouer | Sinon une note tenue validerait les deux |
 | Morceaux | Domaine public + import de fichiers | Pas d'aspiration massive de sites de tablatures (conditions d'utilisation des sites) |
 | Pop | Uniquement par import local, jamais dans le repo | Repo et site publics : pas de musique sous droits dans la bibliothèque intégrée |
+| thesession.org | Non utilisé | Leur licence interdit tout traitement des données par un modèle d'IA |
 | Manche | Sillet à gauche, corde aiguë en haut, géométrie réelle | Même orientation que la tablature, mêmes positions que les futures LEDs |
 
 ## Prochaines étapes proposées

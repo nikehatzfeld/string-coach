@@ -1,36 +1,18 @@
-import type { Song } from './alphatex';
+import { STYLE_ORDER, type Song } from './alphatex';
+import { EXERCISES } from './exercises';
+import { CHRISTMAS, CLASSICAL_MORE, FOLK_WORLD, KIDS } from './library-more';
 
 /**
  * Morceaux du domaine public et exercices, transcrits de mémoire en notation compacte
  * (voir notation.ts). Chaque mélodie est jouable au violon et à la guitare : la
  * conversion choisit corde, case et octave automatiquement.
  */
-export const LIBRARY: Song[] = [
-  {
-    id: 'gamme-re-majeur',
-    title: 'Gamme de Ré majeur',
-    composer: 'Exercice',
-    style: 'Exercices',
-    level: 1,
-    tempo: 70,
-    timeSignature: [4, 4],
-    notation: 'D4 E4 F#4 G4 | A4 B4 C#5 D5 | D5 C#5 B4 A4 | G4 F#4 E4 D4 | D4:1',
-  },
-  {
-    id: 'gamme-sol-majeur',
-    title: 'Gamme de Sol majeur',
-    composer: 'Exercice',
-    style: 'Exercices',
-    level: 1,
-    tempo: 70,
-    timeSignature: [4, 4],
-    notation: 'G3 A3 B3 C4 | D4 E4 F#4 G4 | G4 F#4 E4 D4 | C4 B3 A3 G3 | G3:1',
-  },
+const CORE: Song[] = [
   {
     id: 'penta-la-mineur',
     title: 'Pentatonique de La mineur',
     composer: 'Exercice',
-    style: 'Exercices',
+    style: 'Gammes & arpèges',
     level: 2,
     tempo: 80,
     timeSignature: [4, 4],
@@ -188,7 +170,7 @@ export const LIBRARY: Song[] = [
     id: 'frere-jacques',
     title: 'Frère Jacques',
     composer: 'Traditionnel',
-    style: 'Folk français',
+    style: 'Comptines',
     level: 1,
     tempo: 100,
     timeSignature: [4, 4],
@@ -200,7 +182,7 @@ export const LIBRARY: Song[] = [
     id: 'au-clair-de-la-lune',
     title: 'Au clair de la lune',
     composer: 'Traditionnel',
-    style: 'Folk français',
+    style: 'Comptines',
     level: 1,
     tempo: 90,
     timeSignature: [4, 4],
@@ -214,7 +196,7 @@ export const LIBRARY: Song[] = [
     id: 'drunken-sailor',
     title: 'Drunken Sailor',
     composer: 'Traditionnel (chant de marins)',
-    style: 'Folk anglo-saxon',
+    style: 'Folk & monde',
     level: 2,
     tempo: 110,
     timeSignature: [4, 4],
@@ -251,9 +233,9 @@ export const LIBRARY: Song[] = [
   },
   {
     id: 'jingle-bells',
-    title: 'Jingle Bells',
+    title: 'Jingle Bells (Vive le vent)',
     composer: 'J. L. Pierpont',
-    style: 'Fêtes',
+    style: 'Noël',
     level: 1,
     tempo: 120,
     timeSignature: [4, 4],
@@ -277,4 +259,6 @@ export const LIBRARY: Song[] = [
   },
 ];
 
-export const STYLES = [...new Set(LIBRARY.map((s) => s.style))];
+export const LIBRARY: Song[] = [...CORE, ...KIDS, ...CLASSICAL_MORE, ...CHRISTMAS, ...FOLK_WORLD, ...EXERCISES];
+
+export const STYLES = STYLE_ORDER.filter((st) => LIBRARY.some((s) => s.style === st));

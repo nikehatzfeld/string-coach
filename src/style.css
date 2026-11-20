@@ -127,3 +127,6 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
   .neck { padding: 0.25rem 0.5rem; }
   .neck:not([hidden]) ~ .step:not([hidden]) ~ .score-scroll { height: 45vh; }
 }
+
+.levels { align-items: center; }
+.count { margin-left: auto; color: var(--muted); font-size: 0.9rem; }

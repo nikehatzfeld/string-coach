@@ -1,14 +1,19 @@
 import { fingerNote, octaveShiftFor, type Instrument } from './instruments';
 import { parseNotation, type ParsedBar } from './notation';
 
-export type Style =
-  | 'Classique'
-  | 'Folk français'
-  | 'Folk anglo-saxon'
-  | 'Gospel & jazz'
-  | 'Blues'
-  | 'Fêtes'
-  | 'Exercices';
+export const STYLE_ORDER = [
+  'Comptines',
+  'Chanson française',
+  'Classique',
+  'Noël',
+  'Folk & monde',
+  'Gospel & jazz',
+  'Blues',
+  'Fêtes',
+  'Gammes & arpèges',
+  'Exercices',
+] as const;
+export type Style = (typeof STYLE_ORDER)[number];
 
 export type Level = 1 | 2 | 3;
 
@@ -20,6 +25,8 @@ export interface Song {
   level: Level;
   tempo: number;
   timeSignature: [number, number];
+  /** Armure alphaTex : 'G', 'Bb', 'eminor'… */
+  key?: string;
   notation: string;
 }
 
@@ -46,6 +53,7 @@ export function songToAlphaTex(song: Song, inst: Instrument): string {
     `\\artist "${escape(song.composer)}"`,
     `\\tempo ${song.tempo}`,
     `\\ts (${num} ${den})`,
+    ...(song.key ? [`\\ks ${song.key}`] : []),
     `\\track "${inst.label}"`,
     `\\staff {score tabs}`,
     `\\instrument ${inst.alphaTexInstrument}`,
