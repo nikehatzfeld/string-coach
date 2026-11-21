@@ -19,6 +19,8 @@ export interface ParsedEvent {
   duration: Duration;
   dotted: boolean;
   chord?: string;
+  /** Écrite avec un bémol (pour afficher Si♭ plutôt que La♯). */
+  flat?: boolean;
 }
 
 export type ParsedBar = ParsedEvent[];
@@ -48,18 +50,19 @@ export function parseNotation(src: string): ParsedBar[] {
       const chord = m[7];
       if (m[1] === 'r') bar.push({ kind: 'rest', midi: null, duration, dotted, chord });
       else if (m[1] === '-') bar.push({ kind: 'tie', midi: null, duration, dotted, chord });
-      else bar.push({ kind: 'note', midi: noteToMidi(m[2], m[3], Number(m[4])), duration, dotted, chord });
+      else bar.push({ kind: 'note', midi: noteToMidi(m[2], m[3], Number(m[4])), duration, dotted, chord, flat: m[3] === 'b' });
     }
     bars.push(bar);
   }
   // Résout les liaisons sur la hauteur de la note précédente.
-  let last: number | null = null;
+  let last: ParsedEvent | null = null;
   for (const bar of bars) {
     for (const ev of bar) {
-      if (ev.kind === 'note') last = ev.midi;
+      if (ev.kind === 'note') last = ev;
       else if (ev.kind === 'tie') {
         if (last === null) throw new Error('Liaison sans note précédente');
-        ev.midi = last;
+        ev.midi = last.midi;
+        ev.flat = last.flat;
       }
     }
   }

@@ -1,7 +1,9 @@
 import type * as alphaTab from '@coderline/alphatab';
-import { songToAlphaTex, type Song } from '../songs/alphatex';
+import { synth } from '@coderline/alphatab';
+import { sectionsFor, songToAlphaTex, type Section, type Song } from '../songs/alphatex';
 import { fingerNote, INSTRUMENTS } from '../songs/instruments';
 import { freqToMidiFloat, midiName } from '../songs/notation';
+import { solfege } from '../songs/positions';
 import { MicPitchDetector } from '../practice/pitch-detector';
 import { StepTrainer, type StepTarget, type TrainerUpdate } from '../practice/step-trainer';
 import { GameJudge, type GameNote } from '../game/judge';
@@ -55,15 +57,23 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     <div class="toolbar">
       <button id="play" class="primary only-live" disabled>▶ Lecture</button>
       <button id="stop" class="only-live" disabled aria-label="Stop">■</button>
-      <label>Tempo <input id="speed" type="range" min="0.25" max="1.5" step="0.05" value="${prefs.speed}" /> <output id="speedOut">${Math.round(prefs.speed * 100)} %</output></label>
+      <div class="bpm" role="group" aria-label="Tempo">
+        <button id="bpmDown" aria-label="Ralentir de 5 BPM">−</button>
+        <label>♩ = <input id="bpm" type="number" min="30" max="240" step="1" inputmode="numeric" aria-label="Tempo en BPM" /> BPM</label>
+        <button id="bpmUp" aria-label="Accélérer de 5 BPM">+</button>
+        <input id="bpmRange" type="range" min="30" max="240" step="1" aria-label="Tempo" />
+        <button id="bpmReset" class="ghost" title="Tempo d'origine">↺</button>
+      </div>
       <button id="loop" class="only-live" aria-pressed="false">Boucle</button>
       <button id="metro" class="only-live" aria-pressed="false">Métronome</button>
       <button id="countin" class="only-live" aria-pressed="false">Décompte</button>
+      <button id="backing" aria-pressed="${prefs.backing}" hidden title="Fond musical : accords, basse et batterie">🎶 Accompagnement</button>
       <select id="viewMode" class="no-game" aria-label="Affichage">
-        <option value="score-tab">Partition + tablature</option>
-        <option value="tab">Tablature</option>
-        <option value="score">Partition</option>
+        <option value="score">${inst.id === 'violin' ? 'Partition + doigtés' : 'Partition'}</option>
+        <option value="score-tab">Partition + tablature${inst.id === 'violin' ? ' (demi-tons)' : ''}</option>
+        <option value="tab">Tablature${inst.id === 'violin' ? ' (demi-tons)' : ''}</option>
       </select>
+      <select id="section" aria-label="Partie à travailler" hidden></select>
       <select id="track" aria-label="Piste" hidden></select>
       <button id="neckBtn" class="no-game" aria-pressed="${prefs.showNeck}">Manche</button>
       <button id="zoomOut" class="no-game" aria-label="Dézoomer">A−</button>
@@ -118,7 +128,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   const stopBtn = $<HTMLButtonElement>('stop');
   const viewSel = $<HTMLSelectElement>('viewMode');
   const trackSel = $<HTMLSelectElement>('track');
-  viewSel.value = prefs.view;
+  viewSel.value = prefs.views[inst.id];
 
   // ---------- Chargement ----------
   api.playerReady.on(() => {
@@ -126,16 +136,60 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     stopBtn.disabled = false;
     $('status').textContent = '';
   });
-  api.playbackSpeed = prefs.speed;
   let firstRender = true;
   api.renderFinished.on(() => {
     if (firstRender) {
       firstRender = false;
-      if (prefs.view !== 'score-tab') v.setViewMode(prefs.view);
+      if (prefs.views[inst.id] !== 'score-tab') v.setViewMode(prefs.views[inst.id]);
     }
   });
+  // ---------- Parties ----------
+  let sections: Section[] = [];
+  let section: Section | null = null;
+  const sectionSel = $<HTMLSelectElement>('section');
+  const inSection = (beat: alphaTab.model.Beat) => !section || (beat.voice.bar.index >= section.first && beat.voice.bar.index <= section.last);
+  function sectionRange(): { start: number; end: number } | null {
+    const mbs = api.score?.masterBars;
+    if (!section || !mbs) return null;
+    const last = mbs[section.last];
+    return { start: mbs[section.first].start, end: last.start + last.calculateDuration() };
+  }
+  function applySection() {
+    const r = sectionRange();
+    if (r) {
+      const range = new synth.PlaybackRange();
+      range.startTick = r.start;
+      range.endTick = r.end;
+      api.playbackRange = range;
+    } else api.playbackRange = null;
+    api.tickPosition = r ? r.start : 0;
+  }
   api.scoreLoaded.on((score) => {
-    if (score.tracks.length > 1) {
+    sections = sectionsFor(score.masterBars.length, source.kind === 'library' ? source.song.sections : undefined);
+    sectionSel.hidden = sections.length === 0;
+    sectionSel.innerHTML =
+      `<option value="">Morceau entier</option>` +
+      sections.map((s, i) => `<option value="${i}">${esc(s.name)} · mes. ${s.first + 1}-${s.last + 1}</option>`).join('');
+  });
+  sectionSel.addEventListener('change', () => {
+    section = sectionSel.value === '' ? null : sections[Number(sectionSel.value)];
+    applySection();
+    setMode(mode);
+  });
+
+  const backingTracks = () => (source.kind === 'library' ? (api.score?.tracks.slice(1) ?? []) : []);
+  /** Volume relatif de l'accompagnement : la mélodie reste devant. */
+  const BACKING_VOLUME = 0.3;
+  const applyBacking = () => {
+    const t = backingTracks();
+    if (!t.length) return;
+    api.changeTrackVolume(t, BACKING_VOLUME);
+    api.changeTrackMute(t, !prefs.backing);
+  };
+  api.playerReady.on(applyBacking);
+  api.scoreLoaded.on((score) => {
+    if (source.kind === 'library' && score.tracks.length > 1) $('backing').hidden = false;
+    if (source.kind === 'file' && score.tracks.length > 1) {
       trackSel.hidden = false;
       trackSel.innerHTML = score.tracks.map((t, i) => `<option value="${i}">${esc(t.name || `Piste ${i + 1}`)}</option>`).join('');
     }
@@ -144,7 +198,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   api.error.on((e) => ($('status').textContent = `Erreur : ${e.message}`));
 
   if (source.kind === 'library') {
-    v.loadTex(songToAlphaTex(source.song, inst));
+    v.loadTex(songToAlphaTex(source.song, inst), [0]);
   } else {
     const bytes = source.data instanceof Uint8Array ? source.data : new Uint8Array(source.data);
     if (source.name.endsWith('.tex') || looksLikeAlphaTex(bytes)) v.loadTex(new TextDecoder().decode(bytes));
@@ -159,13 +213,31 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     playBtn.textContent = playing ? '❚❚ Pause' : '▶ Lecture';
     setPracticeActive(playing || !!mic);
   });
-  const speed = $<HTMLInputElement>('speed');
-  speed.addEventListener('input', () => {
-    prefs.speed = Number(speed.value);
-    api.playbackSpeed = prefs.speed;
-    $('speedOut').textContent = `${Math.round(prefs.speed * 100)} %`;
-    savePrefs();
+  // ---------- Tempo en BPM ----------
+  let originalBpm = source.kind === 'library' ? source.song.tempo : 120;
+  const bpmInput = $<HTMLInputElement>('bpm');
+  const bpmRange = $<HTMLInputElement>('bpmRange');
+  function setBpm(bpm: number, save = true) {
+    const v2 = Math.round(Math.max(30, Math.min(240, bpm || originalBpm)));
+    bpmInput.value = String(v2);
+    bpmRange.value = String(v2);
+    api.playbackSpeed = v2 / originalBpm;
+    if (save) {
+      if (v2 === originalBpm) delete prefs.bpmBySong[songId];
+      else prefs.bpmBySong[songId] = v2;
+      savePrefs();
+    }
+  }
+  api.scoreLoaded.on((score) => {
+    originalBpm = Math.round(score.tempo) || originalBpm;
+    setBpm(prefs.bpmBySong[songId] ?? originalBpm, false);
   });
+  setBpm(prefs.bpmBySong[songId] ?? originalBpm, false);
+  bpmInput.addEventListener('change', () => setBpm(Number(bpmInput.value)));
+  bpmRange.addEventListener('input', () => setBpm(Number(bpmRange.value)));
+  $('bpmDown').addEventListener('click', () => setBpm(Number(bpmInput.value) - 5));
+  $('bpmUp').addEventListener('click', () => setBpm(Number(bpmInput.value) + 5));
+  $('bpmReset').addEventListener('click', () => setBpm(originalBpm));
   const toggle = (id: string, apply: (on: boolean) => void) => {
     const b = $<HTMLButtonElement>(id);
     b.addEventListener('click', () => {
@@ -177,10 +249,15 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   toggle('loop', (on) => (api.isLooping = on));
   toggle('metro', (on) => (api.metronomeVolume = on ? 1 : 0));
   toggle('countin', (on) => (api.countInVolume = on ? 1 : 0));
-  viewSel.addEventListener('change', () => {
-    prefs.view = viewSel.value as ViewMode;
+  toggle('backing', (on) => {
+    prefs.backing = on;
     savePrefs();
-    v.setViewMode(prefs.view);
+    applyBacking();
+  });
+  viewSel.addEventListener('change', () => {
+    prefs.views[inst.id] = viewSel.value as ViewMode;
+    savePrefs();
+    v.setViewMode(prefs.views[inst.id]);
   });
   trackSel.addEventListener('change', () => {
     v.selectTrack(Number(trackSel.value));
@@ -199,8 +276,9 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       .filter((n) => !n.isTieDestination || beat.notes.length === 1)
       .map((n) => {
         if (tuning.length === inst.tuning.length && n.fret >= 0 && n.string > 0) {
-          // Dans le modèle alphaTab, la corde 1 est la plus grave.
-          return { midi: n.realValue, string: tuning.length - n.string + 1, fret: n.fret };
+          // Dans le modèle alphaTab, la corde 1 est la plus grave ; doigt : 1 = index … 4 = auriculaire.
+          const finger = n.fret === 0 ? 0 : n.leftHandFinger >= 1 && n.leftHandFinger <= 4 ? n.leftHandFinger : undefined;
+          return { midi: n.realValue, string: tuning.length - n.string + 1, fret: n.fret, finger };
         }
         try {
           return { midi: n.realValue, ...fingerNote(n.realValue, inst) };
@@ -210,15 +288,25 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       })
       .filter((x): x is BoardNote => x !== null);
   }
-  const topFingering = (beat: alphaTab.model.Beat) =>
-    beatFingerings(beat).reduce<BoardNote | null>((a, b) => (!a || b.midi > a.midi ? b : a), null);
+  /** Nom de la note du beat : celui écrit sous la portée, sinon déduit de l'armure (bémols si armure en bémols). */
+  function beatName(beat: alphaTab.model.Beat, midi: number): string {
+    const written = beat.lyrics?.[0];
+    if (written && written !== '_') return written;
+    return solfege(midi, beat.voice.bar.masterBar.keySignature < 0);
+  }
+  const topFingering = (beat: alphaTab.model.Beat) => {
+    const top = beatFingerings(beat).reduce<BoardNote | null>((a, b) => (!a || b.midi > a.midi ? b : a), null);
+    return top ? { ...top, name: beatName(beat, top.midi) } : null;
+  };
 
   function stringLabel(beat: alphaTab.model.Beat): string {
     const f = topFingering(beat);
     if (!f) return '';
     const sName = `corde de ${inst.stringNamesFr[f.string - 1]}`;
     if (f.fret === 0) return `${sName}, à vide`;
-    return inst.id === 'violin' ? `${sName}, +${f.fret} demi-ton${f.fret > 1 ? 's' : ''}` : `${sName}, case ${f.fret}`;
+    const finger = f.finger ?? suggestedFinger(f.fret, inst);
+    const doigt = finger ? `, doigt ${finger}` : '';
+    return inst.id === 'violin' ? `${sName}${doigt}` : `${sName}, case ${f.fret}${doigt}`;
   }
 
   const board = new Fingerboard($('neck'), inst);
@@ -234,7 +322,9 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     return undefined;
   };
   api.playedBeatChanged.on((beat) => {
-    if (mode === 'live') board.show(beatFingerings(beat), beatFingerings(nextSounding(beat)));
+    if (mode !== 'live') return;
+    const named = (b: alphaTab.model.Beat | undefined) => (b ? beatFingerings(b).map((f) => ({ ...f, name: beatName(b, f.midi) })) : []);
+    board.show(named(beat), named(nextSounding(beat)));
   });
   api.playerStateChanged.on((e) => {
     if (e.stopped && mode === 'live') board.show([]);
@@ -288,7 +378,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     const targets: StepTarget[] = [];
     beatsByTarget = [];
     v.trackBeats.forEach((beat, i) => {
-      if (beat.isRest || beat.notes.length === 0) return;
+      if (beat.isRest || beat.notes.length === 0 || !inSection(beat)) return;
       if (beat.notes.every((n) => n.isTieDestination)) return;
       targets.push({ midi: Math.max(...beat.notes.map((n) => n.realValue)), beatIndex: i });
       beatsByTarget.push(beat);
@@ -326,10 +416,15 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       return;
     }
     const beat = beatsByTarget[trainer.index];
-    $('tNote').textContent = midiName(t.midi, 'fr');
-    $('tPos').textContent = `${midiName(t.midi, 'en')} · ${stringLabel(beat)}`;
+    const name = beatName(beat, t.midi);
+    const octave = Math.floor(t.midi / 12) - 1;
+    $('tNote').innerHTML = `${name}<small>${octave}</small>`;
+    $('tPos').textContent = `${/♯/.test(name) ? 'dièse · ' : /♭/.test(name) ? 'bémol · ' : ''}${midiName(t.midi, 'en')} · ${stringLabel(beat)}`;
     v.focusBeat(beat);
-    board.show(beatFingerings(beat), beatFingerings(beatsByTarget[trainer.index + 1]));
+    const cur = topFingering(beat);
+    const nextBeat = beatsByTarget[trainer.index + 1];
+    const nxt = nextBeat ? topFingering(nextBeat) : null;
+    board.show(cur ? [cur] : [], nxt ? [nxt] : []);
   }
 
   function setVerdict(text: string, cls: string) {
@@ -422,7 +517,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   function buildGameNotes(): GameNote[] {
     const notes: GameNote[] = [];
     for (const beat of v.trackBeats) {
-      if (beat.isRest || beat.notes.length === 0) continue;
+      if (beat.isRest || beat.notes.length === 0 || !inSection(beat)) continue;
       const f = topFingering(beat);
       if (!f) continue;
       if (beat.notes.every((n) => n.isTieDestination)) {
@@ -430,13 +525,15 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         if (prev) prev.duration += beat.playbackDuration;
         continue;
       }
-      const finger = suggestedFinger(f.fret, inst);
+      const finger = f.finger ?? suggestedFinger(f.fret, inst);
       notes.push({
         tick: beat.absolutePlaybackStart,
         duration: beat.playbackDuration,
         midi: f.midi,
         lane: inst.tuning.length - f.string,
+        // Violon : doigt ; guitare : case (comme sur la tablature).
         label: inst.id === 'violin' ? String(finger ?? f.fret) : String(f.fret),
+        name: f.name,
       });
     }
     return notes;
@@ -462,6 +559,9 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   }
 
   api.playerPositionChanged.on((e) => {
+    // Fin de la partie travaillée en mode jeu.
+    const r = sectionRange();
+    if (mode === 'game' && gameRunning && r && e.currentTick >= r.end - 1) setTimeout(() => stopGame(true), 400);
     if (e.modifiedTempo > 0) ticksPerMs = (e.modifiedTempo * 960) / 60000;
     lastTick = e.currentTick;
     if (mode === 'game' && highway) highway.sync(e.currentTick, ticksPerMs, gameRunning && api.playerState === 1);
@@ -496,7 +596,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     api.stop();
     const track = api.score?.tracks[Number(trackSel.value) || 0];
     if (track) api.changeTrackMute([track], !prefs.guide);
-    api.metronomeVolume = prefs.guide ? 0 : 0.8;
+    // Métronome seulement s'il n'y a ni mélodie guide ni accompagnement pour donner le tempo.
+    api.metronomeVolume = prefs.guide || (prefs.backing && backingTracks().length) ? 0 : 0.8;
     await countdown();
     gameRunning = true;
     api.play();
@@ -570,7 +671,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     const outcome = recordResult(
       progress,
       {
-        songId,
+        songId: section ? `${songId}#${sections.indexOf(section) + 1}` : songId,
         style: source.kind === 'library' ? source.song.style : undefined,
         mode: m,
         score: k.score,
@@ -584,7 +685,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     );
     persist();
     const act = await showResults({
-      title,
+      title: section ? `${title} · ${section.name}` : title,
       mode: m,
       score: k.score,
       stars,

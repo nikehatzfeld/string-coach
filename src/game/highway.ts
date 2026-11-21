@@ -202,6 +202,14 @@ export class Highway {
       ctx.textBaseline = 'middle';
       ctx.fillText(n.label, x, y + 1);
       ctx.textBaseline = 'alphabetic';
+      if (n.name && n.judged !== 'miss') {
+        // Nom de la note (avec ♯ / ♭) à droite de la pastille.
+        const accidental = /[♯♭]/.test(n.name);
+        ctx.font = `700 ${Math.round(Math.max(11, r * 0.75))}px system-ui, sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.fillStyle = accidental ? '#ffd166' : 'rgba(238,241,247,0.85)';
+        ctx.fillText(n.name, x + r + 4, y + r * 0.3);
+      }
     }
 
     // Textes de jugement

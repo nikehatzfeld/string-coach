@@ -98,15 +98,30 @@ const CORE: Song[] = [
   },
   {
     id: 'lettre-a-elise',
-    title: 'Lettre à Élise (thème)',
+    title: 'Lettre à Élise (partie A complète)',
     composer: 'L. van Beethoven',
     style: 'Classique',
     level: 3,
     tempo: 60,
     timeSignature: [3, 8],
+    sections: [
+      ['Thème', 1, 9],
+      ['Thème (reprise)', 10, 17],
+      ['Passage', 18, 24],
+      ['Retour du thème', 25, 32],
+    ],
     notation:
+      // Thème
       'r:4 E5:16 D#5 | E5@Am D#5 E5 B4 D5 C5 | A4:8 r:16 C4 E4 A4 | B4:8@E r:16 E4 G#4 B4 | C5:8@Am r:16 E4 E5 D#5 | ' +
-      'E5 D#5 E5 B4 D5 C5 | A4:8 r:16 C4 E4 A4 | B4:8@E r:16 E4 C5 B4 | A4:4.@Am',
+      'E5 D#5 E5 B4 D5 C5 | A4:8 r:16 C4 E4 A4 | B4:8@E r:16 E4 C5 B4 | A4:8@Am r:8 E5:16 D#5 | ' +
+      // Reprise du thème, 2e fin
+      'E5 D#5 E5 B4 D5 C5 | A4:8 r:16 C4 E4 A4 | B4:8@E r:16 E4 G#4 B4 | C5:8@Am r:16 E4 E5 D#5 | ' +
+      'E5 D#5 E5 B4 D5 C5 | A4:8 r:16 C4 E4 A4 | B4:8@E r:16 E4 C5 B4 | A4:8@Am r:16 B4 C5 D5 | ' +
+      // Passage (pont simplifié : les sauts d'octave sont ramenés dans la même octave)
+      'E5:8.@C G4:16 F5 E5 | D5:8.@G F4:16 E5 D5 | C5:8.@Am E4:16 D5 C5 | B4:8@E r:16 E4 E5 r:16 | r:16 E5 E5 r:16 r:16 D#5 | E5 r:16 r:16 D#5 E5 D#5 | ' +
+      'E5 D#5 E5 B4 D5 C5 | ' +
+      // Retour du thème
+      'A4:8@Am r:16 C4 E4 A4 | B4:8@E r:16 E4 G#4 B4 | C5:8@Am r:16 E4 E5 D#5 | E5 D#5 E5 B4 D5 C5 | A4:8 r:16 C4 E4 A4 | B4:8@E r:16 E4 C5 B4 | A4:4.@Am | r:4.',
   },
   {
     id: 'largo-nouveau-monde',

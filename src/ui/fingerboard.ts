@@ -21,6 +21,10 @@ export function suggestedFinger(fret: number, inst: Instrument): number | null {
 
 export interface BoardNote extends Fingering {
   midi: number;
+  /** Doigt indiqué par la partition (0 = corde à vide) ; à défaut, doigt de 1re position. */
+  finger?: number;
+  /** Nom affiché (avec ♯ ou ♭). */
+  name?: string;
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -168,12 +172,12 @@ export class Fingerboard {
   private drawNote(note: BoardNote, current: boolean): void {
     const cx = this.fingerX(note.fret);
     const cy = this.y(note.string);
-    const finger = suggestedFinger(note.fret, this.inst);
+    const finger = note.finger ?? suggestedFinger(note.fret, this.inst);
     this.el('circle', { cx, cy, r: current ? 13 : 11, class: current ? 'fb-dot' : 'fb-next' });
     if (current) {
       const label = finger === null ? String(note.fret) : finger === 0 ? '0' : String(finger);
       this.el('text', { x: cx, y: cy + 5, class: 'fb-finger' }, label);
-      this.el('text', { x: cx, y: cy - 18, class: 'fb-note' }, midiName(note.midi));
+      this.el('text', { x: cx, y: cy - 18, class: 'fb-note' }, note.name ?? midiName(note.midi));
     }
   }
 }

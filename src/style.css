@@ -292,3 +292,11 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
   :root { font-size: 22px; }
   .target strong { font-size: 4.5rem; }
 }
+
+.target strong small { font-size: 0.4em; margin-left: 0.1em; -webkit-text-fill-color: var(--muted); }
+
+.bpm { display: flex; align-items: center; gap: 0.35rem; }
+.bpm label { color: var(--muted); display: flex; align-items: center; gap: 0.3rem; }
+.bpm input[type='number'] { width: 4.2rem; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 0.45em 0.4em; min-height: 40px; text-align: center; font-weight: 700; font-size: 1rem; }
+.bpm button { min-width: 40px; padding: 0.4em 0.6em; }
+@media (max-width: 640px) { .bpm input[type='range'] { display: none; } }

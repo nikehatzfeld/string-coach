@@ -7,7 +7,10 @@ export interface GameNote {
   midi: number;
   /** Couloir : 0 = corde la plus grave. */
   lane: number;
+  /** Doigt (ou case) affiché dans la note. */
   label: string;
+  /** Nom de la note avec ♯ ou ♭. */
+  name?: string;
   judged?: Judgment;
 }
 

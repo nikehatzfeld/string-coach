@@ -31,6 +31,16 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - 318 tests verts
 - Limite connue : progression stockée par appareil (pas encore synchronisée)
 
+## v0.5 (21/11/2026)
+
+- Doigtés réels au violon (plus de demi-tons trompeurs), positions marquées, noms des notes avec ♯/♭ sous la portée, dans le pas à pas, sur le manche et dans le mode jeu
+- Positions calculées par programmation dynamique (src/songs/positions.ts) + octave choisie pour rester en 1re position (guitare : octave des méthodes)
+- Tempo en BPM ; accompagnement play-along généré depuis les accords (src/songs/backing.ts), 54 morceaux
+- Banque de sons MuseScore General réduite à 3,9 Mo (violon, guitares, basses, cordes, batterie ; piano retiré : 15 Mo à lui seul)
+- Découpage en parties ; Lettre à Élise complétée (partie A entière)
+- Limite : la plupart des pièces classiques restent des thèmes (au-delà, transcription de mémoire non fiable) ; versions complètes via imports / coffre
+- 382 tests verts
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |
@@ -40,6 +50,7 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 | Pas à pas | Micro, détection de hauteur pitchy | Même logique que le futur manche LED |
 | Notes identiques consécutives | Il faut relâcher (silence 60 ms) avant de rejouer | Sinon une note tenue validerait les deux |
 | Morceaux | Domaine public + import de fichiers | Pas d'aspiration massive de sites de tablatures (conditions d'utilisation des sites) |
+| Mot de passe du coffre | Jamais dans le code, 12 caractères minimum | Repo public ; un code court se casse en quelques minutes |
 | Coffre | Fichiers chiffrés publiés avec le site (choix de l'utilisateur) | Pas de clé GitHub à gérer ; les fichiers chiffrés restent publics mais illisibles sans mot de passe |
 | Pop | Uniquement par import local ou coffre chiffré, jamais en clair dans le repo | Repo et site publics : pas de musique sous droits dans la bibliothèque intégrée |
 | thesession.org | Non utilisé | Leur licence interdit tout traitement des données par un modèle d'IA |

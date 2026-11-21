@@ -24,6 +24,10 @@ Le micro nécessite HTTPS ou `localhost`. Pour tester sur mobile : `npm run buil
 | Mode jeu | Notes qui défilent par corde vers une ligne de frappe, jugées au micro (Parfait / Bien / Raté), combo et multiplicateur, compensation de latence, guide audio |
 | Progression | XP et niveaux, série de jours, objectif quotidien, 16 badges, défi du jour (+100 XP), score et 1 à 3 étoiles par morceau, écran de résultats |
 | Coffre | Chansons protégées publiées chiffrées, accessibles avec ton mot de passe : voir [docs/coffre.md](docs/coffre.md) |
+| Doigtés | Violon : vrais doigts (0 à 4) au-dessus des notes, changements de position marqués (« → 3e pos. »), calculés sur toute la mélodie pour limiter les déplacements. Guitare : position et doigt par case. Nom de chaque note (avec ♯ / ♭) sous la portée |
+| Parties | Chaque morceau se travaille en entier ou par parties (nommées ou de 4 mesures), en écoute (boucle), pas à pas et jeu |
+| Accompagnement | Play-along généré depuis les accords (guitare ou cordes, basse, batterie selon le style), activable par bouton |
+| Tempo | Réglé en BPM (−/+ 5, curseur, retour au tempo d'origine), mémorisé par morceau |
 | Lecture live | Son de synthèse (SoundFont SONiVOX), curseur synchronisé, tempo 25 à 150 %, boucle, métronome, décompte |
 | Affichage | Partition + tablature, tablature seule ou partition seule, zoom, accords au-dessus de la portée |
 | Pas à pas | La note suivante est indiquée (nom, corde, position) ; l'app n'avance que si la note jouée au micro est juste et tenue 80 ms (tolérance réglable ±10 à ±60 cents) |
@@ -70,4 +74,4 @@ Le repo et le site étant publics, la bibliothèque intégrée ne contient que d
 
 - [alphaTab](https://alphatab.net) (MPL-2.0) : rendu partition/tablature, lecture, import Guitar Pro et MusicXML
 - [pitchy](https://github.com/ianprime0509/pitchy) (MIT) : détection de hauteur
-- SoundFont SONiVOX et police Bravura (fournies avec alphaTab)
+- Banque de sons extraite de MuseScore General (MIT, [licence](public/soundfont/string-coach-LICENSE.md)) avec `scripts/trim-soundfont.py` ; police Bravura (fournie avec alphaTab)

@@ -19,7 +19,7 @@ export class ScoreView {
       display: { staveProfile: alphaTab.StaveProfile.ScoreTab, scale: 1.1 },
       player: {
         playerMode: alphaTab.PlayerMode.EnabledSynthesizer,
-        soundFont: `${import.meta.env.BASE_URL}soundfont/sonivox.sf2`,
+        soundFont: `${import.meta.env.BASE_URL}soundfont/string-coach.sf3`,
         enableCursor: true,
         enableAnimatedBeatCursor: true,
         enableElementHighlighting: true,
@@ -28,6 +28,7 @@ export class ScoreView {
         scrollOffsetY: -40,
       },
     });
+    if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) (window as unknown as { __at: unknown }).__at = this.api;
     this.api.scoreLoaded.on((score) => {
       this.beats = [];
       const staff = score.tracks[0]?.staves[0];
@@ -36,8 +37,9 @@ export class ScoreView {
     });
   }
 
-  loadTex(tex: string): void {
-    this.api.tex(tex);
+  /** Charge un morceau alphaTex ; seules les pistes indiquées sont affichées (toutes sont jouées). */
+  loadTex(tex: string, tracks: number[] | 'all' = 'all'): void {
+    this.api.tex(tex, tracks);
   }
 
   loadFile(data: ArrayBuffer): boolean {
