@@ -22,6 +22,15 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - `docs/pop-a-importer.md` : 106 chansons pop/variété faciles (violon et guitare) avec liens de recherche ; à importer par l'utilisateur
 - Objectif initial : 200 morceaux. Au-delà d'une centaine, les transcriptions de mémoire ne seraient plus fiables ; le complément vient de la liste pop à importer
 
+## v0.4 (21/11/2026)
+
+- Refonte visuelle : accueil avec niveau, série, objectif du jour, défi du jour, badges, « Reprendre »
+- Gamification : XP/niveaux, 16 badges, défi du jour, score + étoiles, écran de résultats animé
+- Mode jeu : piste à défilement synchronisée au lecteur, jugement au micro ; testé avec une mélodie injectée comme micro (25 parfaites / 26, 3 étoiles)
+- Coffre chiffré pour les chansons protégées (docs/coffre.md) ; testé de bout en bout ; aucun coffre publié pour l'instant
+- 318 tests verts
+- Limite connue : progression stockée par appareil (pas encore synchronisée)
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |
@@ -31,7 +40,8 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 | Pas à pas | Micro, détection de hauteur pitchy | Même logique que le futur manche LED |
 | Notes identiques consécutives | Il faut relâcher (silence 60 ms) avant de rejouer | Sinon une note tenue validerait les deux |
 | Morceaux | Domaine public + import de fichiers | Pas d'aspiration massive de sites de tablatures (conditions d'utilisation des sites) |
-| Pop | Uniquement par import local, jamais dans le repo | Repo et site publics : pas de musique sous droits dans la bibliothèque intégrée |
+| Coffre | Fichiers chiffrés publiés avec le site (choix de l'utilisateur) | Pas de clé GitHub à gérer ; les fichiers chiffrés restent publics mais illisibles sans mot de passe |
+| Pop | Uniquement par import local ou coffre chiffré, jamais en clair dans le repo | Repo et site publics : pas de musique sous droits dans la bibliothèque intégrée |
 | thesession.org | Non utilisé | Leur licence interdit tout traitement des données par un modèle d'IA |
 | Manche | Sillet à gauche, corde aiguë en haut, géométrie réelle | Même orientation que la tablature, mêmes positions que les futures LEDs |
 

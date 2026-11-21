@@ -21,6 +21,9 @@ Le micro nécessite HTTPS ou `localhost`. Pour tester sur mobile : `npm run buil
 
 | Fonction | Détail |
 | --- | --- |
+| Mode jeu | Notes qui défilent par corde vers une ligne de frappe, jugées au micro (Parfait / Bien / Raté), combo et multiplicateur, compensation de latence, guide audio |
+| Progression | XP et niveaux, série de jours, objectif quotidien, 16 badges, défi du jour (+100 XP), score et 1 à 3 étoiles par morceau, écran de résultats |
+| Coffre | Chansons protégées publiées chiffrées, accessibles avec ton mot de passe : voir [docs/coffre.md](docs/coffre.md) |
 | Lecture live | Son de synthèse (SoundFont SONiVOX), curseur synchronisé, tempo 25 à 150 %, boucle, métronome, décompte |
 | Affichage | Partition + tablature, tablature seule ou partition seule, zoom, accords au-dessus de la portée |
 | Pas à pas | La note suivante est indiquée (nom, corde, position) ; l'app n'avance que si la note jouée au micro est juste et tenue 80 ms (tolérance réglable ±10 à ±60 cents) |
@@ -35,7 +38,12 @@ Le micro nécessite HTTPS ou `localhost`. Pour tester sur mobile : `npm run buil
 
 ```
 src/
-  main.ts                 interface : bibliothèque, lecteur, mode pas à pas
+  main.ts                 démarrage et navigation
+  ui/home.ts              accueil : progression, badges, défi, bibliothèque, coffre, imports
+  ui/player.ts            lecteur : écoute, pas à pas noté, mode jeu
+  ui/results.ts           écran de résultats, confettis, notifications
+  game/                   progression (XP, badges, défi), score, arbitre et piste du mode jeu
+  vault/                  coffre chiffré (Web Crypto) ; scripts/vault.ts pour la ligne de commande
   songs/notation.ts       notation compacte des morceaux (voir en-tête du fichier)
   songs/instruments.ts    accordages, choix corde/case, tessiture
   songs/alphatex.ts       conversion d'un morceau en alphaTex pour un instrument
