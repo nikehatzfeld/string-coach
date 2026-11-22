@@ -14,6 +14,7 @@ import { ScoreKeeper, type Judgment } from '../game/scoring';
 import { persist, progress, setPracticeActive, todayChallenge } from '../game/store';
 import { prefs, savePrefs } from '../state/prefs';
 import { openMicTest } from './mic-test';
+import { chartFromSong } from '../courses/chords-content';
 import { Fingerboard, suggestedFinger, type BoardNote } from './fingerboard';
 import { ScoreView, type ViewMode } from './score-view';
 import { byId as $, esc } from './dom';
@@ -71,6 +72,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       </div>
       <select id="section" aria-label="Partie à travailler" hidden></select>
       <span id="rangeBox" class="range-box" hidden>mes. <input id="rFrom" type="number" min="1" inputmode="numeric" aria-label="Première mesure" /> à <input id="rTo" type="number" min="1" inputmode="numeric" aria-label="Dernière mesure" /> <button id="rOk" class="primary" title="Travailler ces mesures en boucle">🔁</button></span>
+ ${inst.id === 'guitar' && source.kind === 'library' && chartFromSong(source.song) ? '<button id="chordsBtn" title="Jouer les accords du morceau (grattage, capo, micro)">🎸 Accords</button>' : ''}
       <button id="voiceBtn" aria-pressed="false" title="Commandes vocales (mains libres)">🗣 Voix</button>
       <button id="moreBtn" class="ghost more-btn" aria-expanded="false" aria-label="Plus de réglages">⚙</button>
       <button id="loop" class="only-live more" aria-pressed="false">Boucle</button>
@@ -745,6 +747,11 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     $<HTMLInputElement>('a4').value = String(prefs.a4);
     savePrefs();
     if (trainer) trainer.options.a4 = prefs.a4;
+  });
+  app.querySelector('#chordsBtn')?.addEventListener('click', () => {
+    if (source.kind !== 'library') return;
+    const c = chartFromSong(source.song);
+    if (c) dispatchEvent(new CustomEvent('open-chords', { detail: c }));
   });
   $('micTest').addEventListener('click', () => {
     stopMic();
