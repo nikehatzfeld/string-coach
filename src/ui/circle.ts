@@ -103,8 +103,11 @@ export class NoteCircle {
         this.el('text', { x: dx, y: dy + 4, class: 'nc-degree' }, DEGREES[(pc - tonic + 12) % 12]);
       }
     }
-    this.el('text', { x: 150, y: this.compact ? 158 : 146, class: 'nc-center' }, noteName(tonic, flat));
-    if (this.compact) return;
+    this.el('text', { x: 150, y: this.compact ? 152 : 146, class: 'nc-center' }, noteName(tonic, flat));
+    if (this.compact) {
+      this.el('text', { x: 150, y: 176, class: 'nc-center-sub' }, this.order === 'chromatic' ? 'chromatique' : 'quintes');
+      return;
+    }
     this.el('text', { x: 150, y: 164, class: 'nc-center-sub' }, this.order === 'chromatic' ? 'cercle chromatique' : 'cercle des quintes');
     this.el('text', { x: 150, y: 296, class: 'nc-hint' }, 'clic : chromatique ↔ quintes');
   }

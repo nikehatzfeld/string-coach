@@ -2,6 +2,7 @@ import { STYLE_ORDER, type Song } from './alphatex';
 import { EXERCISES } from './exercises';
 import { CHRISTMAS, CLASSICAL_MORE, FOLK_WORLD, KIDS } from './library-more';
 import PD_LIBRARY from './pd-library.json';
+import { easyVersion } from './simplify';
 
 /**
  * Morceaux du domaine public et exercices, transcrits de mémoire en notation compacte
@@ -289,6 +290,42 @@ const REPLACED_BY_FULL: Record<string, RegExp> = {
 };
 const keepShort = (s: Song) => !REPLACED_BY_FULL[s.id] || !FULL.some((f) => REPLACED_BY_FULL[s.id].test(f.title));
 
-export const LIBRARY: Song[] = [...[...CORE, ...KIDS, ...CLASSICAL_MORE, ...CHRISTMAS, ...FOLK_WORLD].filter(keepShort), ...FULL, ...EXERCISES];
+/** Les plus connus. Ceux marqués « facile » ont aussi une version simplifiée (1 note par temps, 1re position, plus lent). */
+const FAMOUS: [string, boolean][] = [
+  ['pd-canon-in-d-j-pachelbel', true],
+  ['pd-canon-per-3-violini-e-basso-j-pachelbel', true],
+  ['pd-marche-turque-rondo-alla-turca-w-a-mozart', true],
+  ['pd-lettre-a-elise-fur-elise-l-van-beethoven', true],
+  ['pd-eine-kleine-nachtmusik-1st-movement-w-a-mozart', true],
+  ['pd-the-entertainer-s-joplin', true],
+  ['vivaldi-spring-i', true],
+  ['vivaldi-summer-iii', true],
+  ['vivaldi-autumn-i', true],
+  ['vivaldi-winter-i', true],
+  ['vivaldi-winter-ii', true],
+  ['pd-ave-maria-meditation-on-the-first-prelude-in-c-by-j-s-bach-c', true],
+  ['pd-danse-napolitaine-p-i-tchaikovsky', true],
+  ['pd-valse-op-39-n-15-j-brahms', true],
+  ['pd-gavotte-g-b-martini', true],
+  ['pd-menuet-bwv-anh-114-115-116-pour-violons-ou-altos-j-s-bach', false],
+  ['pd-musette-en-re-j-s-bach', false],
+  ['pd-greensleeves-traditionnel', false],
+  ['ode-joie', false],
+  ['largo-nouveau-monde', false],
+  ['jesus-que-ma-joie', false],
+  ['amazing-grace', false],
+  ['la-marseillaise', false],
+];
+
+const BASE: Song[] = [...[...CORE, ...KIDS, ...CLASSICAL_MORE, ...CHRISTMAS, ...FOLK_WORLD].filter(keepShort), ...FULL];
+const famousIds = new Map(FAMOUS);
+const EASY: Song[] = [];
+for (const s of BASE) {
+  if (!famousIds.has(s.id)) continue;
+  s.famous = true;
+  if (famousIds.get(s.id)) EASY.push({ ...easyVersion(s), famous: true });
+}
+
+export const LIBRARY: Song[] = [...BASE, ...EASY, ...EXERCISES];
 
 export const STYLES = STYLE_ORDER.filter((st) => LIBRARY.some((s) => s.style === st));

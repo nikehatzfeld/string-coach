@@ -18,10 +18,12 @@ interface Filters {
   style: string | null;
   level: number | null;
   search: string;
+  /** Seulement les incontournables (et leurs versions faciles). */
+  famous: boolean;
   /** Seulement les morceaux complets. */
   full: boolean;
 }
-const filters: Filters = { style: null, level: null, search: '', full: false };
+const filters: Filters = { style: null, level: null, search: '', full: false, famous: false };
 
 export type OpenFn = (s: Source, mode?: 'live' | 'step' | 'game') => void;
 
@@ -49,6 +51,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
       (!filters.style || s.style === filters.style) &&
       (!filters.level || s.level === filters.level) &&
       (!filters.full || !!s.source) &&
+      (!filters.famous || !!s.famous) &&
       (!filters.search || `${s.title} ${s.composer}`.toLowerCase().includes(filters.search.toLowerCase())),
   );
   const earned = BADGES.filter((b) => progress.badges[b.id]).length;
@@ -111,10 +114,11 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
           <button class="chip" data-style="" aria-pressed="${!filters.style}">Tous</button>
           ${STYLES.map((s) => `<button class="chip" data-style="${esc(s)}" aria-pressed="${filters.style === s}">${STYLE_LOOK[s]?.icon ?? ''} ${esc(s)}</button>`).join('')}
         </div>
-        ${filters.style || filters.level || filters.full || filters.search ? `<div class="filters"><button class="chip reset-filters" data-reset>✕ Tout afficher (${LIBRARY.length} morceaux)</button><span class="muted">Filtres actifs : ${[filters.search && `« ${esc(filters.search)} »`, filters.style, filters.level && LEVEL_LABEL[filters.level], filters.full && 'morceaux complets'].filter(Boolean).join(', ')}</span></div>` : ''}
+        ${filters.style || filters.level || filters.full || filters.famous || filters.search ? `<div class="filters"><button class="chip reset-filters" data-reset>✕ Tout afficher (${LIBRARY.length} morceaux)</button><span class="muted">Filtres actifs : ${[filters.search && `« ${esc(filters.search)} »`, filters.style, filters.level && LEVEL_LABEL[filters.level], filters.full && 'morceaux complets', filters.famous && 'incontournables'].filter(Boolean).join(', ')}</span></div>` : ''}
         <div class="filters chips levels">
           ${[0, 1, 2, 3, 4, 5].map((l) => `<button class="chip" data-level="${l}" aria-pressed="${(filters.level ?? 0) === l}">${l ? LEVEL_LABEL[l] : 'Tous niveaux'}</button>`).join('')}
           <button class="chip" data-full aria-pressed="${filters.full}">📜 Morceaux complets</button>
+          <button class="chip" data-famous aria-pressed="${filters.famous}">⭐ Incontournables + versions faciles</button>
           <span class="count">${songs.length} morceau${songs.length > 1 ? 'x' : ''}</span>
         </div>
         <div class="grid">${songs.map((s) => songCard(s)).join('')}</div>
@@ -165,11 +169,16 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
     filters.style = null;
     filters.level = null;
     filters.full = false;
+    filters.famous = false;
     filters.search = '';
     rerender();
   });
   on(app, '[data-full]', 'click', () => {
     filters.full = !filters.full;
+    rerender();
+  });
+  on(app, '[data-famous]', 'click', () => {
+    filters.famous = !filters.famous;
     rerender();
   });
   on(app, '[data-level]', 'click', (b) => {

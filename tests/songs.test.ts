@@ -75,8 +75,26 @@ describe('bibliothèque', () => {
 describe('Quatre Saisons de Vivaldi', () => {
   it('12 mouvements complets, partie soliste', async () => {
     const { LIBRARY } = await import('../src/songs/library');
-    const v = LIBRARY.filter((s) => s.id.startsWith('vivaldi-'));
+    const v = LIBRARY.filter((s) => s.id.startsWith('vivaldi-') && !s.id.endsWith('~facile'));
     expect(v).toHaveLength(12);
     expect(v.find((s) => s.id === 'vivaldi-spring-i')!.notation).toContain('G#5:8 G#5:8 G#5:8 F#5:16 E5:16 B5:4.');
+  });
+});
+
+describe('versions faciles', () => {
+  it('une note par temps, en 1re position (Sol3–Si5), plus lente', async () => {
+    const { LIBRARY: lib } = await import('../src/songs/library');
+    const easy = lib.filter((s) => s.id.endsWith('~facile'));
+    expect(easy.length).toBeGreaterThanOrEqual(12);
+    for (const e of easy) {
+      const orig = lib.find((s) => s.id === e.id.replace('~facile', ''))!;
+      expect(e.tempo).toBeLessThan(orig.tempo);
+      for (const bar of parseNotation(e.notation))
+        for (const ev of bar) {
+          expect(ev.duration).toBeLessThanOrEqual(4);
+          if (ev.kind === 'note') expect(ev.midi!).toBeGreaterThanOrEqual(55), expect(ev.midi!).toBeLessThanOrEqual(83);
+        }
+    }
+    expect(easy.some((s) => /canon in d/i.test(s.title))).toBe(true);
   });
 });

@@ -84,6 +84,12 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - Les Quatre Saisons de Vivaldi : 12 mouvements, partie soliste (Mutopia, CC BY-SA) via scripts/add_pieces.py.
 - Aquarium (Saint-Saëns) : aucune source libre MIDI/MusicXML trouvée (Mutopia, IMSLP) → via coffre.
 
+## v0.11 (22/11/2026)
+- Doigtés violon : démanché coûteux sauf pendant une corde à vide, 4e doigt en extension (4↑), moins d'allers-retours (Marche turque : 1re position jusqu'à la partie en La).
+- Changement de position annoncé sur la note (ou le silence) qui précède.
+- Versions faciles automatiques (src/songs/simplify.ts) : 1 note par temps, 1re position, tempo −25 % ; filtre « ⭐ Incontournables + versions faciles » (liste FAMOUS dans library.ts).
+- Cercle compact : indique « chromatique » / « quintes ».
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |

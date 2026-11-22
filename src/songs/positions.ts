@@ -26,7 +26,8 @@ export function fingerFor(fret: number, position: number, inst: Instrument): num
     const base = VIOLIN_BASE[position];
     if (base === undefined) return null;
     const o = fret - base;
-    if (o < -1 || o > 5) return null;
+    // o = 6 : 4e doigt en extension (ex. Do sur la corde de Mi en 1re position).
+    if (o < -1 || o > 6) return null;
     if (o <= 0) return 1;
     if (o <= 2) return 2;
     if (o <= 4) return 3;
@@ -56,8 +57,12 @@ function placeIn(midi: number, position: number, inst: Instrument): Placed | nul
 }
 
 /** Coûts : rester en position basse et changer le moins possible. */
-const HEIGHT_COST = 6;
-const SHIFT_COST = 9;
+// Rester en 2e ou 3e position coûte peu ; un démanché coûte cher (et deux de suite encore plus).
+const HEIGHT_COST = 1.5;
+const SHIFT_COST = 14;
+/** 4e doigt en extension : utile pour éviter un aller-retour de position pour une seule note. */
+const EXTENSION_COST = 4;
+const OPEN_SHIFT_COST = 2;
 const SHIFT_DISTANCE_COST = 0.5;
 const SLIDE_COST = 5;
 
@@ -90,7 +95,10 @@ function placeMelodyAuto(midis: number[], inst: Instrument): Placed[] {
   const positions = positionsOf(inst);
   const INF = Number.POSITIVE_INFINITY;
   const options = midis.map((m) => positions.map((p) => placeIn(m, p, inst)));
-  let cost = positions.map((p, j) => (options[0]?.[j] ? (options[0][j]!.finger === 0 ? 0 : (p - 1) * HEIGHT_COST) : INF));
+  let cost = positions.map((p, j) => {
+    const o = options[0]?.[j];
+    return o ? (o.finger === 0 ? 0 : (p - 1) * HEIGHT_COST + (isExtension(o, inst) ? EXTENSION_COST : 0)) : INF;
+  });
   if (!midis.length) return [];
   // Note injouable partout (trop aiguë) : on l'autorise dans toutes les positions.
   const allowAll = (i: number) => options[i].every((o) => !o);
@@ -107,14 +115,16 @@ function placeMelodyAuto(midis: number[], inst: Instrument): Placed[] {
         from.push(0);
         return;
       }
-      const noteCost = opt?.finger === 0 ? 0 : (q - 1) * HEIGHT_COST;
+      const noteCost = opt?.finger === 0 ? 0 : (q - 1) * HEIGHT_COST + (opt && isExtension(opt, inst) ? EXTENSION_COST : 0);
       let best = INF;
       let arg = 0;
       positions.forEach((p, k) => {
         const prev = options[i - 1][k];
         // Même doigt sur une autre case juste après : glissement à éviter.
         const slide = prev && opt && prev.finger > 0 && prev.finger === opt.finger && prev.fret !== opt.fret ? SLIDE_COST : 0;
-        const c = cost[k] + slide + (p === q ? 0 : SHIFT_COST + Math.abs(q - p) * SHIFT_DISTANCE_COST);
+        // Pendant une corde à vide, la main se déplace librement : démanché presque gratuit.
+        const shift = prev?.finger === 0 ? OPEN_SHIFT_COST : SHIFT_COST;
+        const c = cost[k] + slide + (p === q ? 0 : shift + Math.abs(q - p) * SHIFT_DISTANCE_COST);
         if (c < best) {
           best = c;
           arg = k;
@@ -185,6 +195,10 @@ export function solfege(midi: number, spelledFlat: boolean): string {
   return (spelledFlat ? NAMES_FLAT : NAMES)[((midi % 12) + 12) % 12];
 }
 
+function isExtension(p: Placed, inst: Instrument): boolean {
+  return inst.id === 'violin' && p.finger === 4 && p.fret - (VIOLIN_BASE[p.position] ?? 0) === 6;
+}
+
 /** Variante du doigt au violon : « bas » (un demi-ton plus bas que d'habitude) ou « haut ». */
 export function fingerVariant(p: Placed, inst: Instrument): '' | 'bas' | 'haut' {
   if (inst.id !== 'violin' || p.finger === 0) return '';
@@ -192,7 +206,7 @@ export function fingerVariant(p: Placed, inst: Instrument): '' | 'bas' | 'haut' 
   if (base === undefined) return '';
   const o = p.fret - base;
   if (o === -1 || o === 1) return 'bas';
-  if (o === 4) return 'haut';
+  if (o === 4 || o === 6) return 'haut';
   return '';
 }
 

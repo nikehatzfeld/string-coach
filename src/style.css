@@ -458,6 +458,7 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .note-circle.compact .nc-label { font-size: 14px; }
 .note-circle.compact .nc-degree { font-size: 12px; }
 .note-circle.compact .nc-center { font-size: 30px; }
+.note-circle.compact .nc-center-sub { font-size: 13px; display: inline; }
 @media (max-width: 760px) { .circle-box { width: 150px; } .nc-hint, .nc-center-sub { display: none; } }
 
 /* Atelier d'improvisation et leçons */

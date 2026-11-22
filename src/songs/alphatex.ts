@@ -1,5 +1,5 @@
 import type { Instrument } from './instruments';
-import { bestOctaveShift, placeMelody, positionLabel, solfege } from './positions';
+import { bestOctaveShift, placeMelody, positionLabel, solfege, type Placed } from './positions';
 import { backingKindFor, backingTracks, hasChords, type BackingKind } from './backing';
 import { parseNotation, type ParsedBar } from './notation';
 
@@ -38,6 +38,8 @@ export interface Song {
   /** Exercice joué sur une seule corde (1 = la plus aiguë) ou dans une position imposée. */
   string?: number;
   position?: number;
+  /** Incontournable (filtre « ⭐ Incontournables » de l'accueil). */
+  famous?: boolean;
   /** Morceau complet importé d'une partition libre (source et licence à créditer). */
   source?: { url: string; license: string };
 }
@@ -138,40 +140,54 @@ export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: b
   const placed = placeMelody(sounding.map((e) => fold((e.midi as number) + shift + (shiftByEvent.get(e) ?? 0))), inst, { onlyString: song.string, position: song.position });
   const usesShifts = placed.some((p) => p.position !== 1);
 
+  // 1re passe : effets de chaque événement. Un changement de position est annoncé sur l'événement
+  // précédent (note, silence ou liaison) pour être lu avant de jouer la note d'arrivée.
+  type Tok = { ev: (typeof bars)[number][number]; effects: string[]; p?: Placed; string: number };
+  const toks: Tok[][] = [];
+  const flatToks: Tok[] = [];
   let k = 0;
   let lastString = 1;
   let lastPosition = 1;
   const names: string[] = [];
-  const body = bars
-    .map((bar) =>
-      bar
-        .map((ev) => {
+  for (const bar of bars) {
+    const row: Tok[] = [];
+    for (const ev of bar) {
+      const effects: string[] = [];
+      if (ev.dotted) effects.push('d');
+      if (ev.chord) effects.push(`ch "${escape(ev.chord)}"`);
+      const tok: Tok = { ev, effects, string: lastString };
+      if (ev.kind === 'tie') names.push('_');
+      if (ev.kind === 'note') {
+        const p = placed[k];
+        const first = k === 0;
+        k++;
+        // Une corde à vide ne change pas la position de la main.
+        if (p.finger !== 0 && (p.position !== lastPosition || (first && usesShifts))) {
+          const prev = flatToks[flatToks.length - 1];
+          if (first || !prev) effects.push(`txt "${positionLabel(p.position, inst)}"`);
+          else prev.effects.push(`txt "→ ${positionLabel(p.position, inst)}"`);
+          lastPosition = p.position;
+        }
+        lastString = p.string;
+        tok.p = p;
+        tok.string = p.string;
+        names.push(solfege(p.midi, !!ev.flat));
+      }
+      row.push(tok);
+      flatToks.push(tok);
+    }
+    toks.push(row);
+  }
+  const body = toks
+    .map((row) =>
+      row
+        .map(({ ev, effects, p, string }) => {
           const dur = DUR_TEX[ev.duration];
-          const effects: string[] = [];
-          if (ev.dotted) effects.push('d');
-          if (ev.chord) effects.push(`ch "${escape(ev.chord)}"`);
-          if (ev.kind === 'rest') {
-            const fx = effects.length ? `{${effects.join(' ')}}` : '';
-            return `r.${dur}${fx}`;
-          }
-          if (ev.kind === 'tie') {
-            names.push('_');
-            const fx = effects.length ? `{${effects.join(' ')}}` : '';
-            return `-.${lastString}.${dur}${fx}`;
-          }
-          const p = placed[k];
-          const first = k === 0;
-          k++;
-          // Changement de position (une corde à vide ne change pas la position de la main).
-          if (p.finger !== 0 && (p.position !== lastPosition || (first && usesShifts))) {
-            effects.push(`txt "${first ? '' : '→ '}${positionLabel(p.position, inst)}"`);
-            lastPosition = p.position;
-          }
-          lastString = p.string;
-          names.push(solfege(p.midi, !!ev.flat));
           const fx = effects.length ? `{${effects.join(' ')}}` : '';
-          const lf = p.finger > 0 ? `{lf ${p.finger + 1}}` : '';
-          return `${p.fret}.${p.string}${lf}.${dur}${fx}`;
+          if (ev.kind === 'rest') return `r.${dur}${fx}`;
+          if (ev.kind === 'tie') return `-.${string}.${dur}${fx}`;
+          const lf = p!.finger > 0 ? `{lf ${p!.finger + 1}}` : '';
+          return `${p!.fret}.${p!.string}${lf}.${dur}${fx}`;
         })
         .join(' '),
     )
