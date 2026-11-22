@@ -1,6 +1,7 @@
 import { STYLE_ORDER, type Song } from './alphatex';
 import { EXERCISES } from './exercises';
 import { CHRISTMAS, CLASSICAL_MORE, FOLK_WORLD, KIDS } from './library-more';
+import PD_LIBRARY from './pd-library.json';
 
 /**
  * Morceaux du domaine public et exercices, transcrits de mémoire en notation compacte
@@ -274,6 +275,20 @@ const CORE: Song[] = [
   },
 ];
 
-export const LIBRARY: Song[] = [...CORE, ...KIDS, ...CLASSICAL_MORE, ...CHRISTMAS, ...FOLK_WORLD, ...EXERCISES];
+/** Morceaux complets (Mutopia Project, domaine public / Creative Commons), voir docs/credits-mutopia.md. */
+const FULL: Song[] = (PD_LIBRARY as unknown as Song[]).map((s) => ({ ...s, style: (STYLE_ORDER as readonly string[]).includes(s.style) ? s.style : 'Classique' }));
+
+/** Versions courtes écrites de mémoire, remplacées par une version complète. */
+const REPLACED_BY_FULL: Record<string, RegExp> = {
+  'marche-turque': /marche turque/i,
+  'lettre-a-elise': /lettre à élise/i,
+  'canon-pachelbel': /canon in d/i,
+  'menuet-sol-bach': /menuet bwv anh 114/i,
+  'petite-musique-de-nuit': /kleine nachtmusik/i,
+  'berceuse-brahms': /berceuse|wiegenlied|cancion de cuna/i,
+};
+const keepShort = (s: Song) => !REPLACED_BY_FULL[s.id] || !FULL.some((f) => REPLACED_BY_FULL[s.id].test(f.title));
+
+export const LIBRARY: Song[] = [...[...CORE, ...KIDS, ...CLASSICAL_MORE, ...CHRISTMAS, ...FOLK_WORLD].filter(keepShort), ...FULL, ...EXERCISES];
 
 export const STYLES = STYLE_ORDER.filter((st) => LIBRARY.some((s) => s.style === st));

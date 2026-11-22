@@ -11,6 +11,30 @@ export interface SongRecord {
   stars: Stars;
   plays: number;
   lastPlayed: number;
+  /** Passages propres consécutifs (justesse ≥ 95 %) au tempo courant. */
+  cleanStreak?: number;
+  /** Étape de révision espacée (0 = pas encore maîtrisé) et prochain jour de révision. */
+  reviewStage?: number;
+  nextReview?: string;
+}
+
+/** Règle de montée de tempo (sources : voir docs/pedagogie.md) : +4 BPM après 3 passages propres, −2 après un passage raté. */
+export const TEMPO_RULE = { cleanAccuracy: 0.95, failAccuracy: 0.8, cleanNeeded: 3, up: 4, down: 2 };
+/** Révisions espacées : J+1, J+3, J+7, J+14, puis tous les 30 jours. */
+export const REVIEW_INTERVALS = [1, 3, 7, 14, 30];
+
+export function addDays(day: string, n: number): string {
+  const [y, m, d] = day.split('-').map(Number);
+  return dayKey(new Date(y, m - 1, d + n));
+}
+
+/** Morceaux à réviser aujourd'hui (les plus en retard d'abord). */
+export function dueReviews(p: Progress, now = new Date()): string[] {
+  const today = dayKey(now);
+  return Object.entries(p.songs)
+    .filter(([, r]) => r.nextReview && r.nextReview <= today)
+    .sort((a, b) => (a[1].nextReview! < b[1].nextReview! ? -1 : 1))
+    .map(([id]) => id);
 }
 
 export interface Progress {
@@ -22,6 +46,17 @@ export interface Progress {
   badges: Record<string, number>;
   totals: { notes: number; perfect: number; songsFinished: number; minutes: number; bestCombo: number };
   challengeDoneDay: string | null;
+  /** Parcours suivi par instrument : semaine courante, durée de séance, éléments faits par jour. */
+  course?: Record<string, CourseState>;
+}
+
+export interface CourseState {
+  week: number;
+  length: 15 | 20 | 30;
+  /** jour → clés des éléments faits */
+  done: Record<string, string[]>;
+  /** Jours où la séance complète a été faite. */
+  sessions: string[];
 }
 
 export interface SongMeta {
@@ -44,6 +79,8 @@ export interface ResultInput {
 }
 
 export interface ResultOutcome {
+  /** Changement de tempo conseillé (BPM) selon la règle de progression, 0 si aucun. */
+  tempoChange: number;
   xpGained: number;
   newBest: boolean;
   newBadges: Badge[];
@@ -204,11 +241,41 @@ export function recordResult(p: Progress, r: ResultInput, challenge: Challenge |
   const levelBefore = levelInfo(p.xp).level;
   const prev = p.songs[r.songId];
   const newBest = !prev || r.score > prev.best;
+  // Montée de tempo et révisions espacées.
+  let cleanStreak = prev?.cleanStreak ?? 0;
+  let tempoChange = 0;
+  if (r.accuracy >= TEMPO_RULE.cleanAccuracy) {
+    cleanStreak++;
+    if (cleanStreak >= TEMPO_RULE.cleanNeeded) {
+      tempoChange = TEMPO_RULE.up;
+      cleanStreak = 0;
+    }
+  } else if (r.accuracy < TEMPO_RULE.failAccuracy) {
+    tempoChange = -TEMPO_RULE.down;
+    cleanStreak = 0;
+  }
+  const today = dayKey(now);
+  let reviewStage = prev?.reviewStage ?? 0;
+  let nextReview = prev?.nextReview;
+  if (r.stars === 3) {
+    // Maîtrisé : on avance d'une étape (au plus une fois par jour).
+    if (!nextReview || nextReview <= today) {
+      reviewStage = Math.min(reviewStage + 1, REVIEW_INTERVALS.length);
+      nextReview = addDays(today, REVIEW_INTERVALS[reviewStage - 1]);
+    }
+  } else if (r.stars <= 1 && reviewStage > 0) {
+    // Oublié : on revient au début du cycle.
+    reviewStage = 1;
+    nextReview = addDays(today, 1);
+  }
   p.songs[r.songId] = {
     best: Math.max(prev?.best ?? 0, r.score),
     stars: Math.max(prev?.stars ?? 0, r.stars) as Stars,
     plays: (prev?.plays ?? 0) + 1,
     lastPlayed: now.getTime(),
+    cleanStreak,
+    reviewStage,
+    nextReview,
   };
   p.totals.notes += Math.round(r.notes * r.accuracy);
   p.totals.perfect += r.perfect;
@@ -217,7 +284,6 @@ export function recordResult(p: Progress, r: ResultInput, challenge: Challenge |
   touchStreak(p, now);
 
   let xp = Math.round(r.notes * r.accuracy * 2) + r.stars * 20 + (newBest && prev ? 10 : 0);
-  const today = dayKey(now);
   const challengeCompleted =
     !!challenge && challenge.day === today && challenge.songId === r.songId && r.stars >= challenge.stars && p.challengeDoneDay !== today;
   if (challengeCompleted) {
@@ -226,7 +292,7 @@ export function recordResult(p: Progress, r: ResultInput, challenge: Challenge |
   }
   p.xp += xp;
   const newBadges = checkBadges(p, r, now.getTime());
-  return { xpGained: xp, newBest, newBadges, challengeCompleted, levelBefore, levelAfter: levelInfo(p.xp).level };
+  return { tempoChange, xpGained: xp, newBest, newBadges, challengeCompleted, levelBefore, levelAfter: levelInfo(p.xp).level };
 }
 
 // ---------- Sauvegarde ----------

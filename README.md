@@ -33,7 +33,10 @@ Le micro nécessite HTTPS ou `localhost`. Pour tester sur mobile : `npm run buil
 | Pas à pas | La note suivante est indiquée (nom, corde, position) ; l'app n'avance que si la note jouée au micro est juste et tenue 80 ms (tolérance réglable ±10 à ±60 cents) |
 | Manche | Schéma du violon ou de la guitare (bouton « Manche ») : note en cours avec le doigt conseillé, note suivante en pointillés ; positions calculées sur la vraie géométrie de la corde, comme les LEDs du manche DIY |
 | Violon | Tablature en demi-tons par corde, repères type « rubans » de 1re position sur le manche |
-| Bibliothèque | 98 morceaux du domaine public : 22 classiques, 10 chants de Noël, comptines, folk du monde, gospel, blues, et 38 gammes et arpèges générés automatiquement ; filtres par style et par niveau ; armures à la clé |
+| Morceaux complets | 212 morceaux entiers (Marche turque, Lettre à Élise, menuets de Bach, Canon de Pachelbel, Soldier's Joy, cantiques, Noël…) extraits des partitions libres du Mutopia Project, niveaux débutant à intermédiaire : [crédits et licences](docs/credits-mutopia.md) |
+| Cours | Parcours de 12 semaines violon et guitare, séance du jour de 15/20/30 min (échauffement, technique, morceau, jeu, révision), minuteur pour les exercices hors app : [sources pédagogiques](docs/pedagogie.md) |
+| Entraînement | Tempo +4 BPM après 3 passages propres, −2 après un passage raté ; révisions espacées (J+1, J+3, J+7, J+14, puis mensuelles) |
+| Bibliothèque | 92 morceaux courts du domaine public : 22 classiques, 10 chants de Noël, comptines, folk du monde, gospel, blues, et 38 gammes et arpèges générés automatiquement ; filtres par style et par niveau ; armures à la clé |
 | Pop | [Liste de 106 chansons faciles](docs/pop-a-importer.md) (violon et guitare) avec où trouver les fichiers à importer |
 | Import | Guitar Pro (.gp, .gp3-5, .gpx), MusicXML (.xml, .musicxml, .mxl), alphaTex ; stockés sur l'appareil (IndexedDB) |
 | TV / télécommande | Navigation aux flèches, Entrée, Espace = lecture, Échap/Retour = bibliothèque, N/P = note suivante/précédente |
@@ -53,6 +56,9 @@ src/
   songs/alphatex.ts       conversion d'un morceau en alphaTex pour un instrument
   songs/library.ts        morceaux de la bibliothèque (+ library-more.ts)
   songs/exercises.ts      gammes, arpèges et exercices générés
+  songs/pd-library.json   morceaux complets (scripts/build_pd_library.py)
+  courses/plans.ts        parcours de 12 semaines
+  ui/course.ts            page Cours
   practice/pitch-detector.ts  micro → hauteur (pitchy, algorithme McLeod)
   practice/step-trainer.ts    logique du pas à pas (testée sans micro)
   ui/score-view.ts        enveloppe alphaTab (rendu + lecture)

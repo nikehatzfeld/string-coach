@@ -60,10 +60,8 @@ describe('bibliothèque', () => {
           const played = staff.bars.flatMap((b) => b.voices[0].beats).flatMap((b) => b.notes).map((n) => n.realValue);
           const expected = parseNotation(song.notation).flat().filter((e) => e.kind !== 'rest').map((e) => e.midi!);
           expect(played.length).toBe(expected.length);
-          // Même mélodie, éventuellement transposée d'octaves entières.
-          const shift = played[0] - expected[0];
-          expect(Math.abs(shift % 12)).toBe(0);
-          played.forEach((m, i) => expect(m).toBe(expected[i] + shift));
+          // Même mélodie, transposée d'octaves entières (notes hors tessiture ramenées d'une octave).
+          played.forEach((m, i) => expect(((m - expected[i]) % 12 + 12) % 12).toBe(0));
           for (const m of played) {
             expect(m).toBeGreaterThanOrEqual(low);
             expect(m).toBeLessThanOrEqual(high + 12);

@@ -1,4 +1,4 @@
-import { BADGES, currentStreak, dailyMinutes, levelInfo, levelTitle } from '../game/progress';
+import { BADGES, currentStreak, dailyMinutes, dueReviews, levelInfo, levelTitle } from '../game/progress';
 import { persist, progress, todayChallenge } from '../game/store';
 import { INSTRUMENTS, type InstrumentId } from '../songs/instruments';
 import { LIBRARY, STYLES } from '../songs/library';
@@ -17,12 +17,14 @@ interface Filters {
   style: string | null;
   level: number | null;
   search: string;
+  /** Seulement les morceaux complets. */
+  full: boolean;
 }
-const filters: Filters = { style: null, level: null, search: '' };
+const filters: Filters = { style: null, level: null, search: '', full: false };
 
 export type OpenFn = (s: Source, mode?: 'live' | 'step' | 'game') => void;
 
-export async function renderHome(app: HTMLElement, open: OpenFn): Promise<void> {
+export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () => void = () => {}): Promise<void> {
   const [imports, vault] = await Promise.all([listImports(), loadVault()]);
   const lvl = levelInfo(progress.xp);
   const streak = currentStreak(progress);
@@ -37,10 +39,15 @@ export async function renderHome(app: HTMLElement, open: OpenFn): Promise<void> 
     .filter((s): s is Song => !!s)
     .slice(0, 4);
 
+  const reviews = dueReviews(progress)
+    .map((id) => LIBRARY.find((s) => s.id === id))
+    .filter((s): s is Song => !!s)
+    .slice(0, 8);
   const songs = LIBRARY.filter(
     (s) =>
       (!filters.style || s.style === filters.style) &&
       (!filters.level || s.level === filters.level) &&
+      (!filters.full || !!s.source) &&
       (!filters.search || `${s.title} ${s.composer}`.toLowerCase().includes(filters.search.toLowerCase())),
   );
   const earned = BADGES.filter((b) => progress.badges[b.id]).length;
@@ -48,6 +55,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn): Promise<void> 
   app.innerHTML = `
     <header class="top home-top">
       <div class="brand"><span class="logo">🎻</span><h1>String Coach</h1></div>
+      <button id="toCourse" class="primary">🎓 Cours</button>
       <div class="seg" role="group" aria-label="Instrument">
         ${(['violin', 'guitar'] as InstrumentId[]).map((id) => `<button data-inst="${id}" aria-pressed="${prefs.instrument === id}">${id === 'violin' ? '🎻' : '🎸'} ${INSTRUMENTS[id].label}</button>`).join('')}
       </div>
@@ -87,6 +95,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn): Promise<void> 
         </div>
       </section>
 
+      ${reviews.length ? `<section><h2>🔁 À réviser aujourd'hui <span class="muted">révisions espacées : J+1, J+3, J+7, J+14, puis tous les mois</span></h2><div class="grid">${reviews.map((s) => songCard(s)).join('')}</div></section>` : ''}
       ${recent.length ? `<section><h2>Reprendre</h2><div class="grid">${recent.map((s) => songCard(s)).join('')}</div></section>` : ''}
 
       <section>
@@ -100,6 +109,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn): Promise<void> 
         </div>
         <div class="filters chips levels">
           ${[0, 1, 2, 3].map((l) => `<button class="chip" data-level="${l}" aria-pressed="${(filters.level ?? 0) === l}">${l ? LEVEL_LABEL[l] : 'Tous niveaux'}</button>`).join('')}
+          <button class="chip" data-full aria-pressed="${filters.full}">📜 Morceaux complets</button>
           <span class="count">${songs.length} morceau${songs.length > 1 ? 'x' : ''}</span>
         </div>
         <div class="grid">${songs.map((s) => songCard(s)).join('')}</div>
@@ -126,7 +136,8 @@ export async function renderHome(app: HTMLElement, open: OpenFn): Promise<void> 
       </section>
     </main>`;
 
-  const rerender = () => renderHome(app, open);
+  const rerender = () => renderHome(app, open, onCourse);
+  app.querySelector('#toCourse')!.addEventListener('click', onCourse);
 
   on(app, '[data-inst]', 'click', (b) => {
     prefs.instrument = b.dataset.inst as InstrumentId;
@@ -140,6 +151,10 @@ export async function renderHome(app: HTMLElement, open: OpenFn): Promise<void> 
   });
   on(app, '[data-style]', 'click', (b) => {
     filters.style = b.dataset.style || null;
+    rerender();
+  });
+  on(app, '[data-full]', 'click', () => {
+    filters.full = !filters.full;
     rerender();
   });
   on(app, '[data-level]', 'click', (b) => {
@@ -202,6 +217,7 @@ function songCard(s: Song): string {
     <span class="style">${esc(s.style)}</span>
     <strong>${esc(s.title)}</strong>
     <span class="meta">${esc(s.composer)}</span>
+    ${s.source ? '<span class="full-badge">Complet</span>' : ''}
     <span class="card-foot"><span class="lvl l${s.level}">${LEVEL_LABEL[s.level]}</span>${rec ? starsHtml(rec.stars) : '<span class="new">Nouveau</span>'}</span>
   </button>`;
 }

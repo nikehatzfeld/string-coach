@@ -41,6 +41,15 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - Limite : la plupart des pièces classiques restent des thèmes (au-delà, transcription de mémoire non fiable) ; versions complètes via imports / coffre
 - 382 tests verts
 
+## v0.6 (22/11/2026)
+
+- 212 morceaux complets importés du Mutopia Project (domaine public, CC BY, CC BY-SA), mélodie extraite automatiquement : `scripts/build_pd_library.py` (catalogues violon, flûte, flûte à bec, voix populaire + pièces de piano célèbres), `scripts/import_pd.py` (MIDI → notation, levée lue dans la source LilyPond, accords déduits, niveau calculé)
+- Cours : parcours 12 semaines violon et guitare (src/courses/plans.ts), séance du jour, d'après docs/pedagogie.md
+- Mécaniques : tempo +4/−2 BPM, révisions espacées, section « À réviser aujourd'hui »
+- Notes hors tessiture ramenées d'une octave
+- 1 212 tests verts
+- À faire : comptes Supabase (en attente de l'URL et de la clé anon), polyphonie guitare (études Carulli/Sor en accords)
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |
@@ -53,6 +62,7 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 | Mot de passe du coffre | Jamais dans le code, 12 caractères minimum | Repo public ; un code court se casse en quelques minutes |
 | Coffre | Fichiers chiffrés publiés avec le site (choix de l'utilisateur) | Pas de clé GitHub à gérer ; les fichiers chiffrés restent publics mais illisibles sans mot de passe |
 | Pop | Uniquement par import local ou coffre chiffré, jamais en clair dans le repo | Repo et site publics : pas de musique sous droits dans la bibliothèque intégrée |
+| Morceaux complets | Mutopia Project, conversion automatique, crédits obligatoires | Seule source massive de partitions libres lisibles par machine ; licences compatibles |
 | thesession.org | Non utilisé | Leur licence interdit tout traitement des données par un modèle d'IA |
 | Manche | Sillet à gauche, corde aiguë en haut, géométrie réelle | Même orientation que la tablature, mêmes positions que les futures LEDs |
 

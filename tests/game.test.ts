@@ -85,3 +85,24 @@ describe('score', () => {
     expect(starsFor(0.5)).toBe(0);
   });
 });
+
+describe('mécaniques d’entraînement', () => {
+  it('+4 BPM après 3 passages propres, −2 après un passage raté', () => {
+    const p = emptyProgress();
+    const clean = res({ accuracy: 0.97, stars: 3 });
+    expect(recordResult(p, clean, null).tempoChange).toBe(0);
+    expect(recordResult(p, clean, null).tempoChange).toBe(0);
+    expect(recordResult(p, clean, null).tempoChange).toBe(4);
+    expect(recordResult(p, res({ accuracy: 0.7, stars: 0 }), null).tempoChange).toBe(-2);
+  });
+  it('révisions espacées J+1, J+3…', async () => {
+    const { dueReviews } = await import('../src/game/progress');
+    const p = emptyProgress();
+    recordResult(p, res({ stars: 3, accuracy: 1 }), null, d('2026-11-01'));
+    expect(p.songs['ode-joie'].nextReview).toBe('2026-11-02');
+    expect(dueReviews(p, d('2026-11-01'))).toEqual([]);
+    expect(dueReviews(p, d('2026-11-02'))).toEqual(['ode-joie']);
+    recordResult(p, res({ stars: 3, accuracy: 1 }), null, d('2026-11-02'));
+    expect(p.songs['ode-joie'].nextReview).toBe('2026-11-05');
+  });
+});

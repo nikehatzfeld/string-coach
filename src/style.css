@@ -300,3 +300,27 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .bpm input[type='number'] { width: 4.2rem; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 0.45em 0.4em; min-height: 40px; text-align: center; font-weight: 700; font-size: 1rem; }
 .bpm button { min-width: 40px; padding: 0.4em 0.6em; }
 @media (max-width: 640px) { .bpm input[type='range'] { display: none; } }
+
+.full-badge { position: absolute; top: 0.7rem; right: 0.7rem; font-size: 0.68rem; font-weight: 700; padding: 0.15em 0.55em; border-radius: 999px; background: rgba(79, 209, 165, 0.18); color: var(--ok); border: 1px solid rgba(79, 209, 165, 0.35); }
+.credit { color: var(--muted); font-size: 0.8rem; padding: 0.3rem 1.25rem 1rem; }
+
+.tempo-note { font-weight: 700; color: var(--accent); margin: 0.6rem 0 0; }
+
+/* Cours */
+.course-head { display: flex; flex-direction: column; gap: 0.8rem; }
+.weeks { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.weeks .chip.past { color: var(--ok); }
+.stage-tile strong { font-size: 1.15rem; }
+.session-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 0.8rem; }
+.session-bar div { height: 100%; background: linear-gradient(90deg, var(--violet), var(--ok)); transition: width 0.5s; }
+.session { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.6rem; }
+.sitem { display: flex; align-items: center; gap: 0.8rem; background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.8rem 1rem; }
+.sitem.done { opacity: 0.65; }
+.sitem .sbody { flex: 1; display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
+.sblock { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); }
+.sblock.b-warmup { color: #6ea8ff; } .sblock.b-technique { color: var(--violet); } .sblock.b-piece { color: var(--accent); } .sblock.b-rhythm { color: var(--ok); } .sblock.b-review { color: #f472b6; }
+.check-btn { width: 40px; height: 40px; min-height: 40px; border-radius: 50%; padding: 0; font-weight: 800; }
+.check-btn[aria-pressed='true'] { background: var(--ok); color: #06231a; }
+.timer-btn { font-variant-numeric: tabular-nums; }
+.stages .tile.current { border-color: rgba(255,181,71,0.5); background: rgba(255,181,71,0.08); }
+@media (max-width: 640px) { .sitem { flex-wrap: wrap; } .sitem .sbody { flex-basis: calc(100% - 60px); } }

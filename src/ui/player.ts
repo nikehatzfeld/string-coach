@@ -119,6 +119,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     </section>
     <div id="scroll" class="score-scroll no-game"><div id="score"></div></div>
     <p id="status" class="status">Chargement…</p>
+    ${source.kind === 'library' && source.song.source ? `<p class="credit">Partition : <a href="${esc(source.song.source.url)}" target="_blank" rel="noopener">Mutopia Project</a> · ${esc(source.song.source.license)} · mélodie extraite automatiquement</p>` : ''}
     </div>`;
 
   const root = app.querySelector<HTMLElement>('.player')!;
@@ -684,7 +685,21 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       todayChallenge(),
     );
     persist();
+    // Règle de progression du tempo (seulement sur le morceau entier ou la partie travaillée, pas en mode assisté).
+    let tempoNote: string | undefined;
+    if (outcome.tempoChange && !assisted) {
+      const before = Number(bpmInput.value);
+      setBpm(before + outcome.tempoChange);
+      tempoNote =
+        outcome.tempoChange > 0
+          ? `🚀 3 passages propres : tempo monté à ${bpmInput.value} BPM (+${outcome.tempoChange})`
+          : `🐢 Tempo baissé à ${bpmInput.value} BPM (−${-outcome.tempoChange}) pour consolider`;
+    } else {
+      const streak = progress.songs[section ? `${songId}#${sections.indexOf(section) + 1}` : songId]?.cleanStreak ?? 0;
+      if (streak > 0) tempoNote = `Passages propres : ${streak} / 3 avant de monter le tempo`;
+    }
     const act = await showResults({
+      tempoNote,
       title: section ? `${title} · ${section.name}` : title,
       mode: m,
       score: k.score,

@@ -9,6 +9,7 @@ export const STYLE_ORDER = [
   'Classique',
   'Noël',
   'Folk & monde',
+  'Chants & cantiques',
   'Gospel & jazz',
   'Blues',
   'Fêtes',
@@ -34,6 +35,8 @@ export interface Song {
   backing?: BackingKind | false;
   /** Parties pour apprendre par morceaux : [nom, 1re mesure, dernière mesure] (1 = première mesure). */
   sections?: [string, number, number][];
+  /** Morceau complet importé d'une partition libre (source et licence à créditer). */
+  source?: { url: string; license: string };
 }
 
 export interface Section {
@@ -100,7 +103,15 @@ export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: b
   // Doigtés et positions calculés sur toute la mélodie (les liaisons gardent la note précédente).
   const events = bars.flat();
   const sounding = events.filter((e) => e.kind === 'note');
-  const placed = placeMelody(sounding.map((e) => (e.midi as number) + shift), inst);
+  // Notes hors tessiture (au-delà de la 17e case, ou sous la corde la plus grave) : ramenées d'une octave.
+  const ceiling = Math.max(...inst.tuning) + (inst.id === 'violin' ? 17 : 17);
+  const floor = Math.min(...inst.tuning);
+  const fold = (m: number) => {
+    while (m > ceiling) m -= 12;
+    while (m < floor) m += 12;
+    return m;
+  };
+  const placed = placeMelody(sounding.map((e) => fold((e.midi as number) + shift)), inst);
   const usesShifts = placed.some((p) => p.position !== 1);
 
   let k = 0;

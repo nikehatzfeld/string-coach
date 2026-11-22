@@ -24,6 +24,7 @@ export const STYLE_LOOK: Record<string, { icon: string; hue: number }> = {
   Noël: { icon: '🎄', hue: 140 },
   'Folk & monde': { icon: '🌍', hue: 30 },
   'Gospel & jazz': { icon: '🎺', hue: 45 },
+  'Chants & cantiques': { icon: '🎶', hue: 195 },
   Blues: { icon: '🎸', hue: 205 },
   Fêtes: { icon: '🎉', hue: 300 },
   'Gammes & arpèges': { icon: '🎼', hue: 180 },

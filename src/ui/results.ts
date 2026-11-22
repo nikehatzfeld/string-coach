@@ -11,6 +11,8 @@ export interface ResultView {
   counts: { perfect: number; good: number; ok: number; miss: number };
   outcome: ResultOutcome;
   xpTotal: number;
+  /** Message sur le tempo (montée ou baisse automatique). */
+  tempoNote?: string;
 }
 
 /** Fenêtre de fin de morceau. Renvoie l'action choisie. */
@@ -32,6 +34,7 @@ export function showResults(r: ResultView): Promise<'replay' | 'library'> {
         <div><strong>${Math.round(r.accuracy * 100)} %</strong><span>justesse</span></div>
         <div><strong>${r.maxCombo}</strong><span>meilleur combo</span></div>
       </div>
+      ${r.tempoNote ? `<p class="tempo-note">${esc(r.tempoNote)}</p>` : ''}
       <p class="res-detail">${r.counts.perfect} parfaites · ${r.counts.good + r.counts.ok} correctes · ${r.counts.miss} ratées</p>
       <div class="xp-box">
         <div class="xp-line"><span>+${r.outcome.xpGained} XP${r.outcome.challengeCompleted ? ' (dont 100 du défi du jour 🎯)' : ''}</span><span>Niveau ${lvl.level}</span></div>
