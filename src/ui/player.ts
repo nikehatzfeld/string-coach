@@ -94,6 +94,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       <label class="only-step more">Tolérance <input id="tol" type="range" min="10" max="60" step="5" value="${prefs.tolerance}" /> <output id="tolOut">±${prefs.tolerance} cents</output></label>
       <button id="restart" class="only-step more">↻ Recommencer</button>
       <button id="micTest" class="more">🎤 Test micro</button>
+      <label class="no-live more" title="Fréquence du La : 440 Hz standard, ou celle de ton accordage">La = <input id="a4" type="number" min="415" max="466" step="0.5" value="${prefs.a4}" /> Hz</label>
       <label class="no-live more">🎤 <select id="micSel" aria-label="Micro"><option value="">Micro par défaut</option></select></label>
     </div>
     <div id="micHelp" class="mic-help" role="status" hidden></div>
@@ -491,7 +492,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     if (lvl) lvl.style.width = `${Math.round(r.level * 100)}%`;
     if (!heard) return;
     if (r.rawFreq > 0) {
-      const m = freqToMidiFloat(r.rawFreq);
+      const m = freqToMidiFloat(r.rawFreq, prefs.a4);
       const near = Math.round(m);
       const c = Math.round((m - near) * 100);
       heard.textContent = `j'entends ${solfege(near, false)}${Math.floor(near / 12) - 1} ${c >= 0 ? '+' : ''}${c}`;
@@ -579,7 +580,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       targets.push({ midi: Math.max(...beat.notes.map((n) => n.realValue)), beatIndex: i });
       beatsByTarget.push(beat);
     });
-    trainer = new StepTrainer(targets, { toleranceCents: prefs.tolerance });
+    trainer = new StepTrainer(targets, { toleranceCents: prefs.tolerance, a4: prefs.a4 });
     keeper = new ScoreKeeper(targets.length);
     hadError = false;
     errorSince = null;
@@ -722,6 +723,13 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     savePrefs();
     if (mic) $('micBtn').click(); // arrête : le prochain ▶ utilisera le nouveau micro
   });
+  $('a4').addEventListener('change', () => {
+    const v = Number($<HTMLInputElement>('a4').value);
+    prefs.a4 = v >= 415 && v <= 466 ? v : 440;
+    $<HTMLInputElement>('a4').value = String(prefs.a4);
+    savePrefs();
+    if (trainer) trainer.options.a4 = prefs.a4;
+  });
   $('micTest').addEventListener('click', () => {
     stopMic();
     openMicTest();
@@ -814,7 +822,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     updateGameHud();
     const ok = await startMic((r) => {
       if (!gameRunning || !judge || !highway) return;
-      const heard = r.freq ? freqToMidiFloat(r.freq) : null;
+      const heard = r.freq ? freqToMidiFloat(r.freq, prefs.a4) : null;
       for (const ev of judge.update(heard, highway.tick, highway.speed, r.rms)) {
         gameKeeper.register(ev.judgment);
         highway.feedback(ev.note, ev.judgment);
@@ -1028,7 +1036,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   });
   let lastHeard: number | null = null;
   const circleHeard = (freq: number | null) => {
-    const pc = freq ? ((Math.round(freqToMidiFloat(freq)) % 12) + 12) % 12 : null;
+    const pc = freq ? ((Math.round(freqToMidiFloat(freq, prefs.a4)) % 12) + 12) % 12 : null;
     if (pc !== lastHeard) {
       lastHeard = pc;
       circle.set({ heard: pc });

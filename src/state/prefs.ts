@@ -33,6 +33,8 @@ export interface Prefs {
   latencyMs: number;
   /** Micro choisi (deviceId), vide = micro par défaut. */
   micId: string;
+  /** La de référence en Hz (440 standard ; calibrable sur l'accordage de l'instrument). */
+  a4: number;
 }
 
 const KEY = 'string-coach:prefs';
@@ -54,6 +56,7 @@ const DEFAULTS: Prefs = {
   backing: true,
   latencyMs: 80,
   micId: '',
+  a4: 440,
 };
 
 function load(): Prefs {

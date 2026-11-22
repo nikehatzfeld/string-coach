@@ -505,3 +505,7 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .mt-row { margin-bottom: 0.4rem; }
 .mt-ask { font-size: 1.25rem; margin: 0.6rem 0 0; text-align: center; }
 .mt-info { font-size: 0.72rem; white-space: pre-wrap; word-break: break-all; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 8px; max-height: 9rem; overflow: auto; }
+.mt-cal { margin: 0.6rem 0; padding: 0.6rem 0.8rem; border-radius: 12px; background: rgba(255,181,71,0.12); border: 1px solid rgba(255,181,71,0.4); font-size: 0.92rem; }
+.mt-cal.ok { background: rgba(79,209,165,0.12); border-color: rgba(79,209,165,0.4); }
+.mt-cal p { margin: 0.3rem 0; }
+#a4 { width: 4.5em; }

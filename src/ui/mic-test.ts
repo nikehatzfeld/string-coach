@@ -19,6 +19,8 @@ export function openMicTest(): void {
   let holdSince = 0;
   let results: StringResult[] = [];
   const stats = { frames: 0, loud: 0, pitched: 0, maxRms: 0, maxClarity: 0, heard: [] as string[] };
+  /** Écart de chaque corde reconnue par rapport au La 440, en cents. */
+  let offsets: number[] = [];
 
   const back = document.createElement('div');
   back.className = 'modal-backdrop';
@@ -49,6 +51,7 @@ export function openMicTest(): void {
         <div class="mt-strings">${ss
           .map((s, k) => `<button data-k="${k}" class="${results[k] === 'ok' ? 'ok' : results[k] === 'skip' ? 'skip' : ''} ${mic && k === current ? 'cur' : ''}" ${mic ? '' : 'disabled'}>${s.name}<small>${s.octave}</small></button>`)
           .join('')}</div>
+        ${mic ? '' : calibrationHtml()}
         ${mic ? '' : results.length ? `<pre class="mt-info">${esc(report())}</pre>` : ''}
         <div class="modal-actions">
           ${mic ? '<button id="mtSkip">Passer cette corde</button><button id="mtStop">⏹ Arrêter</button>' : `<button id="mtStart" class="primary">▶ Démarrer</button>${results.length ? '<button id="mtCopy">📋 Copier le rapport</button>' : ''}`}
@@ -105,7 +108,7 @@ export function openMicTest(): void {
       verdict.textContent = r.level > 0.2 ? '⚠ du son, mais aucune note' : r.rms < 0.0006 ? '🔈 rien n’arrive du micro' : 'j’écoute…';
       return;
     }
-    const m = freqToMidiFloat(f);
+    const m = freqToMidiFloat(f, prefs.a4);
     const near = Math.round(m);
     const c = Math.round((m - near) * 100);
     noteEl.textContent = `${solfege(near, false)}${Math.floor(near / 12) - 1} ${c >= 0 ? '+' : ''}${c}`;
@@ -123,6 +126,7 @@ export function openMicTest(): void {
       if (!holdSince) holdSince = r.time;
       if (r.time - holdSince > 300) {
         results[current] = 'ok';
+        offsets.push(Math.round((((((freqToMidiFloat(f) - target.midi) % 12) + 18) % 12) - 6) * 100));
         stats.heard.push(`${target.name}: ${noteEl.textContent}`);
         back.querySelector(`[data-k="${current}"]`)?.classList.add('ok');
         next();
@@ -137,6 +141,7 @@ export function openMicTest(): void {
     results = strings().map(() => 'todo');
     current = 0;
     Object.assign(stats, { frames: 0, loud: 0, pitched: 0, maxRms: 0, maxClarity: 0, heard: [] });
+    offsets = [];
     const m = new MicPitchDetector({ deviceId: prefs.micId });
     try {
       await m.start(onReading);
@@ -164,12 +169,35 @@ export function openMicTest(): void {
     render();
   }
 
+  /** Accordage moyen mesuré (Hz du La) et proposition de l'utiliser. */
+  function measuredA4(): number | null {
+    if (offsets.length < 2) return null;
+    const sorted = [...offsets].sort((a, b) => a - b);
+    const med = sorted[Math.floor(sorted.length / 2)];
+    return Math.round(440 * Math.pow(2, med / 1200) * 2) / 2;
+  }
+  function calibrationHtml(): string {
+    const a = measuredA4();
+    if (a === null) return '';
+    const cents = Math.round(1200 * Math.log2(a / 440));
+    const diff = Math.abs(1200 * Math.log2(a / prefs.a4));
+    const state = `Réglage actuel de l'app : La = ${prefs.a4} Hz.`;
+    if (Math.abs(cents) < 8 && Math.abs(prefs.a4 - 440) < 1) return `<p class="mt-cal ok">🎯 Ton instrument est bien accordé (La ≈ 440 Hz).</p>`;
+    if (diff < 8) return `<p class="mt-cal ok">🎯 L'app est calée sur ton accordage. ${state}</p>`;
+    return `<div class="mt-cal">
+      <p>🎻 Ton instrument est accordé <strong>${Math.abs(cents)} cents ${cents < 0 ? 'trop bas' : 'trop haut'}</strong> (La ≈ ${a} Hz). Le pas à pas risque de refuser des notes justes.</p>
+      <p>Soit tu l'accordes (tourne les chevilles/tendeurs jusqu'à lire +0), soit l'app s'aligne sur lui :</p>
+      <div class="modal-actions"><button id="mtUseA4" class="primary">Utiliser mon accordage (La = ${a} Hz)</button>${prefs.a4 !== 440 ? '<button id="mtReset440">Revenir à 440 Hz</button>' : ''}</div>
+      <p class="muted">${state}</p></div>`;
+  }
+
   function report(): string {
     const ss = strings();
     return [
       `Instrument : ${INSTRUMENTS[inst].label}`,
       `Cordes reconnues : ${ss.filter((_, k) => results[k] === 'ok').map((s) => s.name).join(', ') || 'aucune'} / ${ss.length}`,
       `Notes entendues : ${stats.heard.join(' · ') || '—'}`,
+      `Écarts / La 440 : ${offsets.join(', ') || '—'} cents · La de l'app : ${prefs.a4} Hz`,
       `Micro : ${lastInfo.label || '?'} · filtres : ${lastInfo.filtered.join(', ') || 'aucun'}`,
       `Audio : ${lastDetails?.sampleRate ?? '?'} Hz · ${JSON.stringify(lastDetails?.settings ?? {})}`,
       `Mesures : ${stats.frames} · avec son ${stats.loud} · avec note ${stats.pitched} · niveau max ${stats.maxRms.toFixed(4)} · netteté max ${stats.maxClarity.toFixed(2)}`,
@@ -216,6 +244,16 @@ export function openMicTest(): void {
       (e.target as HTMLElement).textContent = '✔ Copié';
     });
     q('mtClose')?.addEventListener('click', close);
+    q('mtUseA4')?.addEventListener('click', () => {
+      prefs.a4 = measuredA4() ?? 440;
+      savePrefs();
+      render();
+    });
+    q('mtReset440')?.addEventListener('click', () => {
+      prefs.a4 = 440;
+      savePrefs();
+      render();
+    });
   }
 
   back.addEventListener('click', (e) => e.target === back && !mic && close());

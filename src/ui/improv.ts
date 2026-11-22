@@ -144,7 +144,7 @@ export function renderImprov(app: HTMLElement, back: () => void, preset: ImprovP
     mic = new MicPitchDetector({ deviceId: prefs.micId });
     try {
       await mic.start((r) => {
-        const pc = r.freq ? ((Math.round(freqToMidiFloat(r.freq)) % 12) + 12) % 12 : null;
+        const pc = r.freq ? ((Math.round(freqToMidiFloat(r.freq, prefs.a4)) % 12) + 12) % 12 : null;
         if (pc !== lastPc) {
           lastPc = pc;
           since = r.time;
