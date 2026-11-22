@@ -13,6 +13,7 @@ import type { Exercise } from '../songs/exercise-bank';
 import { ScoreKeeper, type Judgment } from '../game/scoring';
 import { persist, progress, setPracticeActive, todayChallenge } from '../game/store';
 import { prefs, savePrefs } from '../state/prefs';
+import { openMicTest } from './mic-test';
 import { Fingerboard, suggestedFinger, type BoardNote } from './fingerboard';
 import { ScoreView, type ViewMode } from './score-view';
 import { byId as $, esc } from './dom';
@@ -92,6 +93,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       <button id="ksBtn" class="more" aria-pressed="${prefs.keySignatures}" title="Armure à la clé, ou dièses et bémols écrits devant chaque note">Armure</button>
       <label class="only-step more">Tolérance <input id="tol" type="range" min="10" max="60" step="5" value="${prefs.tolerance}" /> <output id="tolOut">±${prefs.tolerance} cents</output></label>
       <button id="restart" class="only-step more">↻ Recommencer</button>
+      <button id="micTest" class="more">🎤 Test micro</button>
       <label class="no-live more">🎤 <select id="micSel" aria-label="Micro"><option value="">Micro par défaut</option></select></label>
     </div>
     <div id="micHelp" class="mic-help" role="status" hidden></div>
@@ -720,6 +722,10 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     savePrefs();
     if (mic) $('micBtn').click(); // arrête : le prochain ▶ utilisera le nouveau micro
   });
+  $('micTest').addEventListener('click', () => {
+    stopMic();
+    openMicTest();
+  });
   const tol = $<HTMLInputElement>('tol');
   tol.addEventListener('input', () => {
     prefs.tolerance = Number(tol.value);
@@ -1184,7 +1190,7 @@ function noPitchHelp(info: { label: string; filtered: string[] }): string {
     <br>• Mac : Centre de contrôle › <strong>Mode micro › Standard</strong> (pas « Isolement de la voix »).
     <br>• Windows : Paramètres › Son › micro › désactive <strong>Effets audio / Effets de studio / Voice Focus</strong>.
     <br>• Casque Bluetooth / AirPods : utilise plutôt le micro de l'ordinateur.
-    <br>• Coupe 🗣 Voix pour tester.`;
+    <br>• Coupe 🗣 Voix pour tester. Puis ⚙ › <strong>🎤 Test micro</strong>.`;
 }
 
 function micErrorText(err: unknown): string {

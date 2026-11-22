@@ -1,3 +1,4 @@
+import { openMicTest } from './mic-test';
 import { BADGES, currentStreak, dailyMinutes, dueReviews, levelInfo, levelTitle } from '../game/progress';
 import { persist, progress, todayChallenge } from '../game/store';
 import { INSTRUMENTS, type InstrumentId } from '../songs/instruments';
@@ -62,6 +63,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
       <button id="toCourse" class="primary">🎓 Cours</button>
       <button id="toExercises">💪 Exercices</button>
       <button id="toHarmony">🎼 Harmonie</button>
+      <button id="toMicTest" title="Vérifier que le micro entend ton instrument">🎤 Test micro</button>
       <button id="account" class="account" hidden></button>
       <div class="seg" role="group" aria-label="Instrument">
         ${(['violin', 'guitar'] as InstrumentId[]).map((id) => `<button data-inst="${id}" aria-pressed="${prefs.instrument === id}">${id === 'violin' ? '🎻' : '🎸'} ${INSTRUMENTS[id].label}</button>`).join('')}
@@ -147,6 +149,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
 
   const rerender = () => renderHome(app, open, onCourse, onExercises, onHarmony);
   app.querySelector('#toHarmony')!.addEventListener('click', onHarmony);
+  app.querySelector('#toMicTest')!.addEventListener('click', () => openMicTest());
   app.querySelector('#toExercises')!.addEventListener('click', onExercises);
   app.querySelector('#toCourse')!.addEventListener('click', onCourse);
   bindAccount(app.querySelector<HTMLButtonElement>('#account')!);

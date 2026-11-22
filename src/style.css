@@ -487,3 +487,13 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .range-box { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.9rem; }
 .range-box[hidden] { display: none; }
 .range-box input { width: 4.2em; min-height: 38px; }
+.mic-test { text-align: left; }
+.mic-test label { display: flex; gap: 0.5rem; align-items: center; }
+.mic-test select { flex: 1; }
+.mic-meter.big { width: 100%; height: 14px; margin: 0.8rem 0; }
+.mt-note { font-size: 1.6rem; margin: 0.3rem 0; }
+.mt-note span { font-size: 0.95rem; }
+.mt-strings { display: flex; gap: 0.5rem; margin: 0.6rem 0; }
+.mt-strings span { flex: 1; text-align: center; padding: 0.5rem; border-radius: 10px; border: 1px solid var(--border); font-weight: 700; }
+.mt-strings span.ok { background: var(--ok); color: #0b1a14; }
+.mt-info { font-size: 0.72rem; white-space: pre-wrap; word-break: break-all; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 8px; max-height: 9rem; overflow: auto; }

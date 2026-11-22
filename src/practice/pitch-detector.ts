@@ -28,7 +28,7 @@ export interface MicOptions {
  * Seuils volontairement bas : sur téléphone et tablette, sans contrôle automatique du gain,
  * le micro capte beaucoup plus faiblement qu'un ordinateur. Le bruit de fond est mesuré en continu.
  */
-const DEFAULTS: MicOptions = { minClarity: 0.7, minRms: 0.0015, noiseFactor: 2.5, minFreq: 70, maxFreq: 2200 };
+const DEFAULTS: MicOptions = { minClarity: 0.7, minRms: 0.0006, noiseFactor: 2, minFreq: 70, maxFreq: 2200 };
 
 /** Écoute le micro et renvoie la hauteur jouée environ 60 fois par seconde. */
 export class MicPitchDetector {
@@ -52,6 +52,12 @@ export class MicPitchDetector {
     if (st.voiceIsolation) filtered.push('isolement de la voix');
     if (st.echoCancellation) filtered.push('annulation d’écho');
     return { label: t?.label ?? '', filtered };
+  }
+
+  /** Réglages réels de la piste micro et fréquence d'échantillonnage (rapport de diagnostic). */
+  get details(): { settings: Record<string, unknown>; sampleRate: number; state: string } {
+    const t = this.stream?.getAudioTracks()[0];
+    return { settings: (t?.getSettings() ?? {}) as Record<string, unknown>, sampleRate: this.ctx?.sampleRate ?? 0, state: this.ctx?.state ?? 'fermé' };
   }
 
   get running(): boolean {
