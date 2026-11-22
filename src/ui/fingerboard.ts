@@ -33,6 +33,13 @@ export interface BoardNote extends Fingering {
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
+/** Une couleur par corde (de la plus aiguë à la plus grave), reprise partout : cordes, notes, étiquettes. */
+export const STRING_COLORS: Record<string, string[]> = {
+  violin: ['#5aa9ff', '#4fd1a5', '#ffb547', '#ff6b6b'], // Mi bleu, La vert, Ré orange, Sol rouge
+  guitar: ['#b48cff', '#5aa9ff', '#4fd1a5', '#ffd166', '#ffa04d', '#ff6b6b'],
+};
+export const stringColor = (instId: string, string: number): string => (STRING_COLORS[instId] ?? STRING_COLORS.guitar)[string - 1] ?? '#ffb547';
+
 /**
  * Schéma du manche, vu de dessus : sillet à gauche, corde la plus aiguë en haut
  * (même orientation que la tablature). Les positions des notes suivent la vraie
@@ -56,7 +63,7 @@ export class Fingerboard {
     host: HTMLElement,
     private readonly inst: Instrument,
   ) {
-    this.gap = inst.tuning.length === 4 ? 30 : 24;
+    this.gap = inst.tuning.length === 4 ? 46 : 34;
     this.height = this.top * 2 + this.gap * (inst.tuning.length - 1) + 16;
     this.svg = document.createElementNS(SVG_NS, 'svg');
     this.svg.setAttribute('viewBox', `0 0 ${this.width} ${this.height}`);
@@ -81,7 +88,7 @@ export class Fingerboard {
 
   private neededMax(): number {
     const needed = Math.max(0, ...[...this.current, ...this.next, ...this.later].map((n) => n.fret));
-    const base = this.compact ? 7 : 12;
+    const base = this.compact ? 7 : this.inst.id === 'violin' ? 9 : 12;
     return needed > 12 ? 24 : needed > base ? 12 : base;
   }
 
@@ -164,8 +171,10 @@ export class Fingerboard {
     // Cordes
     for (let s = 1; s <= n; s++) {
       const y = this.y(s);
-      this.el('line', { x1: this.left, x2: xEnd, y1: y, y2: y, class: 'fb-string', 'stroke-width': 1 + (s - 1) * 0.45 });
-      this.el('text', { x: this.left - 48, y: y + 5, class: 'fb-label' }, this.inst.stringNamesFr[s - 1]);
+      const col = stringColor(this.inst.id, s);
+      this.el('line', { x1: this.left, x2: this.width, y1: y, y2: y, class: 'fb-string', stroke: col, 'stroke-opacity': 0.55, 'stroke-width': 1.5 + (s - 1) * 0.6 });
+      this.el('rect', { x: 4, y: y - 13, width: this.left - 62, height: 26, rx: 8, class: 'fb-chip', fill: col });
+      this.el('text', { x: 4 + (this.left - 62) / 2, y: y + 6, class: 'fb-label' }, this.inst.stringNamesFr[s - 1]);
     }
 
     // Notes
@@ -175,12 +184,45 @@ export class Fingerboard {
       const txt = cur.position === 1 ? '1re position' : `${cur.position}e position`;
       this.el('text', { x: this.width - this.right, y: 14, class: 'fb-pos' }, `${txt}  ·  ↓ doigt bas  ↑ doigt haut`);
     }
+    // Longueur de corde qui vibre : du doigt (ou du sillet) jusqu'au chevalet, hors de l'image à droite.
+    for (const note of this.next) this.drawVibe(note, false);
+    for (const note of this.current) this.drawVibe(note, true);
     for (const note of this.later) this.drawNote(note, 'later');
     for (const note of this.next) this.drawNote(note, 'next');
     for (const note of this.current) this.drawNote(note, 'current');
 
     const desc = this.current.map((c) => `${midiName(c.midi)} corde ${this.inst.stringNamesFr[c.string - 1]} ${c.fret === 0 ? 'à vide' : `position ${c.fret}`}`);
     this.svg.setAttribute('aria-label', desc.length ? `Manche : ${desc.join(', ')}` : 'Manche');
+  }
+
+  private drawVibe(note: BoardNote, current: boolean): void {
+    const y = this.y(note.string);
+    const x0 = note.fret === 0 ? this.left : this.x(note.fret);
+    const col = stringColor(this.inst.id, note.string);
+    if (!current) {
+      this.el('line', { x1: x0, x2: this.width, y1: y, y2: y, stroke: col, 'stroke-width': 3, 'stroke-dasharray': '3 6', 'stroke-opacity': 0.6 });
+      return;
+    }
+    // Ondulation : un fuseau qui bat (plus large au milieu), comme une vraie corde.
+    const x1 = this.width;
+    const mid = (x0 + x1) / 2;
+    const a = 7;
+    const g = this.el('g', { class: 'fb-vibe' });
+    for (const sgn of [1, -1]) {
+      const p = document.createElementNS(SVG_NS, 'path');
+      p.setAttribute('d', `M${x0} ${y} Q${mid} ${y + sgn * a * 2} ${x1} ${y}`);
+      p.setAttribute('stroke', col);
+      p.setAttribute('class', 'fb-vibe-path');
+      g.appendChild(p);
+    }
+    const glow = document.createElementNS(SVG_NS, 'line');
+    for (const [k, v] of Object.entries({ x1: x0, x2: x1, y1: y, y2: y, stroke: col, class: 'fb-vibe-core' })) glow.setAttribute(k, String(v));
+    g.appendChild(glow);
+    if (note.fret === 0) {
+      // Corde à vide : toute la corde vibre, étiquette nette au sillet.
+      this.el('rect', { x: this.left - 52, y: y - 15, width: 46, height: 30, rx: 15, class: 'fb-open-chip', fill: col });
+      this.el('text', { x: this.left - 29, y: y + 6, class: 'fb-open-text' }, 'à vide');
+    }
   }
 
   private drawNote(note: BoardNote, kind: 'current' | 'next' | 'later'): void {
@@ -190,11 +232,15 @@ export class Fingerboard {
     const label = note.label ?? (finger === null ? String(note.fret) : String(finger));
     const name = note.name ?? midiName(note.midi);
     if (kind === 'current') {
-      this.el('circle', { cx, cy, r: 14, class: 'fb-dot' });
+      if (note.fret === 0) {
+        this.el('text', { x: this.left + 40, y: cy - 16, class: 'fb-note' }, name);
+        return;
+      }
+      this.el('circle', { cx, cy, r: 18, class: 'fb-dot', fill: stringColor(this.inst.id, note.string) });
       this.el('text', { x: cx, y: cy + 5, class: 'fb-finger' }, label);
       this.el('text', { x: cx, y: cy - 19, class: 'fb-note' }, name);
     } else if (kind === 'next') {
-      this.el('circle', { cx, cy, r: 12, class: 'fb-next' });
+      this.el('circle', { cx, cy, r: 15, class: 'fb-next' });
       this.el('text', { x: cx, y: cy + 5, class: 'fb-next-finger' }, label);
       this.el('text', { x: cx, y: cy + 27, class: 'fb-next-note' }, `puis ${name}`);
     } else {
