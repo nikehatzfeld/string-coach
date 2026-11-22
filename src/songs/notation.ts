@@ -91,6 +91,11 @@ export function midiToFreq(midi: number, a4 = 440): number {
   return a4 * Math.pow(2, (midi - 69) / 12);
 }
 
+/** Écart en cents ramené à l'octave la plus proche (−600 à +600). */
+export function centsToNearestOctave(cents: number): number {
+  return ((((cents + 600) % 1200) + 1200) % 1200) - 600;
+}
+
 export function freqToMidiFloat(freq: number, a4 = 440): number {
   return 69 + 12 * Math.log2(freq / a4);
 }

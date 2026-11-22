@@ -50,6 +50,14 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - 1 212 tests verts
 - À faire : comptes Supabase (en attente de l'URL et de la clé anon), polyphonie guitare (études Carulli/Sor en accords)
 
+## v0.7 (22/11/2026)
+
+- Micro : seuils adaptés aux téléphones (bruit de fond mesuré, clarté 0,78), contexte audio créé pendant le clic et relancé au besoin, réglages de secours, tolérance aux erreurs d'octave, nouvelle attaque détectée par baisse de volume (changement d'archet)
+- Indicateur micro (niveau + « j'entends … ») en pas à pas et en jeu
+- Lecteur réorganisé : partition et manche prioritaires, réglages secondaires sous ⚙, pas à pas sur une ligne, manche avec note actuelle + 2 suivantes
+- Mode jeu : audio débloqué pendant le clic « Jouer » (Safari / Android)
+- Non vérifiable ici : comportement sur l'appareil réel de l'utilisateur
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |

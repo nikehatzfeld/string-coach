@@ -43,3 +43,25 @@ describe('StepTrainer', () => {
     expect(t.current?.midi).toBe(60);
   });
 });
+
+describe('tolérance d’octave', () => {
+  it('accepte la bonne note détectée une octave plus haut ou plus bas', () => {
+    const t = new StepTrainer([{ midi: 69, beatIndex: 0 }]);
+    t.update(880, 0);
+    expect(t.update(880, 100).verdict).toBe('validated');
+    const strict = new StepTrainer([{ midi: 69, beatIndex: 0 }], { anyOctave: false });
+    expect(strict.update(880, 0).verdict).toBe('too-high');
+  });
+});
+
+describe('nouvelle attaque par baisse de volume', () => {
+  it('deux notes identiques liées par un changement d’archet', () => {
+    const t = new StepTrainer([{ midi: 69, beatIndex: 0 }, { midi: 69, beatIndex: 1 }]);
+    t.update(440, 0, 0.2);
+    expect(t.update(440, 100, 0.2).verdict).toBe('validated');
+    expect(t.update(440, 150, 0.2).verdict).toBe('listening');
+    t.update(440, 170, 0.08); // creux du changement d'archet, sans silence
+    t.update(440, 200, 0.2);
+    expect(t.update(440, 300, 0.2).verdict).toBe('validated');
+  });
+});

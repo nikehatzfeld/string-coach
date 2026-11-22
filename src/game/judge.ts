@@ -1,4 +1,5 @@
 import type { Judgment } from './scoring';
+import { centsToNearestOctave } from '../songs/notation';
 
 export interface GameNote {
   /** Début en ticks MIDI (960 par noire). */
@@ -50,6 +51,7 @@ export class GameJudge {
   private candidate: { note: GameNote; frames: number; firstTick: number } | null = null;
   private lastHitMidi: number | null = null;
   private needRelease = false;
+  private releasePeak = 0;
 
   constructor(
     readonly notes: GameNote[],
@@ -75,7 +77,11 @@ export class GameJudge {
    * @param tick position de lecture courante
    * @param ticksPerMs vitesse de lecture
    */
-  update(heardMidi: number | null, tick: number, ticksPerMs: number): JudgeEvent[] {
+  update(heardMidi: number | null, tick: number, ticksPerMs: number, rms?: number): JudgeEvent[] {
+    if (this.needRelease && rms !== undefined) {
+      this.releasePeak = Math.max(this.releasePeak, rms);
+      if (rms < this.releasePeak * 0.55) this.needRelease = false;
+    }
     const events: JudgeEvent[] = [];
     const o = this.opts;
     const eff = tick - o.latencyMs * ticksPerMs;
@@ -104,7 +110,7 @@ export class GameJudge {
       const n = this.notes[i];
       if (n.tick - early > eff) break;
       if (n.judged) continue;
-      if (Math.abs((heardMidi - n.midi) * 100) <= o.toleranceCents) {
+      if (Math.abs(centsToNearestOctave((heardMidi - n.midi) * 100)) <= o.toleranceCents) {
         if (this.needRelease && n.midi === this.lastHitMidi) continue;
         match = n;
         break;
@@ -124,6 +130,7 @@ export class GameJudge {
     events.push({ note: match, judgment, deltaMs });
     this.lastHitMidi = match.midi;
     this.needRelease = true;
+    this.releasePeak = 0;
     this.candidate = null;
     return events;
   }

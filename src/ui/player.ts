@@ -4,7 +4,7 @@ import { sectionsFor, songToAlphaTex, type Section, type Song } from '../songs/a
 import { fingerNote, INSTRUMENTS } from '../songs/instruments';
 import { freqToMidiFloat, midiName } from '../songs/notation';
 import { solfege } from '../songs/positions';
-import { MicPitchDetector } from '../practice/pitch-detector';
+import { MicPitchDetector, type PitchReading } from '../practice/pitch-detector';
 import { StepTrainer, type StepTarget, type TrainerUpdate } from '../practice/step-trainer';
 import { GameJudge, type GameNote } from '../game/judge';
 import { Highway } from '../game/highway';
@@ -64,41 +64,41 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         <input id="bpmRange" type="range" min="30" max="240" step="1" aria-label="Tempo" />
         <button id="bpmReset" class="ghost" title="Tempo d'origine">↺</button>
       </div>
-      <button id="loop" class="only-live" aria-pressed="false">Boucle</button>
-      <button id="metro" class="only-live" aria-pressed="false">Métronome</button>
-      <button id="countin" class="only-live" aria-pressed="false">Décompte</button>
-      <button id="backing" aria-pressed="${prefs.backing}" hidden title="Fond musical : accords, basse et batterie">🎶 Accompagnement</button>
-      <select id="viewMode" class="no-game" aria-label="Affichage">
+      <select id="section" aria-label="Partie à travailler" hidden></select>
+      <button id="moreBtn" class="ghost more-btn" aria-expanded="false" aria-label="Plus de réglages">⚙</button>
+      <button id="loop" class="only-live more" aria-pressed="false">Boucle</button>
+      <button id="metro" class="only-live more" aria-pressed="false">Métronome</button>
+      <button id="countin" class="only-live more" aria-pressed="false">Décompte</button>
+      <button id="backing" class="more" aria-pressed="${prefs.backing}" hidden title="Fond musical : accords, basse et batterie">🎶 Accompagnement</button>
+      <select id="viewMode" class="no-game more" aria-label="Affichage">
         <option value="score">${inst.id === 'violin' ? 'Partition + doigtés' : 'Partition'}</option>
         <option value="score-tab">Partition + tablature${inst.id === 'violin' ? ' (demi-tons)' : ''}</option>
         <option value="tab">Tablature${inst.id === 'violin' ? ' (demi-tons)' : ''}</option>
       </select>
-      <select id="section" aria-label="Partie à travailler" hidden></select>
-      <select id="track" aria-label="Piste" hidden></select>
-      <button id="neckBtn" class="no-game" aria-pressed="${prefs.showNeck}">Manche</button>
-      <button id="zoomOut" class="no-game" aria-label="Dézoomer">A−</button>
-      <button id="zoomIn" class="no-game" aria-label="Zoomer">A+</button>
+      <select id="track" class="more" aria-label="Piste" hidden></select>
+      <button id="neckBtn" class="no-game more" aria-pressed="${prefs.showNeck}">Manche</button>
+      <button id="zoomOut" class="no-game more" aria-label="Dézoomer">A−</button>
+      <button id="zoomIn" class="no-game more" aria-label="Zoomer">A+</button>
+      <label class="only-step more">Tolérance <input id="tol" type="range" min="10" max="60" step="5" value="${prefs.tolerance}" /> <output id="tolOut">±${prefs.tolerance} cents</output></label>
+      <button id="restart" class="only-step more">↻ Recommencer</button>
     </div>
     <section id="neck" class="neck no-game" ${prefs.showNeck ? '' : 'hidden'}></section>
     <section id="step" class="step only-step">
       <div class="target">
-        <span class="label">Note à jouer</span>
         <strong id="tNote">–</strong>
         <span id="tPos" class="pos"></span>
       </div>
       <div class="tuner" aria-live="polite">
-        <div class="hud-mini"><span id="sScore">0 pt</span><span id="sCombo"></span><span id="progress"></span></div>
-        <div class="scale"><span>−50</span><span>0</span><span>+50</span></div>
         <div class="bar"><div class="zone"></div><div id="needle" class="needle" hidden></div></div>
-        <span id="verdict" class="verdict">Active le micro pour commencer</span>
+        <div class="tuner-line"><span id="verdict" class="verdict">Active le micro</span><span id="progress" class="muted"></span><span id="sCombo"></span><span id="sScore" class="muted">0 pt</span></div>
       </div>
       <div class="step-actions">
-        <button id="micBtn" class="primary">🎤 Activer le micro</button>
-        <button id="hear">🔊 Écouter la note</button>
-        <button id="prev">◀</button>
-        <button id="skip">Passer ▶</button>
-        <button id="restart">↻ Recommencer</button>
-        <label>Tolérance <input id="tol" type="range" min="10" max="60" step="5" value="${prefs.tolerance}" /> <output id="tolOut">±${prefs.tolerance} cents</output></label>
+        <button id="micBtn" class="primary">🎤 Micro</button>
+        <div class="mic-meter" title="Niveau du micro"><span class="lvl" id="sLvl"></span></div>
+        <span id="sHeard" class="heard muted">—</span>
+        <button id="hear" aria-label="Écouter la note">🔊</button>
+        <button id="prev" aria-label="Note précédente">◀</button>
+        <button id="skip" aria-label="Passer la note">▶</button>
       </div>
     </section>
     <section id="game" class="game only-game">
@@ -113,6 +113,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         <button id="gStart" class="primary big">▶ Jouer</button>
         <button id="gStop" hidden>■ Arrêter</button>
         <button id="gGuide" aria-pressed="${prefs.guide}" title="Joue la mélodie pendant que tu joues. Coupe-le avec des haut-parleurs : le micro l'entendrait.">🎵 Guide audio</button>
+        <div class="mic-meter" title="Niveau du micro"><span class="lvl" id="gLvl"></span></div>
+        <span id="gHeard" class="heard muted">—</span>
         <label title="Retard du micro à compenser">Latence <input id="gLat" type="range" min="0" max="250" step="10" value="${prefs.latencyMs}" /> <output id="gLatOut">${prefs.latencyMs} ms</output></label>
       </div>
       <p class="hint game-hint">🎧 Avec un casque, garde le guide audio. Avec des haut-parleurs, coupe-le : le micro l'entendrait.</p>
@@ -268,6 +270,12 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   $('zoomIn').addEventListener('click', () => v.setZoom((zoom = Math.min(2.5, zoom + 0.15))));
   $('zoomOut').addEventListener('click', () => v.setZoom((zoom = Math.max(0.6, zoom - 0.15))));
   $('back').addEventListener('click', () => exit());
+  const toolbar = app.querySelector<HTMLElement>('.toolbar')!;
+  $('moreBtn').addEventListener('click', () => {
+    const open = !toolbar.classList.contains('open');
+    toolbar.classList.toggle('open', open);
+    $('moreBtn').setAttribute('aria-expanded', String(open));
+  });
 
   // ---------- Doigtés et manche ----------
   function beatFingerings(beat: alphaTab.model.Beat | undefined): BoardNote[] {
@@ -325,7 +333,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   api.playedBeatChanged.on((beat) => {
     if (mode !== 'live') return;
     const named = (b: alphaTab.model.Beat | undefined) => (b ? beatFingerings(b).map((f) => ({ ...f, name: beatName(b, f.midi) })) : []);
-    board.show(named(beat), named(nextSounding(beat)));
+    const n1 = nextSounding(beat);
+    board.show(named(beat), named(n1), named(n1 ? nextSounding(n1) : undefined));
   });
   api.playerStateChanged.on((e) => {
     if (e.stopped && mode === 'live') board.show([]);
@@ -346,11 +355,29 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   }
   app.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode as Mode)));
 
-  async function startMic(onReading: (freq: number | null, time: number) => void): Promise<boolean> {
+  /** Indicateur micro : niveau et note entendue. */
+  function showMic(r: PitchReading) {
+    const lvl = document.getElementById(mode === 'game' ? 'gLvl' : 'sLvl');
+    const heard = document.getElementById(mode === 'game' ? 'gHeard' : 'sHeard');
+    if (lvl) lvl.style.width = `${Math.round(r.level * 100)}%`;
+    if (!heard) return;
+    if (r.rawFreq > 0) {
+      const m = freqToMidiFloat(r.rawFreq);
+      const near = Math.round(m);
+      const c = Math.round((m - near) * 100);
+      heard.textContent = `j'entends ${solfege(near, false)}${Math.floor(near / 12) - 1} ${c >= 0 ? '+' : ''}${c}`;
+      heard.classList.toggle('weak', !r.freq);
+    } else heard.textContent = r.level > 0.15 ? 'son sans hauteur nette' : 'silence';
+  }
+
+  async function startMic(onReading: (r: PitchReading) => void): Promise<boolean> {
     stopMic();
     mic = new MicPitchDetector();
     try {
-      await mic.start((r) => onReading(r.freq, r.time));
+      await mic.start((r) => {
+        showMic(r);
+        onReading(r);
+      });
       setPracticeActive(true);
       return true;
     } catch {
@@ -364,7 +391,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     mic = null;
     setPracticeActive(false);
     const btn = document.getElementById('micBtn');
-    if (btn) btn.textContent = '🎤 Activer le micro';
+    if (btn) btn.textContent = '🎤 Micro';
   }
 
   // ---------- Pas à pas (noté) ----------
@@ -423,9 +450,12 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     $('tPos').textContent = `${/♯/.test(name) ? 'dièse · ' : /♭/.test(name) ? 'bémol · ' : ''}${midiName(t.midi, 'en')} · ${stringLabel(beat)}`;
     v.focusBeat(beat);
     const cur = topFingering(beat);
-    const nextBeat = beatsByTarget[trainer.index + 1];
-    const nxt = nextBeat ? topFingering(nextBeat) : null;
-    board.show(cur ? [cur] : [], nxt ? [nxt] : []);
+    const at = (k: number) => {
+      const b = beatsByTarget[trainer!.index + k];
+      const f = b ? topFingering(b) : null;
+      return f ? [f] : [];
+    };
+    board.show(cur ? [cur] : [], at(1), at(2));
   }
 
   function setVerdict(text: string, cls: string) {
@@ -476,8 +506,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   $('micBtn').addEventListener('click', async () => {
     if (mic) return stopMic();
     if (!trainer) setupTrainer();
-    const ok = await startMic((freq, time) => trainer && onUpdate(trainer.update(freq, time), time));
-    if (ok) $('micBtn').textContent = '⏹ Couper le micro';
+    const ok = await startMic((r) => trainer && onUpdate(trainer.update(r.freq, r.time, r.rms), r.time));
+    if (ok) $('micBtn').textContent = '⏹ Micro';
     else setVerdict('Micro refusé ou indisponible : utilise « Passer ▶ ».', 'bad');
   });
   $('hear').addEventListener('click', () => {
@@ -572,16 +602,23 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   });
 
   async function startGame() {
+    // Débloque l'audio du lecteur pendant le clic (Safari / Android refusent de démarrer le son plus tard).
+    try {
+      api.play();
+      api.pause();
+    } catch {
+      /* lecteur pas encore prêt */
+    }
     if (!judge || !highway) setupGame();
     if (!judge?.notes.length) return;
     judge.reset();
     gameKeeper = new ScoreKeeper(judge.notes.length);
     judge.opts.latencyMs = prefs.latencyMs;
     updateGameHud();
-    const ok = await startMic((freq) => {
+    const ok = await startMic((r) => {
       if (!gameRunning || !judge || !highway) return;
-      const heard = freq ? freqToMidiFloat(freq) : null;
-      for (const ev of judge.update(heard, highway.tick, highway.speed)) {
+      const heard = r.freq ? freqToMidiFloat(r.freq) : null;
+      for (const ev of judge.update(heard, highway.tick, highway.speed, r.rms)) {
         gameKeeper.register(ev.judgment);
         highway.feedback(ev.note, ev.judgment);
         if (gameKeeper.combo > 0 && gameKeeper.combo % 10 === 0) pulse($('gMult'));

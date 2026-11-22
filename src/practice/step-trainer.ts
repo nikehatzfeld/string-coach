@@ -1,4 +1,4 @@
-import { freqToMidiFloat } from '../songs/notation';
+import { centsToNearestOctave, freqToMidiFloat } from '../songs/notation';
 
 export interface StepTarget {
   midi: number;
@@ -14,6 +14,8 @@ export interface TrainerOptions {
   /** Silence minimal pour réattaquer une note identique à la précédente (ms). */
   releaseMs: number;
   a4: number;
+  /** Accepter la bonne note à une autre octave (erreurs d'octave fréquentes du détecteur). */
+  anyOctave: boolean;
 }
 
 export const DEFAULT_TRAINER_OPTIONS: TrainerOptions = {
@@ -21,6 +23,7 @@ export const DEFAULT_TRAINER_OPTIONS: TrainerOptions = {
   holdMs: 80,
   releaseMs: 60,
   a4: 440,
+  anyOctave: true,
 };
 
 export type Verdict = 'silence' | 'listening' | 'too-low' | 'too-high' | 'holding' | 'validated' | 'finished';
@@ -43,6 +46,7 @@ export class StepTrainer {
   private holdSince: number | null = null;
   private silenceSince: number | null = null;
   private needRelease = false;
+  private releasePeak = 0;
   readonly options: TrainerOptions;
 
   constructor(
@@ -82,8 +86,13 @@ export class StepTrainer {
   /**
    * @param freq fréquence détectée en Hz, ou null si silence / signal peu clair
    * @param now horodatage en ms
+   * @param rms niveau du signal : une baisse nette (changement d'archet) compte comme une nouvelle attaque
    */
-  update(freq: number | null, now: number): TrainerUpdate {
+  update(freq: number | null, now: number, rms?: number): TrainerUpdate {
+    if (this.needRelease && rms !== undefined) {
+      this.releasePeak = Math.max(this.releasePeak, rms);
+      if (rms < this.releasePeak * 0.55) this.needRelease = false;
+    }
     if (this.finished) return { verdict: 'finished', cents: null, heardMidi: null, index: this.idx };
 
     if (freq === null || freq <= 0) {
@@ -96,7 +105,8 @@ export class StepTrainer {
 
     const target = this.targets[this.idx];
     const heard = freqToMidiFloat(freq, this.options.a4);
-    const cents = (heard - target.midi) * 100;
+    const raw = (heard - target.midi) * 100;
+    const cents = this.options.anyOctave ? centsToNearestOctave(raw) : raw;
 
     if (this.needRelease) {
       return { verdict: 'listening', cents, heardMidi: heard, index: this.idx };
@@ -121,5 +131,6 @@ export class StepTrainer {
     const next = this.targets[this.idx];
     // Deux notes identiques de suite : il faut relâcher avant de rejouer.
     this.needRelease = !!next && !!prev && next.midi === prev.midi;
+    this.releasePeak = 0;
   }
 }

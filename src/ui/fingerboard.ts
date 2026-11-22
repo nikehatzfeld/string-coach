@@ -46,6 +46,7 @@ export class Fingerboard {
   private compact = false;
   private current: BoardNote[] = [];
   private next: BoardNote[] = [];
+  private later: BoardNote[] = [];
 
   constructor(
     host: HTMLElement,
@@ -75,15 +76,17 @@ export class Fingerboard {
   }
 
   private neededMax(): number {
-    const needed = Math.max(0, ...this.current.map((n) => n.fret), ...this.next.map((n) => n.fret));
+    const needed = Math.max(0, ...[...this.current, ...this.next, ...this.later].map((n) => n.fret));
     const base = this.compact ? 7 : 12;
     return needed > 12 ? 24 : needed > base ? 12 : base;
   }
 
   /** Notes en cours (pleines) et suivantes (contour). */
-  show(current: BoardNote[], next: BoardNote[] = []): void {
+  /** Note en cours (pleine), suivante (anneau vert) et celle d'après (petit anneau discret). */
+  show(current: BoardNote[], next: BoardNote[] = [], later: BoardNote[] = []): void {
     this.current = current;
     this.next = next;
+    this.later = later;
     this.maxFret = this.neededMax();
     this.render();
   }
@@ -162,22 +165,31 @@ export class Fingerboard {
     }
 
     // Notes
-    for (const note of this.next) this.drawNote(note, false);
-    for (const note of this.current) this.drawNote(note, true);
+    for (const note of this.later) this.drawNote(note, 'later');
+    for (const note of this.next) this.drawNote(note, 'next');
+    for (const note of this.current) this.drawNote(note, 'current');
 
     const desc = this.current.map((c) => `${midiName(c.midi)} corde ${this.inst.stringNamesFr[c.string - 1]} ${c.fret === 0 ? 'à vide' : `position ${c.fret}`}`);
     this.svg.setAttribute('aria-label', desc.length ? `Manche : ${desc.join(', ')}` : 'Manche');
   }
 
-  private drawNote(note: BoardNote, current: boolean): void {
+  private drawNote(note: BoardNote, kind: 'current' | 'next' | 'later'): void {
     const cx = this.fingerX(note.fret);
     const cy = this.y(note.string);
     const finger = note.finger ?? suggestedFinger(note.fret, this.inst);
-    this.el('circle', { cx, cy, r: current ? 13 : 11, class: current ? 'fb-dot' : 'fb-next' });
-    if (current) {
-      const label = finger === null ? String(note.fret) : finger === 0 ? '0' : String(finger);
+    const label = finger === null ? String(note.fret) : String(finger);
+    const name = note.name ?? midiName(note.midi);
+    if (kind === 'current') {
+      this.el('circle', { cx, cy, r: 14, class: 'fb-dot' });
       this.el('text', { x: cx, y: cy + 5, class: 'fb-finger' }, label);
-      this.el('text', { x: cx, y: cy - 18, class: 'fb-note' }, note.name ?? midiName(note.midi));
+      this.el('text', { x: cx, y: cy - 19, class: 'fb-note' }, name);
+    } else if (kind === 'next') {
+      this.el('circle', { cx, cy, r: 12, class: 'fb-next' });
+      this.el('text', { x: cx, y: cy + 5, class: 'fb-next-finger' }, label);
+      this.el('text', { x: cx, y: cy + 27, class: 'fb-next-note' }, `puis ${name}`);
+    } else {
+      this.el('circle', { cx, cy, r: 9, class: 'fb-later' });
+      this.el('text', { x: cx, y: cy + 4, class: 'fb-later-finger' }, label);
     }
   }
 }
