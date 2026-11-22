@@ -82,6 +82,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       <label class="only-step more">Tolérance <input id="tol" type="range" min="10" max="60" step="5" value="${prefs.tolerance}" /> <output id="tolOut">±${prefs.tolerance} cents</output></label>
       <button id="restart" class="only-step more">↻ Recommencer</button>
     </div>
+    <div id="micHelp" class="mic-help" role="status" hidden></div>
     <section id="neck" class="neck no-game" ${prefs.showNeck ? '' : 'hidden'}></section>
     <section id="step" class="step only-step">
       <div class="target">
@@ -370,18 +371,47 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     } else heard.textContent = r.level > 0.15 ? 'son sans hauteur nette' : 'silence';
   }
 
+  /** Message d'aide affiché tant que le micro n'est pas opérationnel. */
+  function micHelp(html: string | null) {
+    const el = document.getElementById('micHelp');
+    if (!el) return;
+    el.hidden = !html;
+    el.innerHTML = html ?? '';
+  }
+
   async function startMic(onReading: (r: PitchReading) => void): Promise<boolean> {
     stopMic();
-    mic = new MicPitchDetector();
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      micHelp(`🔒 Le micro n'est disponible que sur une page sécurisée (adresse en <strong>https://</strong>) et dans un vrai navigateur (Chrome, Edge, Firefox, Safari). Ouvre <a href="https://nikehatzfeld.github.io/string-coach/" target="_blank" rel="noopener">l'app dans ton navigateur</a>.`);
+      return false;
+    }
+    micHelp('🎤 <strong>Autorise le micro</strong> dans la petite fenêtre du navigateur, en haut près de la barre d’adresse (« Autoriser »).');
+    let pending = true;
+    const slow = setTimeout(() => {
+      if (pending) micHelp('⏳ Toujours en attente du micro : regarde en haut de l’écran, le navigateur te demande l’autorisation. Si rien n’apparaît, clique sur l’icône 🔒 ou 🎤 à gauche de l’adresse › Micro › Autoriser, puis recharge la page.');
+    }, 5000);
+    const m = new MicPitchDetector();
+    mic = m;
     try {
-      await mic.start((r) => {
+      let heardSomething = false;
+      await m.start((r) => {
+        if (!heardSomething && r.level > 0.2) {
+          heardSomething = true;
+          micHelp(null);
+        }
         showMic(r);
         onReading(r);
       });
+      pending = false;
+      clearTimeout(slow);
+      micHelp('✅ Micro activé. Joue une note : la barre verte doit bouger. Si elle reste vide, vérifie le micro choisi dans les réglages son de ton ordinateur.');
       setPracticeActive(true);
       return true;
-    } catch {
-      mic = null;
+    } catch (err) {
+      pending = false;
+      clearTimeout(slow);
+      if (mic === m) mic = null;
+      micHelp(micErrorText(err));
       return false;
     }
   }
@@ -506,9 +536,12 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   $('micBtn').addEventListener('click', async () => {
     if (mic) return stopMic();
     if (!trainer) setupTrainer();
+    $('micBtn').textContent = '⏳ Micro';
+    setVerdict('Autorise le micro…', '');
     const ok = await startMic((r) => trainer && onUpdate(trainer.update(r.freq, r.time, r.rms), r.time));
-    if (ok) $('micBtn').textContent = '⏹ Micro';
-    else setVerdict('Micro refusé ou indisponible : utilise « Passer ▶ ».', 'bad');
+    $('micBtn').textContent = ok ? '⏹ Micro' : '🎤 Micro';
+    if (ok) setVerdict('À toi de jouer…', '');
+    else setVerdict('Micro indisponible (voir le message ci-dessus)', 'bad');
   });
   $('hear').addEventListener('click', () => {
     const beat = trainer && beatsByTarget[trainer.index];
@@ -626,7 +659,6 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       updateGameHud();
     });
     if (!ok) {
-      $('status').textContent = 'Micro refusé ou indisponible : le mode jeu en a besoin.';
       return;
     }
     $('gStart').hidden = true;
@@ -784,6 +816,24 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
 
   setMode(mode);
   playBtn.focus();
+}
+
+/** Explication claire d'un échec d'accès au micro. */
+function micErrorText(err: unknown): string {
+  const name = (err as DOMException)?.name ?? '';
+  switch (name) {
+    case 'NotAllowedError':
+    case 'SecurityError':
+      return '🚫 <strong>Accès au micro bloqué.</strong> Clique sur l’icône 🔒 (ou 🎤 barrée) à gauche de l’adresse › Micro › <strong>Autoriser</strong>, puis recharge la page. Sur Mac : Réglages Système › Confidentialité et sécurité › Microphone › autorise ton navigateur. Sur Windows : Paramètres › Confidentialité › Microphone.';
+    case 'NotFoundError':
+    case 'OverconstrainedError':
+      return '🔌 <strong>Aucun micro trouvé.</strong> Branche ou active un micro, vérifie qu’il est choisi comme entrée dans les réglages son de ton ordinateur, puis réessaie.';
+    case 'NotReadableError':
+    case 'AbortError':
+      return '🔇 <strong>Le micro est occupé ou bloqué par le système.</strong> Ferme les autres applications qui l’utilisent (Zoom, Teams, Discord…), vérifie les autorisations du système, puis réessaie.';
+    default:
+      return `⚠️ Le micro n’a pas pu démarrer (${name || (err as Error)?.message || 'erreur inconnue'}). Essaie de recharger la page ou un autre navigateur (Chrome, Edge, Firefox).`;
+  }
 }
 
 function pulse(el: HTMLElement) {
