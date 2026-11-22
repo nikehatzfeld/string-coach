@@ -494,6 +494,14 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .mt-note { font-size: 1.6rem; margin: 0.3rem 0; }
 .mt-note span { font-size: 0.95rem; }
 .mt-strings { display: flex; gap: 0.5rem; margin: 0.6rem 0; }
-.mt-strings span { flex: 1; text-align: center; padding: 0.5rem; border-radius: 10px; border: 1px solid var(--border); font-weight: 700; }
-.mt-strings span.ok { background: var(--ok); color: #0b1a14; }
+.mt-strings button { flex: 1; padding: 0.6rem 0.2rem; border-radius: 10px; font-weight: 800; font-size: 1.05rem; }
+.mt-strings button small { font-size: 0.7em; opacity: 0.7; margin-left: 1px; }
+.mt-strings button.cur { outline: 3px solid var(--accent); }
+.mt-strings button.ok { background: var(--ok); color: #0b1a14; }
+.mt-strings button.skip { background: rgba(255,90,90,0.25); }
+.mt-strings button:disabled { opacity: 0.6; }
+.mt-inst { display: flex; gap: 0.4rem; margin-bottom: 0.6rem; }
+.mt-inst button { flex: 1; }
+.mt-row { margin-bottom: 0.4rem; }
+.mt-ask { font-size: 1.25rem; margin: 0.6rem 0 0; text-align: center; }
 .mt-info { font-size: 0.72rem; white-space: pre-wrap; word-break: break-all; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 8px; max-height: 9rem; overflow: auto; }
