@@ -67,6 +67,16 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - Bouton « Tout afficher » quand un filtre est actif
 - Limite : dans la partition, le doigt bas / haut n'apparaît que par le chiffre (alphaTab n'affiche que des chiffres) ; la flèche est sur le manche et dans le pas à pas
 
+## v0.9 (22/11/2026)
+- Commandes vocales fr (Web Speech, Chrome/Edge) : « joue », « stop », « suivant », « recommence », « plus vite », « tempo 80 », « partie 2 », « métronome »… + pédales PageUp/PageDown.
+- ♯/♭ affichés sous chaque note (partition, manche, mode jeu) ; zoom A−/A+ partout.
+- Pas à pas guidé (▶ Commencer, 🔊 auto) ; mode « Jeu & play-along » sur partition ou défilement.
+- Répétitions 1/3/5/10/∞ (exercices et morceaux).
+- 105 exercices techniques style Ševčík (src/songs/technique-bank.ts) : total 308 exercices.
+- Cercle des notes (chromatique ↔ quintes) à côté du manche.
+- Cours « Harmonie & improvisation » 16 leçons (docs/cours-harmonie.md) + atelier (grilles, bourdon, micro qui classe les notes).
+- docs/generiques-films-series.md : 63 génériques à importer via le coffre (protégés).
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |

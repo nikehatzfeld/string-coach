@@ -35,6 +35,9 @@ export interface Song {
   backing?: BackingKind | false;
   /** Parties pour apprendre par morceaux : [nom, 1re mesure, dernière mesure] (1 = première mesure). */
   sections?: [string, number, number][];
+  /** Exercice joué sur une seule corde (1 = la plus aiguë) ou dans une position imposée. */
+  string?: number;
+  position?: number;
   /** Morceau complet importé d'une partition libre (source et licence à créditer). */
   source?: { url: string; license: string };
 }
@@ -79,12 +82,16 @@ export function songMidiRange(bars: ParsedBar[]): [number, number] {
 }
 
 /** Convertit un morceau de la bibliothèque en alphaTex pour un instrument. */
-export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: boolean } = {}): string {
+export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: boolean; keySignature?: boolean } = {}): string {
   const bars = parseNotation(song.notation);
-  const shift = bestOctaveShift(
-    bars.flat().filter((e) => e.kind === 'note').map((e) => e.midi as number),
-    inst,
-  );
+  // Exercices à corde ou position imposée : hauteurs telles qu'écrites.
+  const shift =
+    song.string || song.position
+      ? 0
+      : bestOctaveShift(
+          bars.flat().filter((e) => e.kind === 'note').map((e) => e.midi as number),
+          inst,
+        );
   const [num, den] = song.timeSignature;
 
   const header = [
@@ -92,7 +99,7 @@ export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: b
     `\\artist "${escape(song.composer)}"`,
     `\\tempo ${song.tempo}`,
     `\\ts (${num} ${den})`,
-    ...(song.key ? [`\\ks ${song.key}`] : []),
+    ...(song.key && opts.keySignature !== false ? [`\\ks ${song.key}`] : []),
     `\\track "${inst.label}"`,
     `\\lyrics "${NAMES_PLACEHOLDER}"`,
     `\\staff {score tabs}`,
@@ -128,7 +135,7 @@ export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: b
     while (m < floor) m += 12;
     return m;
   };
-  const placed = placeMelody(sounding.map((e) => fold((e.midi as number) + shift + (shiftByEvent.get(e) ?? 0))), inst);
+  const placed = placeMelody(sounding.map((e) => fold((e.midi as number) + shift + (shiftByEvent.get(e) ?? 0))), inst, { onlyString: song.string, position: song.position });
   const usesShifts = placed.some((p) => p.position !== 1);
 
   let k = 0;

@@ -13,6 +13,20 @@ export interface Prefs {
   showNeck: boolean;
   /** Mode jeu : la mélodie est jouée pendant qu'on joue (à couper avec des haut-parleurs). */
   guide: boolean;
+  /** Armure à la clé : sinon les ♯ / ♭ sont écrits devant chaque note. */
+  keySignatures: boolean;
+  /** Zoom de la partition. */
+  zoom: number;
+  /** Répétitions en pas à pas / jeu : 1, 3, 5 ou 0 (à l'infini). */
+  repeat: number;
+  /** Commandes vocales activées. */
+  voice: boolean;
+  /** Pas à pas : jouer automatiquement chaque nouvelle note. */
+  autoHear: boolean;
+  /** Mode jeu : piste à défilement ou partition. */
+  gameView: 'highway' | 'score';
+  /** Cercle des notes à côté du manche. */
+  showCircle: boolean;
   /** Accompagnement play-along activé. */
   backing: boolean;
   /** Mode jeu : retard du micro à compenser (ms). */
@@ -28,6 +42,13 @@ const DEFAULTS: Prefs = {
   bpmBySong: {},
   showNeck: true,
   guide: true,
+  keySignatures: false,
+  zoom: 1.1,
+  repeat: 1,
+  voice: false,
+  autoHear: false,
+  gameView: 'highway',
+  showCircle: true,
   backing: true,
   latencyMs: 80,
 };

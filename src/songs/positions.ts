@@ -66,7 +66,27 @@ const SLIDE_COST = 5;
  * chaque note coûte (position − 1) × HEIGHT_COST, chaque changement SHIFT_COST + distance.
  * Une corde à vide ne coûte rien et ne force aucune position.
  */
-export function placeMelody(midis: number[], inst: Instrument): Placed[] {
+export interface PlaceOptions {
+  /** Tout jouer sur cette corde (1 = la plus aiguë) : gammes sur une corde, démanchés. */
+  onlyString?: number;
+  /** Tout jouer dans cette position (si possible) : spider, exercices de position. */
+  position?: number;
+}
+
+export function placeMelody(midis: number[], inst: Instrument, opts: PlaceOptions = {}): Placed[] {
+  if (opts.onlyString) {
+    const s = opts.onlyString;
+    const single = { ...inst, tuning: [inst.tuning[s - 1]] };
+    return placeMelodyAuto(midis, single).map((p) => ({ ...p, string: s }));
+  }
+  if (opts.position) {
+    const auto = placeMelodyAuto(midis, inst);
+    return midis.map((m, i) => placeIn(m, opts.position!, inst) ?? auto[i]);
+  }
+  return placeMelodyAuto(midis, inst);
+}
+
+function placeMelodyAuto(midis: number[], inst: Instrument): Placed[] {
   const positions = positionsOf(inst);
   const INF = Number.POSITIVE_INFINITY;
   const options = midis.map((m) => positions.map((p) => placeIn(m, p, inst)));

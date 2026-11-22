@@ -3,7 +3,7 @@
 Mélodies extraites automatiquement (scripts/build_pd_library.py) des fichiers MIDI du [Mutopia Project](https://www.mutopiaproject.org). Les morceaux sous licence Creative Commons BY-SA sont redistribués sous la même licence ; les adaptations (mélodie seule, doigtés) sont du même auteur que le dépôt.
 
 
-289 morceaux.
+291 morceaux.
 
 | Morceau | Compositeur | Licence | Source |
 |---|---|---|---|
@@ -89,6 +89,8 @@ Mélodies extraites automatiquement (scripts/build_pd_library.py) des fichiers M
 | Cranham (hymntune) | G. T. Holst | Domaine public | https://www.mutopiaproject.org/ftp/HolstGT/cranham/cranham.mid |
 | Crusader's Hymn (hymntune) | Traditionnel | Domaine public | https://www.mutopiaproject.org/ftp/Traditional/crusaders_hymn/crusaders_hymn.mid |
 | Cwm Rhondda | J. Hughes | Domaine public | https://www.mutopiaproject.org/ftp/HughesJ/CwmRhondda/CwmRhondda.mid |
+| Dans l'antre du roi de la montagne (complet) | E. Grieg | Domaine public | https://www.mutopiaproject.org/ftp/GriegE/O46/Dans_l_antre_du_roi_de_la_montagne/Dans_l_antre_du_roi_de_la_montagne.mid |
+| Danse napolitaine (Le Lac des cygnes) | P. I. Tchaïkovski | Domaine public | https://www.mutopiaproject.org/ftp/TchaikovskyPI/dansenapolitaine/dansenapolitaine.mid |
 | Das Lied der Trennung | W. A. Mozart | Domaine public | https://www.mutopiaproject.org/ftp/MozartWA/KV519/k519/k519.mid |
 | Der Hirt auf dem Felsen | F. Schubert | Domaine public | https://www.mutopiaproject.org/ftp/SchubertF/D965/SchubertF-D965-DerHirtAufDemFelsen/SchubertF-D965-DerHirtAufDemFelsen.mid |
 | Des Sommers letzte Rose | A. Neithardt | Domaine public | https://www.mutopiaproject.org/ftp/NeithardtA/O141/03-TheLastRoseOfSummer/03-TheLastRoseOfSummer.mid |

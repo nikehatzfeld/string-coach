@@ -281,10 +281,12 @@ for (const [cname, chord] of [
   add({ title: `Arpège p-i-m-a sur ${cname}`, category: 'Arpèges aux doigts', level: (cname.startsWith('Fa') ? 3 : 1) as Key['level'], only: 'guitar', how: 'Pouce sur la basse, i-m-a sur les cordes aiguës, accord tenu.', notation: pack(seq(notes, 0.5), false) });
 }
 
-export const EXERCISE_BANK: Exercise[] = out;
+import { TECHNIQUE_BANK } from './technique-bank';
+
+export const EXERCISE_BANK: Exercise[] = [...out, ...TECHNIQUE_BANK];
 
 export function exercisesFor(inst: InstrumentId): Exercise[] {
-  return out.filter((e) => !e.only || e.only === inst);
+  return EXERCISE_BANK.filter((e) => !e.only || e.only === inst);
 }
 
-export const EXERCISE_CATEGORIES = [...new Set(out.map((e) => e.category))];
+export const EXERCISE_CATEGORIES = [...new Set(EXERCISE_BANK.map((e) => e.category))];

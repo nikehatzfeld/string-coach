@@ -4,6 +4,8 @@ import { initCloud, schedulePush } from './cloud/sync';
 import { renderHome } from './ui/home';
 import { consumeMarkDone, renderCourse } from './ui/course';
 import { renderExercises } from './ui/exercises';
+import { renderHarmony } from './ui/harmony';
+import { closeImprov, renderImprov, type ImprovPreset } from './ui/improv';
 import { closePlayer, openPlayer, type Source } from './ui/player';
 import { installSpatialNav } from './ui/spatial-nav';
 import { esc } from './ui/dom';
@@ -18,12 +20,13 @@ onPracticeBadges((badges) => {
   for (const b of badges) toast(`<span class="bicon">${b.icon}</span> Badge débloqué : <strong>${esc(b.name)}</strong>`);
 });
 
-let returnTo: 'home' | 'course' | 'exercises' = 'home';
+let returnTo: 'home' | 'course' | 'exercises' | 'harmony' = 'home';
 
 function home(): void {
   closePlayer();
   returnTo = 'home';
-  renderHome(app, play, course, exercises);
+  closeImprov();
+  renderHome(app, play, course, exercises, harmony);
   window.scrollTo({ top: 0 });
 }
 
@@ -32,6 +35,20 @@ function course(): void {
   returnTo = 'course';
   consumeMarkDone();
   renderCourse(app, play, home);
+  window.scrollTo({ top: 0 });
+}
+
+function harmony(): void {
+  closePlayer();
+  closeImprov();
+  returnTo = 'harmony';
+  renderHarmony(app, home, improv);
+  window.scrollTo({ top: 0 });
+}
+
+function improv(preset: ImprovPreset): void {
+  closePlayer();
+  renderImprov(app, harmony, preset);
   window.scrollTo({ top: 0 });
 }
 

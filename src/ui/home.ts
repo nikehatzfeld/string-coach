@@ -25,7 +25,7 @@ const filters: Filters = { style: null, level: null, search: '', full: false };
 
 export type OpenFn = (s: Source, mode?: 'live' | 'step' | 'game') => void;
 
-export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () => void = () => {}, onExercises: () => void = () => {}): Promise<void> {
+export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () => void = () => {}, onExercises: () => void = () => {}, onHarmony: () => void = () => {}): Promise<void> {
   const [imports, vault] = await Promise.all([listImports(), loadVault()]);
   const lvl = levelInfo(progress.xp);
   const streak = currentStreak(progress);
@@ -58,6 +58,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
       <div class="brand"><span class="logo">🎻</span><h1>String Coach</h1></div>
       <button id="toCourse" class="primary">🎓 Cours</button>
       <button id="toExercises">💪 Exercices</button>
+      <button id="toHarmony">🎼 Harmonie</button>
       <button id="account" class="account" hidden></button>
       <div class="seg" role="group" aria-label="Instrument">
         ${(['violin', 'guitar'] as InstrumentId[]).map((id) => `<button data-inst="${id}" aria-pressed="${prefs.instrument === id}">${id === 'violin' ? '🎻' : '🎸'} ${INSTRUMENTS[id].label}</button>`).join('')}
@@ -140,7 +141,8 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
       </section>
     </main>`;
 
-  const rerender = () => renderHome(app, open, onCourse, onExercises);
+  const rerender = () => renderHome(app, open, onCourse, onExercises, onHarmony);
+  app.querySelector('#toHarmony')!.addEventListener('click', onHarmony);
   app.querySelector('#toExercises')!.addEventListener('click', onExercises);
   app.querySelector('#toCourse')!.addEventListener('click', onCourse);
   bindAccount(app.querySelector<HTMLButtonElement>('#account')!);
