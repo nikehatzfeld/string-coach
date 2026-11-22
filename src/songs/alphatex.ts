@@ -9,6 +9,7 @@ export const STYLE_ORDER = [
   'Comptines',
   'Chanson française',
   'Classique',
+  'Cinéma & TV',
   'Noël',
   'Folk & monde',
   'Chants & cantiques',

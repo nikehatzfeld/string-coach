@@ -22,6 +22,7 @@ export const STYLE_LOOK: Record<string, { icon: string; hue: number }> = {
   Comptines: { icon: '🧸', hue: 330 },
   'Chanson française': { icon: '🇫🇷', hue: 220 },
   Classique: { icon: '🎻', hue: 265 },
+  'Cinéma & TV': { icon: '🎬', hue: 0 },
   Noël: { icon: '🎄', hue: 140 },
   'Folk & monde': { icon: '🌍', hue: 30 },
   'Gospel & jazz': { icon: '🎺', hue: 45 },

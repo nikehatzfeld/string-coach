@@ -506,3 +506,22 @@ Mélodies extraites automatiquement (scripts/build_pd_library.py) des fichiers M
 | Six Caprices, No. 5 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O26/carcassi-op26-05/carcassi-op26-05.mid |
 | Six Caprices, No. 6 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O26/carcassi-op26-06/carcassi-op26-06.mid |
 | Study in A Minor | D. Aguado | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/AguadoD/aminor-study/aminor-study.mid |
+
+## Cinéma & TV (scripts/add_pieces.py, mélodie principale)
+
+| Titre | Compositeur | Licence | Source |
+|---|---|---|---|
+| Gymnopédie n° 1 | E. Satie | Domaine public | https://www.mutopiaproject.org/ftp/SatieE/gymnopedie_1/gymnopedie_1.mid |
+| Clair de lune | C. Debussy | Domaine public | https://www.mutopiaproject.org/ftp/DebussyC/L75/debussy_Ste_Bergamesq_Clair/debussy_Ste_Bergamesq_Clair.mid |
+| Toccata et fugue en ré mineur | J. S. Bach | Domaine public | https://www.mutopiaproject.org/ftp/BachJS/BWV565/ToccataFugue/ToccataFugue.mid |
+| Sonate « Au clair de lune » | L. van Beethoven | CC BY | https://www.mutopiaproject.org/ftp/BeethovenLv/O27/moonlight/moonlight-mids.zip |
+| Nocturne op. 9 n° 2 | F. Chopin | CC BY | https://www.mutopiaproject.org/ftp/ChopinFF/O9/chopin_nocturne_op9_n2/chopin_nocturne_op9_n2.mid |
+| Marche nuptiale | F. Mendelssohn | CC BY | https://www.mutopiaproject.org/ftp/Mendelssohn-BartholdyF/O61/Sommernachtstraum-wedding-march/Sommernachtstraum-wedding-march.mid |
+| Le Beau Danube bleu (thème) | J. Strauss fils | CC BY | https://www.mutopiaproject.org/ftp/StraussJJ/O314/blue_danube/blue_danube.mid |
+| Dans l'antre du roi de la montagne | E. Grieg | Domaine public | https://www.mutopiaproject.org/ftp/GriegE/O46/Dans_l_antre_du_roi_de_la_montagne/Dans_l_antre_du_roi_de_la_montagne.mid |
+| Carmen : Prélude | G. Bizet | CC BY | https://www.mutopiaproject.org/ftp/BizetG/prelude/prelude.mid |
+| Valse op. 64 n° 1 | F. Chopin | Domaine public | https://www.mutopiaproject.org/ftp/ChopinFF/O64/chopin_valse_op64_no1/chopin_valse_op64_no1.mid |
+| Maple Leaf Rag | S. Joplin | Domaine public | https://www.mutopiaproject.org/ftp/JoplinS/maple/maple.mid |
+| La Traviata : Brindisi | G. Verdi | Domaine public | https://www.mutopiaproject.org/ftp/VerdiG/Traviata_02/Traviata_02.mid |
+| Peer Gynt : La danse d'Anitra | E. Grieg | Domaine public | https://www.mutopiaproject.org/ftp/GriegE/O46/03-anitrasdance/03-anitrasdance-mids.zip |
+| Peer Gynt : La mort d'Aase | E. Grieg | Domaine public | https://www.mutopiaproject.org/ftp/GriegE/O46/02-lamortdase-strings/02-lamortdase-strings-mids.zip |
