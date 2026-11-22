@@ -39,11 +39,19 @@ export function flushPractice(): void {
   pendingMs -= minutes * 60000;
   const badges = addPracticeTime(progress, minutes);
   saveProgress(progress);
+  afterSave();
   if (badges.length) onBadges(badges);
+}
+
+/** Appelé après chaque sauvegarde locale (synchronisation du compte). */
+let afterSave: () => void = () => {};
+export function onAfterSave(cb: () => void): void {
+  afterSave = cb;
 }
 
 export function persist(): void {
   saveProgress(progress);
+  afterSave();
 }
 
 setInterval(flushPractice, 30000);

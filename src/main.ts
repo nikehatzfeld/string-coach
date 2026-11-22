@@ -1,5 +1,6 @@
 import './style.css';
-import { onPracticeBadges } from './game/store';
+import { onAfterSave, onPracticeBadges } from './game/store';
+import { initCloud, schedulePush } from './cloud/sync';
 import { renderHome } from './ui/home';
 import { consumeMarkDone, renderCourse } from './ui/course';
 import { closePlayer, openPlayer, type Source } from './ui/player';
@@ -35,5 +36,14 @@ function play(source: Source, mode: 'live' | 'step' | 'game' = 'live'): void {
   openPlayer(app, source, () => (returnTo === 'course' ? course() : home()), mode);
   window.scrollTo({ top: 0 });
 }
+
+onAfterSave(schedulePush);
+// Après fusion avec le compte : réaffiche l'écran courant (hors lecteur).
+addEventListener('cloud-merged', () => {
+  if (document.querySelector('.player')) return;
+  if (returnTo === 'course') course();
+  else home();
+});
+initCloud().catch(() => {});
 
 home();

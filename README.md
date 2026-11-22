@@ -23,6 +23,7 @@ Le micro nécessite HTTPS ou `localhost`. Pour tester sur mobile : `npm run buil
 | --- | --- |
 | Mode jeu | Notes qui défilent par corde vers une ligne de frappe, jugées au micro (Parfait / Bien / Raté), combo et multiplicateur, compensation de latence, guide audio |
 | Progression | XP et niveaux, série de jours, objectif quotidien, 16 badges, défi du jour (+100 XP), score et 1 à 3 étoiles par morceau, écran de résultats |
+| Comptes | Connexion par lien email (Supabase), progression, niveau, cours et tempos synchronisés entre appareils : configuration dans [docs/supabase.sql](docs/supabase.sql) et `src/cloud/config.ts` |
 | Coffre | Chansons protégées publiées chiffrées, accessibles avec ton mot de passe : voir [docs/coffre.md](docs/coffre.md) |
 | Doigtés | Violon : vrais doigts (0 à 4) au-dessus des notes, changements de position marqués (« → 3e pos. »), calculés sur toute la mélodie pour limiter les déplacements. Guitare : position et doigt par case. Nom de chaque note (avec ♯ / ♭) sous la portée |
 | Parties | Chaque morceau se travaille en entier ou par parties (nommées ou de 4 mesures), en écoute (boucle), pas à pas et jeu |

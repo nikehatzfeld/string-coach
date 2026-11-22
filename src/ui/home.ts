@@ -10,6 +10,7 @@ import { deleteImport, listImports, saveImport } from './imports-store';
 import { download, esc, LEVEL_LABEL, on, ring, starsHtml, STYLE_LOOK } from './dom';
 import type { Source } from './player';
 import { toast } from './results';
+import { bindAccount } from './account';
 
 const UPLOAD_URL = 'https://github.com/nikehatzfeld/string-coach/upload/main/public/vault';
 
@@ -56,6 +57,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
     <header class="top home-top">
       <div class="brand"><span class="logo">🎻</span><h1>String Coach</h1></div>
       <button id="toCourse" class="primary">🎓 Cours</button>
+      <button id="account" class="account" hidden></button>
       <div class="seg" role="group" aria-label="Instrument">
         ${(['violin', 'guitar'] as InstrumentId[]).map((id) => `<button data-inst="${id}" aria-pressed="${prefs.instrument === id}">${id === 'violin' ? '🎻' : '🎸'} ${INSTRUMENTS[id].label}</button>`).join('')}
       </div>
@@ -138,6 +140,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
 
   const rerender = () => renderHome(app, open, onCourse);
   app.querySelector('#toCourse')!.addEventListener('click', onCourse);
+  bindAccount(app.querySelector<HTMLButtonElement>('#account')!);
 
   on(app, '[data-inst]', 'click', (b) => {
     prefs.instrument = b.dataset.inst as InstrumentId;

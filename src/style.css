@@ -324,3 +324,4 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .timer-btn { font-variant-numeric: tabular-nums; }
 .stages .tile.current { border-color: rgba(255,181,71,0.5); background: rgba(255,181,71,0.08); }
 @media (max-width: 640px) { .sitem { flex-wrap: wrap; } .sitem .sbody { flex-basis: calc(100% - 60px); } }
+.account { background: var(--panel); }
