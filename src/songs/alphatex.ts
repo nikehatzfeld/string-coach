@@ -5,6 +5,7 @@ import { parseNotation, type ParsedBar } from './notation';
 import { LYRICS, lyricSyllables } from './lyrics';
 
 export const STYLE_ORDER = [
+  'Mes morceaux',
   'Comptines',
   'Chanson française',
   'Classique',

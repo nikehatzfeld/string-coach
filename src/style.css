@@ -620,3 +620,5 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .ly-now .done { color: var(--ok); opacity: 0.75; }
 .ly-now .now { color: var(--accent); transform: scale(1.18); text-shadow: 0 0 12px rgba(255,181,71,0.55); }
 .ly-next { font-size: 0.95rem; color: var(--muted); }
+.tr-modal { text-align: left; } .tr-row { display: flex; gap: 0.5rem; align-items: center; margin: 0.4rem 0; }
+.tr-list { list-style: none; padding: 0; max-height: 10rem; overflow: auto; } .tr-list li { display: flex; justify-content: space-between; }

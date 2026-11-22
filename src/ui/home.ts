@@ -1,4 +1,6 @@
 import { openMicTest } from './mic-test';
+import { openTranscriber } from './transcribe-ui';
+import { userSongs } from '../state/user-songs';
 import { BADGES, currentStreak, dailyMinutes, dueReviews, levelInfo, levelTitle } from '../game/progress';
 import { persist, progress, todayChallenge } from '../game/store';
 import { INSTRUMENT_IDS, INSTRUMENTS, type InstrumentId } from '../songs/instruments';
@@ -47,7 +49,8 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
     .map((id) => LIBRARY.find((s) => s.id === id))
     .filter((s): s is Song => !!s)
     .slice(0, 8);
-  const mine = LIBRARY.filter((s) => songFor(s, prefs.instrument));
+  const ALL = [...userSongs(), ...LIBRARY];
+  const mine = ALL.filter((s) => songFor(s, prefs.instrument));
   const songs = mine.filter(
     (s) =>
       (!filters.style || s.style === filters.style) &&
@@ -66,6 +69,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
       <button id="toHarmony">🎼 Harmonie</button>
       <button id="toChords">🎸 Accords</button>
       <button id="toVoice">🎤 Studio voix</button>
+      <button id="toTranscribe" title="Transformer un enregistrement en partition (reste sur ton appareil)">🎧 Transcrire</button>
       <button id="toMicTest" title="Vérifier que le micro entend ton instrument">🎤 Test micro</button>
       <button id="account" class="account" hidden></button>
       <div class="seg" role="group" aria-label="Instrument">
@@ -154,6 +158,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
   app.querySelector('#toHarmony')!.addEventListener('click', onHarmony);
   app.querySelector('#toChords')!.addEventListener('click', () => onChords());
   app.querySelector('#toVoice')!.addEventListener('click', () => onVoice());
+  app.querySelector('#toTranscribe')!.addEventListener('click', () => openTranscriber((song) => open({ kind: 'library', song }), rerender));
   app.querySelector('#toMicTest')!.addEventListener('click', () => openMicTest());
   app.querySelector('#toExercises')!.addEventListener('click', onExercises);
   app.querySelector('#toCourse')!.addEventListener('click', onCourse);
@@ -199,7 +204,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
     rerender();
   });
   on(app, '[data-song]', 'click', (b) => {
-    const song = LIBRARY.find((s) => s.id === b.dataset.song)!;
+    const song = ALL.find((s) => s.id === b.dataset.song)!;
     open({ kind: 'library', song });
   });
   on(app, '[data-challenge]', 'click', (b) => {

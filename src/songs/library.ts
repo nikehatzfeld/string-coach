@@ -334,7 +334,7 @@ export const LIBRARY: Song[] = [...BASE, ...EASY, ...EXERCISES];
 
 export const STYLES = STYLE_ORDER.filter((st) => LIBRARY.some((s) => s.style === st));
 
-const FOR_ALL = new Set(['Comptines', 'Chanson française', 'Noël', 'Folk & monde', 'Chants & cantiques', 'Gospel & jazz', 'Blues', 'Fêtes', 'Gammes & arpèges', 'Exercices']);
+const FOR_ALL = new Set(['Mes morceaux', 'Comptines', 'Chanson française', 'Noël', 'Folk & monde', 'Chants & cantiques', 'Gospel & jazz', 'Blues', 'Fêtes', 'Gammes & arpèges', 'Exercices']);
 
 /**
  * Répertoire par instrument : chansons, folk, Noël, blues… pour tous ; le répertoire classique

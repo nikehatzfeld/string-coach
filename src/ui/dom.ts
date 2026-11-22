@@ -18,6 +18,7 @@ export function on<K extends keyof HTMLElementEventMap>(
 export const LEVEL_LABEL = ['', 'Débutant', 'Élémentaire', 'Intermédiaire', 'Avancé', 'Virtuose'];
 
 export const STYLE_LOOK: Record<string, { icon: string; hue: number }> = {
+  'Mes morceaux': { icon: '🎧', hue: 300 },
   Comptines: { icon: '🧸', hue: 330 },
   'Chanson française': { icon: '🇫🇷', hue: 220 },
   Classique: { icon: '🎻', hue: 265 },
