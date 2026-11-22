@@ -22,6 +22,14 @@ export const LYRICS: Record<string, string> = {
   'we-wish-you':
     'We wish you a mer- ry Christ- mas, we wish you a mer- ry Christ- mas, we wish you a mer- ry Christ- mas and a hap- py new year.',
   'mon-beau-sapin': "Mon beau sa- pin, roi des fo- rêts, que j'ai- me ta ver- dure !",
+  'deck-the-halls':
+    "Deck the halls with boughs of hol- ly, fa la la la la, la la la la. 'Tis the sea- son to be jol- ly, fa la la la la, la la la la. Don we now our gay ap- par- el, fa la la, la la la, la la la. Troll the an- cient Yule- tide car- ol, fa la la la la, la la la la.",
+  'good-king-wenceslas':
+    "Good King Wen- ces- las looked out on the feast of Ste- phen, when the snow lay round a- bout, deep and crisp and e- ven. Bright- ly shone the moon that night, though the frost was cru- el, when a poor man came in sight, gath- 'ring win- ter fu- u- el.",
+  'yankee-doodle': 'Yan- kee Doo- dle went to town a- rid- ing on a po- ny, stuck a fea- ther in his cap and called it ma- ca- ro- ni.',
+  saints: 'Oh when the saints go march- ing in, oh when the saints go march- ing in, oh Lord I want to be in that num- ber when the saints go march in.',
+  'drunken-sailor':
+    'What shall we do with a drun- ken sai- lor, what shall we do with a drun- ken sai- lor, what shall we do with a drun- ken sai- lor, ear- ly in the mor- ning? Way hay and up she rises, way hay and up she rises, way hay and up she rises, ear- ly in the mor- ning.',
   'old-macdonald': 'Old Mac- Don- ald had a farm, E- I- E- I- O, and on that farm he had a cow, E- I- E- I- O.',
 };
 
