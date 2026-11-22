@@ -65,3 +65,23 @@ describe('nouvelle attaque par baisse de volume', () => {
     expect(t.update(440, 300, 0.2).verdict).toBe('validated');
   });
 });
+
+describe('pas à pas exigeant', () => {
+  it('tient la durée écrite avant de valider', () => {
+    const t = new StepTrainer([{ midi: 69, beatIndex: 0, holdMs: 500 }, { midi: 71, beatIndex: 1 }]);
+    expect(t.update(440, 0).verdict).toBe('holding');
+    expect(t.update(440, 300).hold).toBeCloseTo(0.6);
+    expect(t.update(440, 520).verdict).toBe('validated');
+  });
+  it('détaché : une note différente doit être réattaquée', () => {
+    const t = new StepTrainer([{ midi: 69, beatIndex: 0 }, { midi: 71, beatIndex: 1 }], { detache: true });
+    t.update(440, 0, 0.1);
+    expect(t.update(440, 100, 0.1).verdict).toBe('validated');
+    // Glissé sans attaque : refusé
+    expect(t.update(493.88, 150, 0.1).verdict).toBe('listening');
+    // Coup d'archet : le volume baisse puis remonte
+    t.update(493.88, 200, 0.03);
+    t.update(493.88, 250, 0.1);
+    expect(t.update(493.88, 400, 0.1).verdict).toBe('validated');
+  });
+});

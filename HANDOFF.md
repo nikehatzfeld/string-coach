@@ -90,6 +90,12 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - Versions faciles automatiques (src/songs/simplify.ts) : 1 note par temps, 1re position, tempo −25 % ; filtre « ⭐ Incontournables + versions faciles » (liste FAMOUS dans library.ts).
 - Cercle compact : indique « chromatique » / « quintes ».
 
+## v0.12 (22/11/2026)
+- Micro : test guidé (🎤 Test micro, violon/guitare), La de référence réglable + calibrage depuis le test (accordage à 432 Hz détecté chez l'utilisateur ; PC : désactiver les « améliorations audio » Windows / Intel SST).
+- Pas à pas exigeant (⚙) : ⏱ tenir la durée écrite (70 % au tempo choisi), ✂ détaché (chaque note réattaquée).
+- Accordeur flottant (🎚 Accordeur) à côté du métronome, sur toutes les pages.
+- Comptes : Supabase branché (src/cloud/config.ts) ; reste à exécuter docs/supabase.sql + Site URL côté Supabase.
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |

@@ -4,6 +4,8 @@ export interface StepTarget {
   midi: number;
   /** Index dans la liste de beats d'alphaTab, pour placer le curseur. */
   beatIndex: number;
+  /** Durée à tenir pour valider (ms), sinon options.holdMs. */
+  holdMs?: number;
 }
 
 export interface TrainerOptions {
@@ -16,6 +18,8 @@ export interface TrainerOptions {
   a4: number;
   /** Accepter la bonne note à une autre octave (erreurs d'octave fréquentes du détecteur). */
   anyOctave: boolean;
+  /** Détaché : chaque note doit être attaquée (coup d'archet ou silence), pas seulement les notes répétées. */
+  detache: boolean;
 }
 
 export const DEFAULT_TRAINER_OPTIONS: TrainerOptions = {
@@ -24,6 +28,7 @@ export const DEFAULT_TRAINER_OPTIONS: TrainerOptions = {
   releaseMs: 60,
   a4: 440,
   anyOctave: true,
+  detache: false,
 };
 
 export type Verdict = 'silence' | 'listening' | 'too-low' | 'too-high' | 'holding' | 'validated' | 'finished';
@@ -35,6 +40,8 @@ export interface TrainerUpdate {
   /** Note entendue (MIDI flottant). */
   heardMidi: number | null;
   index: number;
+  /** Tenue en cours : part de la durée demandée déjà tenue (0..1). */
+  hold?: number;
 }
 
 /**
@@ -116,12 +123,13 @@ export class StepTrainer {
       return { verdict: cents < 0 ? 'too-low' : 'too-high', cents, heardMidi: heard, index: this.idx };
     }
     if (this.holdSince === null) this.holdSince = now;
-    if (now - this.holdSince >= this.options.holdMs) {
+    const need = target.holdMs ?? this.options.holdMs;
+    if (now - this.holdSince >= need) {
       const validatedIndex = this.idx;
       this.advance();
       return { verdict: 'validated', cents, heardMidi: heard, index: validatedIndex };
     }
-    return { verdict: 'holding', cents, heardMidi: heard, index: this.idx };
+    return { verdict: 'holding', cents, heardMidi: heard, index: this.idx, hold: Math.min(1, (now - this.holdSince) / need) };
   }
 
   private advance(): void {
@@ -129,8 +137,8 @@ export class StepTrainer {
     this.idx++;
     this.holdSince = null;
     const next = this.targets[this.idx];
-    // Deux notes identiques de suite : il faut relâcher avant de rejouer.
-    this.needRelease = !!next && !!prev && next.midi === prev.midi;
+    // Deux notes identiques de suite (ou mode détaché) : il faut relâcher avant de rejouer.
+    this.needRelease = !!next && !!prev && (this.options.detache || next.midi === prev.midi);
     this.releasePeak = 0;
   }
 }

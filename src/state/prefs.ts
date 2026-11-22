@@ -23,6 +23,10 @@ export interface Prefs {
   voice: boolean;
   /** Pas à pas : jouer automatiquement chaque nouvelle note. */
   autoHear: boolean;
+  /** Pas à pas : tenir chaque note sa durée écrite (au tempo choisi). */
+  stepHold: boolean;
+  /** Pas à pas : chaque note doit être attaquée (détaché). */
+  stepDetache: boolean;
   /** Mode jeu : piste à défilement ou partition. */
   gameView: 'highway' | 'score';
   /** Cercle des notes à côté du manche. */
@@ -51,6 +55,8 @@ const DEFAULTS: Prefs = {
   repeat: 1,
   voice: false,
   autoHear: false,
+  stepHold: true,
+  stepDetache: true,
   gameView: 'highway',
   showCircle: true,
   backing: true,

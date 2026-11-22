@@ -11,10 +11,12 @@ import { installSpatialNav } from './ui/spatial-nav';
 import { esc } from './ui/dom';
 import { toast } from './ui/results';
 import { mountMetronome } from './ui/metronome';
+import { mountTuner } from './ui/tuner';
 
 const app = document.getElementById('app')!;
 installSpatialNav();
 mountMetronome();
+mountTuner();
 
 onPracticeBadges((badges) => {
   for (const b of badges) toast(`<span class="bicon">${b.icon}</span> Badge débloqué : <strong>${esc(b.name)}</strong>`);

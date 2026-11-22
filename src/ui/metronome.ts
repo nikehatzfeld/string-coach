@@ -98,7 +98,7 @@ export function mountMetronome(): void {
   root.className = 'metro';
   root.innerHTML = `
     <button class="metro-fab" aria-expanded="false" aria-label="Métronome" title="Métronome">
-      <span class="metro-icon">♩</span><span class="metro-fab-bpm"></span>
+      <span class="metro-icon">♩</span><small class="fab-label">Métronome</small><span class="metro-fab-bpm"></span>
     </button>
     <div class="metro-panel" hidden role="dialog" aria-label="Métronome">
       <div class="metro-beats"></div>

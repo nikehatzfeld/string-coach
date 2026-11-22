@@ -92,6 +92,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       </select>
       <button id="ksBtn" class="more" aria-pressed="${prefs.keySignatures}" title="Armure à la clé, ou dièses et bémols écrits devant chaque note">Armure</button>
       <label class="only-step more">Tolérance <input id="tol" type="range" min="10" max="60" step="5" value="${prefs.tolerance}" /> <output id="tolOut">±${prefs.tolerance} cents</output></label>
+      <button id="stepHold" class="only-step more" aria-pressed="${prefs.stepHold}" title="Tenir chaque note sa durée écrite (au tempo choisi)">⏱ Tenir la durée</button>
+      <button id="stepDetache" class="only-step more" aria-pressed="${prefs.stepDetache}" title="Chaque note doit être attaquée : coup d'archet ou petit silence entre deux notes">✂ Détaché</button>
       <button id="restart" class="only-step more">↻ Recommencer</button>
       <button id="micTest" class="more">🎤 Test micro</button>
       <label class="no-live more" title="Fréquence du La : 440 Hz standard, ou celle de ton accordage">La = <input id="a4" type="number" min="415" max="466" step="0.5" value="${prefs.a4}" /> Hz</label>
@@ -309,11 +311,13 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   let originalBpm = source.kind === 'library' ? source.song.tempo : 120;
   const bpmInput = $<HTMLInputElement>('bpm');
   const bpmRange = $<HTMLInputElement>('bpmRange');
+  let trainer: StepTrainer | null = null;
   function setBpm(bpm: number, save = true) {
     const v2 = Math.round(Math.max(30, Math.min(240, bpm || originalBpm)));
     bpmInput.value = String(v2);
     bpmRange.value = String(v2);
     api.playbackSpeed = v2 / originalBpm;
+    applyHold();
     if (save) {
       if (v2 === originalBpm) delete prefs.bpmBySong[songId];
       else prefs.bpmBySong[songId] = v2;
@@ -564,7 +568,6 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   }
 
   // ---------- Pas à pas (noté) ----------
-  let trainer: StepTrainer | null = null;
   let beatsByTarget: alphaTab.model.Beat[] = [];
   let keeper = new ScoreKeeper(0);
   let errorSince: number | null = null;
@@ -577,16 +580,29 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     v.trackBeats.forEach((beat, i) => {
       if (beat.isRest || beat.notes.length === 0 || !inSection(beat)) return;
       if (beat.notes.every((n) => n.isTieDestination)) return;
-      targets.push({ midi: Math.max(...beat.notes.map((n) => n.realValue)), beatIndex: i });
+      // Durée écrite, liaisons comprises (en ticks : 960 par noire).
+      let ticks = beat.playbackDuration;
+      const all = v.trackBeats;
+      for (let k = i + 1; k < all.length && all[k].notes.length && all[k].notes.every((n) => n.isTieDestination); k++) ticks += all[k].playbackDuration;
+      targets.push({ midi: Math.max(...beat.notes.map((n) => n.realValue)), beatIndex: i, ticks } as StepTarget & { ticks: number });
       beatsByTarget.push(beat);
     });
-    trainer = new StepTrainer(targets, { toleranceCents: prefs.tolerance, a4: prefs.a4 });
+    trainer = new StepTrainer(targets, { toleranceCents: prefs.tolerance, a4: prefs.a4, detache: prefs.stepDetache });
+    applyHold();
     keeper = new ScoreKeeper(targets.length);
     hadError = false;
     errorSince = null;
     stepAssisted = false;
     updateStepHud();
     showTarget();
+  }
+
+  /** Tenue demandée : 70 % de la durée écrite au tempo choisi (min. 80 ms, max. 4 s). */
+  function applyHold() {
+    if (!trainer) return;
+    const bpm = Number(bpmInput.value) || originalBpm;
+    for (const t of trainer.targets as (StepTarget & { ticks?: number })[])
+      t.holdMs = prefs.stepHold && t.ticks ? Math.min(4000, Math.max(80, ((t.ticks / 960) * 60000 * 0.7) / bpm)) : undefined;
   }
 
   function updateStepHud() {
@@ -656,7 +672,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         setVerdict('À toi de jouer…', '');
         break;
       case 'listening':
-        setVerdict('Relâche puis rejoue la note', '');
+        setVerdict(prefs.stepDetache ? 'Détache : nouveau coup d’archet pour cette note' : 'Relâche puis rejoue la note', '');
         break;
       case 'too-low':
         setVerdict(`Trop bas (${heard}, ${Math.round(u.cents!)} cents)`, 'bad');
@@ -665,7 +681,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         setVerdict(`Trop haut (${heard}, +${Math.round(u.cents!)} cents)`, 'bad');
         break;
       case 'holding':
-        setVerdict('Juste, tiens la note…', 'near');
+        setVerdict(prefs.stepHold && u.hold !== undefined ? `Juste, tiens la note… ${'▮'.repeat(Math.round(u.hold * 8))}${'▯'.repeat(8 - Math.round(u.hold * 8))}` : 'Juste, tiens la note…', 'near');
         break;
       case 'validated': {
         const j: Judgment = hadError ? 'ok' : 'perfect';
@@ -1066,6 +1082,18 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     clearTimeout(flashTimer);
     flashTimer = window.setTimeout(() => (el.className = 'g-flash'), 600);
   }
+  $('stepHold').addEventListener('click', () => {
+    prefs.stepHold = !prefs.stepHold;
+    savePrefs();
+    $('stepHold').setAttribute('aria-pressed', String(prefs.stepHold));
+    applyHold();
+  });
+  $('stepDetache').addEventListener('click', () => {
+    prefs.stepDetache = !prefs.stepDetache;
+    savePrefs();
+    $('stepDetache').setAttribute('aria-pressed', String(prefs.stepDetache));
+    if (trainer) trainer.options.detache = prefs.stepDetache;
+  });
   $('autoHear').addEventListener('click', () => {
     prefs.autoHear = !prefs.autoHear;
     savePrefs();
