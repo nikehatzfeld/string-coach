@@ -178,9 +178,120 @@ const GUITAR: CourseStage[] = [
   },
 ];
 
+
+/** Flûte à bec soprano : progression classique des méthodes scolaires (main gauche Si-La-Sol d'abord). */
+const RECORDER: CourseStage[] = [
+  {
+    weeks: [1, 2],
+    goal: 'Souffle doux, langue « tu », Si – La – Sol',
+    items: [
+      { block: 'warmup', title: 'Souffle et coup de langue', how: 'Sur le Si (pouce + 1er doigt), souffle tiède comme pour embuer une vitre, « tu-tu-tu » régulier.', offline: true },
+      { block: 'technique', title: 'Si, La, Sol', how: 'Main gauche seulement : ajoute un doigt à chaque note. Trous bien bouchés avec la pulpe.', song: 'hot-cross-buns', mode: 'step', bpm: 60 },
+      { block: 'piece', title: 'Mary Had a Little Lamb', how: 'Tiens chaque note sa durée.', song: 'mary-had-a-little-lamb', mode: 'step', bpm: 70 },
+      { block: 'rhythm', title: 'Hot Cross Buns', how: 'Mode jeu : en rythme.', song: 'hot-cross-buns', mode: 'game', bpm: 70 },
+    ],
+  },
+  {
+    weeks: [3, 4],
+    goal: 'Do et Ré aigus, Au clair de la lune',
+    items: [
+      { block: 'warmup', title: 'Notes longues', how: 'Si, La, Sol, Do, Ré : 4 temps chacune, son stable sans « trembler ».', offline: true },
+      { block: 'technique', title: 'Gamme de Sol (début)', how: 'Monte doucement, garde le souffle léger dans l’aigu.', song: 'gamme-g-major', mode: 'step', bpm: 60 },
+      { block: 'piece', title: 'Au clair de la lune', how: 'Phrase de 4 mesures, respire entre les phrases.', song: 'au-clair-de-la-lune', mode: 'step', bpm: 80 },
+      { block: 'rhythm', title: 'Frère Jacques', how: 'Mode jeu.', song: 'frere-jacques', mode: 'game', bpm: 80 },
+    ],
+  },
+  {
+    weeks: [5, 6],
+    goal: 'Main droite : Mi, Ré grave, Fa♯',
+    items: [
+      { block: 'warmup', title: 'Ré grave', how: 'Tous les doigts sauf le petit doigt : souffle très doux, sinon ça « octavie ».', offline: true },
+      { block: 'technique', title: 'Gamme de Ré majeur', how: 'Le Fa♯ : pouce, 1-2-3 | – 5-6.', song: 'gamme-d-major', mode: 'step', bpm: 60 },
+      { block: 'piece', title: 'Ode à la joie', how: 'Par parties.', song: 'ode-joie', mode: 'step', bpm: 80 },
+      { block: 'rhythm', title: 'Jingle Bells', how: 'Mode jeu.', song: 'jingle-bells', mode: 'game', bpm: 90 },
+    ],
+  },
+  {
+    weeks: [7, 8],
+    goal: 'Fa (doigté fourché), Do grave',
+    items: [
+      { block: 'warmup', title: 'Do grave', how: 'Tous les trous bouchés, souffle minimal ; vérifie avec le test micro.', offline: true },
+      { block: 'technique', title: 'Gamme de Do majeur', how: 'Le Fa baroque : 1-2-3 | 4 – 6-7.', song: 'gamme-c-major', mode: 'step', bpm: 60 },
+      { block: 'piece', title: 'Amazing Grace', how: 'Notes liées : une seule attaque de langue.', song: 'amazing-grace', mode: 'step', bpm: 70 },
+      { block: 'rhythm', title: 'Oh! Susanna', how: 'Mode jeu.', song: 'oh-susanna', mode: 'game', bpm: 90 },
+    ],
+  },
+  {
+    weeks: [9, 10],
+    goal: 'Registre aigu : pouce entrouvert',
+    items: [
+      { block: 'warmup', title: 'Octaves Mi – Mi', how: 'Même doigté, on entrouvre le pouce (ongle contre le trou) et on souffle un peu plus.', offline: true },
+      { block: 'technique', title: 'Gamme de Sol sur 2 octaves', how: 'Lentement, pouce mobile.', song: 'gamme-g-2oct', mode: 'step', bpm: 56 },
+      { block: 'piece', title: 'Greensleeves', how: 'Par parties.', song: 'greensleeves', mode: 'step', bpm: 80 },
+      { block: 'rhythm', title: 'Scarborough Fair', how: 'Mode jeu.', song: 'scarborough-fair', mode: 'game', bpm: 80 },
+    ],
+  },
+  {
+    weeks: [11, 12],
+    goal: 'Altérations (Si♭, Do♯), morceaux complets',
+    items: [
+      { block: 'warmup', title: 'Si♭ et Do♯', how: 'Si♭ : pouce, 1 – 3 | 4 ; Do♯ aigu : 1-2 sans le pouce.', offline: true },
+      { block: 'technique', title: 'Gamme de Fa majeur', how: 'Avec le Si♭.', song: 'gamme-f-major', mode: 'step', bpm: 60 },
+      { block: 'piece', title: 'Jésus que ma joie demeure', how: 'Version facile d’abord.', song: 'jesus-que-ma-joie', mode: 'step', bpm: 66 },
+      { block: 'rhythm', title: 'Korobeiniki', how: 'Mode jeu.', song: 'korobeiniki', mode: 'game', bpm: 100 },
+    ],
+  },
+];
+
+/** Voix : justesse, souffle, puis chant à deux voix (canons). */
+const VOICE: CourseStage[] = [
+  {
+    weeks: [1, 2],
+    goal: 'Posture, souffle, trouver sa note',
+    items: [
+      { block: 'warmup', title: 'Souffle et sirènes', how: 'Inspire par le ventre, expire sur « sss » 10 s ; puis sirène douce du grave à l’aigu sur « ou ».', offline: true },
+      { block: 'technique', title: 'Reproduire une note', how: 'Écoute 🔊, chante « la », regarde la courbe de hauteur.', song: 'cordes-a-vide', mode: 'step', bpm: 60 },
+      { block: 'piece', title: 'Au clair de la lune', how: 'Doucement, sur « lou ».', song: 'au-clair-de-la-lune', mode: 'step', bpm: 70 },
+      { block: 'rhythm', title: 'Hot Cross Buns', how: 'Mode jeu : chante en rythme.', song: 'hot-cross-buns', mode: 'game', bpm: 70 },
+    ],
+  },
+  {
+    weeks: [3, 4],
+    goal: 'Gamme et intervalles',
+    items: [
+      { block: 'warmup', title: 'Lip trill', how: 'Lèvres qui vibrent (« brrr ») en glissant 5 notes.', offline: true },
+      { block: 'technique', title: 'Gamme de Do majeur', how: 'Do-ré-mi… nommer chaque note en chantant.', song: 'gamme-c-major', mode: 'step', bpm: 60 },
+      { block: 'piece', title: 'Frère Jacques', how: 'Seul d’abord, puis en canon dans l’atelier 2 voix.', song: 'frere-jacques', mode: 'step', bpm: 80 },
+      { block: 'rhythm', title: 'Ode à la joie', how: 'Mode jeu.', song: 'ode-joie', mode: 'game', bpm: 80 },
+    ],
+  },
+  {
+    weeks: [5, 6],
+    goal: 'Arpèges, sauts, justesse dans l’aigu',
+    items: [
+      { block: 'warmup', title: 'Arpège sur « mi-a »', how: 'Do-mi-sol-do-sol-mi-do, bouche ouverte, sans forcer.', offline: true },
+      { block: 'technique', title: 'Arpège de Do majeur', how: 'Vise le centre de chaque note.', song: 'arpege-c-major', mode: 'step', bpm: 60 },
+      { block: 'piece', title: 'Amazing Grace', how: 'Phrases longues, respire aux virgules.', song: 'amazing-grace', mode: 'step', bpm: 70 },
+      { block: 'rhythm', title: 'Oh! Susanna', how: 'Mode jeu.', song: 'oh-susanna', mode: 'game', bpm: 90 },
+    ],
+  },
+  {
+    weeks: [7, 12],
+    goal: 'Chanter à deux voix',
+    items: [
+      { block: 'warmup', title: 'Tenir sa note contre une autre', how: 'Atelier 2 voix : l’app tient une note, tu chantes la tierce, puis la quinte.', offline: true },
+      { block: 'technique', title: 'Gamme mineure', how: 'Écoute la tierce mineure.', song: 'gamme-a-minor', mode: 'step', bpm: 60 },
+      { block: 'piece', title: 'Douce nuit', how: 'Mélodie, puis tierce au-dessous dans l’atelier 2 voix.', song: 'douce-nuit', mode: 'step', bpm: 70 },
+      { block: 'rhythm', title: 'Scarborough Fair', how: 'Mode jeu.', song: 'scarborough-fair', mode: 'game', bpm: 80 },
+    ],
+  },
+];
+
 export const COURSES: Record<InstrumentId, { title: string; stages: CourseStage[] }> = {
   violin: { title: 'Violon : 12 semaines pour débuter', stages: VIOLIN },
   guitar: { title: 'Guitare : 12 semaines pour débuter', stages: GUITAR },
+  recorder: { title: 'Flûte à bec : 12 semaines pour débuter', stages: RECORDER },
+  voice: { title: 'Voix : 12 semaines pour chanter juste', stages: VOICE },
 };
 
 export function stageForWeek(inst: InstrumentId, week: number): CourseStage {

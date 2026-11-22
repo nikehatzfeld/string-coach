@@ -1,3 +1,4 @@
+import { INSTRUMENTS } from '../songs/instruments';
 import { persist, progress } from '../game/store';
 import { EXERCISE_CATEGORIES, exercisesFor, type Exercise } from '../songs/exercise-bank';
 import { prefs, savePrefs } from '../state/prefs';
@@ -24,7 +25,7 @@ export function renderExercises(app: HTMLElement, open: OpenFn, back: () => void
   app.innerHTML = `
     <header class="top">
       <button id="xBack" class="ghost" aria-label="Retour">←</button>
-      <div class="ptitle"><h1>💪 Exercices ${prefs.instrument === 'violin' ? 'de violon' : 'de guitare'}</h1><span class="pbest">${done} / ${all.length} validés</span></div>
+      <div class="ptitle"><h1>💪 Exercices · ${INSTRUMENTS[prefs.instrument].label}</h1><span class="pbest">${done} / ${all.length} validés</span></div>
     </header>
     <main class="home">
       <div class="session-bar"><div style="width:${(done / all.length) * 100}%"></div></div>

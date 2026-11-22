@@ -14,6 +14,9 @@ import { ScoreKeeper, type Judgment } from '../game/scoring';
 import { persist, progress, setPracticeActive, todayChallenge } from '../game/store';
 import { prefs, savePrefs } from '../state/prefs';
 import { openMicTest } from './mic-test';
+import { RecorderBoard } from './recorder-board';
+import { PitchTrace } from './voice-board';
+import { recorderTip } from '../songs/recorder';
 import { chartFromSong } from '../courses/chords-content';
 import { Fingerboard, suggestedFinger, type BoardNote } from './fingerboard';
 import { ScoreView, type ViewMode } from './score-view';
@@ -79,7 +82,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       <button id="metro" class="only-live more" aria-pressed="false">Métronome</button>
       <button id="countin" class="only-live more" aria-pressed="false">Décompte</button>
       <button id="backing" class="more" aria-pressed="${prefs.backing}" hidden title="Fond musical : accords, basse et batterie">🎶 Accompagnement</button>
-      <select id="viewMode" class="no-game more" aria-label="Affichage">
+      <select id="viewMode" class="no-game more" aria-label="Affichage" ${inst.kind !== 'strings' ? 'hidden' : ''}>
         <option value="score">${inst.id === 'violin' ? 'Partition + doigtés' : 'Partition'}</option>
         <option value="score-tab">Partition + tablature${inst.id === 'violin' ? ' (demi-tons)' : ''}</option>
         <option value="tab">Tablature${inst.id === 'violin' ? ' (demi-tons)' : ''}</option>
@@ -314,6 +317,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   const bpmInput = $<HTMLInputElement>('bpm');
   const bpmRange = $<HTMLInputElement>('bpmRange');
   let trainer: StepTrainer | null = null;
+  let trace: PitchTrace | null = null;
   function setBpm(bpm: number, save = true) {
     const v2 = Math.round(Math.max(30, Math.min(240, bpm || originalBpm)));
     bpmInput.value = String(v2);
@@ -394,6 +398,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   // ---------- Doigtés et manche ----------
   function beatFingerings(beat: alphaTab.model.Beat | undefined): BoardNote[] {
     if (!beat || beat.isRest) return [];
+    if (inst.kind !== 'strings') return beat.notes.filter((n) => !n.isTieDestination || beat.notes.length === 1).map((n) => ({ midi: n.realValue, string: 0, fret: 0 }));
     const tuning = beat.voice.bar.staff.stringTuning.tunings;
     return beat.notes
       .filter((n) => !n.isTieDestination || beat.notes.length === 1)
@@ -421,7 +426,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   const placements = new Map<alphaTab.model.Beat, Placed>();
   function computePlacements() {
     placements.clear();
-    if (source.kind !== 'library') return;
+    if (source.kind !== 'library' || inst.kind !== 'strings') return;
     const beats = v.trackBeats.filter((b) => !b.isRest && b.notes.length && !b.notes.every((n) => n.isTieDestination));
     const midis = beats.map((b) => Math.max(...b.notes.map((n) => n.realValue)));
     try {
@@ -443,6 +448,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   function stringLabel(beat: alphaTab.model.Beat): string {
     const f = topFingering(beat);
     if (!f) return '';
+    if (inst.kind === 'wind') return recorderTip(f.midi) || 'doigté ci-dessus';
+    if (inst.kind === 'voice') return 'chante la note (ou une octave plus bas)';
     const sName = `corde de ${inst.stringNamesFr[f.string - 1]}`;
     if (f.fret === 0) return `${sName}, à vide`;
     const finger = f.finger ?? suggestedFinger(f.fret, inst);
@@ -453,7 +460,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     return inst.id === 'violin' ? `${sName}${doigt}${pos}` : `${sName}, case ${f.fret}${doigt}${pos}`;
   }
 
-  const board = new Fingerboard($('neck'), inst);
+  const board: { show(c: BoardNote[], n?: BoardNote[], l?: BoardNote[]): void } =
+    inst.kind === 'wind' ? new RecorderBoard($('neck')) : inst.kind === 'voice' ? (trace = new PitchTrace($('neck'), 'ta voix')) : new Fingerboard($('neck'), inst);
   $('neckBtn').addEventListener('click', () => {
     prefs.showNeck = !prefs.showNeck;
     savePrefs();
@@ -492,6 +500,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
 
   /** Indicateur micro : niveau et note entendue. */
   function showMic(r: PitchReading) {
+    trace?.feed(r.freq ? freqToMidiFloat(r.freq, prefs.a4) : null, r.time);
     circleHeard(r.freq);
     const lvl = document.getElementById(mode === 'game' ? 'gLvl' : 'sLvl');
     const heard = document.getElementById(mode === 'game' ? 'gHeard' : 'sHeard');

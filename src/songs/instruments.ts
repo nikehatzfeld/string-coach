@@ -1,8 +1,13 @@
-export type InstrumentId = 'violin' | 'guitar';
+export type InstrumentId = 'violin' | 'guitar' | 'recorder' | 'voice';
 
 export interface Instrument {
   id: InstrumentId;
   label: string;
+  /** Instrument à cordes (manche, tablature) ou mélodique (partition seule). */
+  kind: 'strings' | 'wind' | 'voice';
+  icon: string;
+  /** Tessiture écrite [grave, aigu] pour les instruments sans cordes. */
+  range?: [number, number];
   /** Cordes de la plus aiguë à la plus grave (ordre alphaTex : corde 1 = plus aiguë). */
   tuning: number[];
   tuningNames: string[];
@@ -18,6 +23,8 @@ export const INSTRUMENTS: Record<InstrumentId, Instrument> = {
   violin: {
     id: 'violin',
     label: 'Violon',
+    kind: 'strings',
+    icon: '🎻',
     tuning: [76, 69, 62, 55],
     tuningNames: ['E5', 'A4', 'D4', 'G3'],
     stringNamesFr: ['Mi', 'La', 'Ré', 'Sol'],
@@ -28,6 +35,8 @@ export const INSTRUMENTS: Record<InstrumentId, Instrument> = {
   guitar: {
     id: 'guitar',
     label: 'Guitare',
+    kind: 'strings',
+    icon: '🎸',
     tuning: [64, 59, 55, 50, 45, 40],
     tuningNames: ['E4', 'B3', 'G3', 'D3', 'A2', 'E2'],
     stringNamesFr: ['Mi aigu', 'Si', 'Sol', 'Ré', 'La', 'Mi grave'],
@@ -35,7 +44,37 @@ export const INSTRUMENTS: Record<InstrumentId, Instrument> = {
     alphaTexInstrument: 'acousticguitarsteel',
     defaultView: 'score-tab',
   },
+  recorder: {
+    id: 'recorder',
+    label: 'Flûte à bec',
+    kind: 'wind',
+    icon: '🪈',
+    // Soprano : écrite de Do4 à Ré6, sonne une octave plus haut.
+    range: [60, 86],
+    tuning: [],
+    tuningNames: [],
+    stringNamesFr: [],
+    maxFret: 0,
+    alphaTexInstrument: 'recorder',
+    defaultView: 'score',
+  },
+  voice: {
+    id: 'voice',
+    label: 'Voix',
+    kind: 'voice',
+    icon: '🎤',
+    // Voix « moyenne » : Sol3 à Sol5 ; une voix grave chante une octave plus bas (accepté).
+    range: [55, 79],
+    tuning: [],
+    tuningNames: [],
+    stringNamesFr: [],
+    maxFret: 0,
+    alphaTexInstrument: 'voiceoohs',
+    defaultView: 'score',
+  },
 };
+
+export const INSTRUMENT_IDS: InstrumentId[] = ['violin', 'guitar', 'recorder', 'voice'];
 
 export interface Fingering {
   /** 1 = corde la plus aiguë. */
@@ -56,6 +95,7 @@ export function fingerNote(midi: number, inst: Instrument): Fingering {
 }
 
 export function instrumentRange(inst: Instrument): [number, number] {
+  if (inst.range) return inst.range;
   const low = Math.min(...inst.tuning);
   const high = Math.max(...inst.tuning) + inst.maxFret;
   return [low, high];

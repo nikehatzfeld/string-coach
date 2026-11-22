@@ -44,7 +44,7 @@ export interface Prefs {
 const KEY = 'string-coach:prefs';
 const DEFAULTS: Prefs = {
   instrument: 'violin',
-  views: { violin: 'score', guitar: 'score-tab' },
+  views: { violin: 'score', guitar: 'score-tab', recorder: 'score', voice: 'score' },
   tolerance: 35,
   speed: 1,
   bpmBySong: {},
@@ -67,7 +67,8 @@ const DEFAULTS: Prefs = {
 
 function load(): Prefs {
   try {
-    return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) ?? '{}') };
+    const saved = JSON.parse(localStorage.getItem(KEY) ?? '{}');
+    return { ...DEFAULTS, ...saved, views: { ...DEFAULTS.views, ...(saved.views ?? {}) } };
   } catch {
     return { ...DEFAULTS };
   }

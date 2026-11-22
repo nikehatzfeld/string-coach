@@ -98,3 +98,16 @@ describe('versions faciles', () => {
     expect(easy.some((s) => /canon in d/i.test(s.title))).toBe(true);
   });
 });
+
+describe('flûte à bec', () => {
+  it('doigté pour chaque note chromatique de Do4 à Ré6', async () => {
+    const { RECORDER_FINGERINGS } = await import('../src/songs/recorder');
+    for (let m = 60; m <= 86; m++) expect(RECORDER_FINGERINGS.get(m), String(m)).toHaveLength(8);
+    expect(RECORDER_FINGERINGS.get(67)!.join('')).toBe('XXXXOOOO'); // Sol
+  });
+  it('les morceaux sont dans la tessiture, partition seule', () => {
+    const tex = songToAlphaTex(LIBRARY.find((s) => s.id === 'ode-joie')!, INSTRUMENTS.recorder);
+    expect(tex).toContain('\\instrument recorder');
+    expect(tex).not.toContain('\\tuning');
+  });
+});

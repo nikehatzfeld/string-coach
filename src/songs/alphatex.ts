@@ -85,6 +85,7 @@ export function songMidiRange(bars: ParsedBar[]): [number, number] {
 
 /** Convertit un morceau de la bibliothèque en alphaTex pour un instrument. */
 export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: boolean; keySignature?: boolean } = {}): string {
+  if (inst.kind !== 'strings') return melodicToAlphaTex(song, inst, opts);
   const bars = parseNotation(song.notation);
   // Exercices à corde ou position imposée : hauteurs telles qu'écrites.
   const shift =
@@ -194,6 +195,77 @@ export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: b
     .join(' |\n');
 
   const melody = `${header.replace(NAMES_PLACEHOLDER, escape(names.join(' ')))}\n${body}`;
+  const withBacking = (opts.backing ?? true) && song.backing !== false && hasChords(bars);
+  if (!withBacking) return melody;
+  return `${melody}\n${backingTracks(bars, song.timeSignature, song.backing || backingKindFor(song.style))}`;
+}
+
+const TEX_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const TEX_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+
+/**
+ * Flûte, voix : partition seule (hauteurs écrites), mélodie ramenée dans la tessiture,
+ * mesure par mesure pour éviter les sauts d'octave au milieu d'une phrase.
+ */
+function melodicToAlphaTex(song: Song, inst: Instrument, opts: { backing?: boolean; keySignature?: boolean }): string {
+  const bars = parseNotation(song.notation);
+  const [low, high] = inst.range ?? [55, 84];
+  const [num, den] = song.timeSignature;
+  const all = bars.flat().filter((e) => e.kind === 'note').map((e) => e.midi as number);
+  const count = (t: number) => all.filter((m) => m + t >= low && m + t <= high).length;
+  const global = [0, 12, -12, 24, -24].reduce((b, t) => (count(t) > count(b) ? t : b), 0);
+  const fits = (lo: number, hi: number, t: number) => lo + t >= low && hi + t <= high;
+  let barShift = global;
+  const fold = (m: number) => {
+    while (m > high) m -= 12;
+    while (m < low) m += 12;
+    return m;
+  };
+  const names: string[] = [];
+  let last = '';
+  const body = bars
+    .map((bar) => {
+      const ms = bar.filter((e) => e.kind === 'note').map((e) => e.midi as number);
+      if (ms.length) {
+        const lo = Math.min(...ms);
+        const hi = Math.max(...ms);
+        if (!fits(lo, hi, barShift)) {
+          const o = [global, global - 12, global + 12, global - 24, global + 24].filter((t) => fits(lo, hi, t));
+          barShift = o.length ? o[0] : global;
+        }
+      }
+      return bar
+        .map((ev) => {
+          const dur = DUR_TEX[ev.duration];
+          const effects: string[] = [];
+          if (ev.dotted) effects.push('d');
+          if (ev.chord) effects.push(`ch "${escape(ev.chord)}"`);
+          const fx = effects.length ? `{${effects.join(' ')}}` : '';
+          if (ev.kind === 'rest') return `r.${dur}${fx}`;
+          if (ev.kind === 'tie') {
+            names.push('_');
+            return last ? `${last}{-}.${dur}${fx}` : `r.${dur}${fx}`;
+          }
+          const m = fold((ev.midi as number) + barShift);
+          last = `${(ev.flat ? TEX_FLAT : TEX_SHARP)[m % 12]}${Math.floor(m / 12) - 1}`;
+          names.push(solfege(m, !!ev.flat));
+          return `${last}.${dur}${fx}`;
+        })
+        .join(' ');
+    })
+    .join(' |\n');
+  const header = [
+    `\\title "${escape(song.title)}"`,
+    `\\artist "${escape(song.composer)}"`,
+    `\\tempo ${song.tempo}`,
+    `\\ts (${num} ${den})`,
+    ...(song.key && opts.keySignature !== false ? [`\\ks ${song.key}`] : []),
+    `\\track "${inst.label}"`,
+    `\\lyrics "${escape(names.join(' '))}"`,
+    `\\staff {score}`,
+    `\\instrument ${inst.alphaTexInstrument}`,
+  ].join('\n');
+  const melody = `${header}\n${body}`;
   const withBacking = (opts.backing ?? true) && song.backing !== false && hasChords(bars);
   if (!withBacking) return melody;
   return `${melody}\n${backingTracks(bars, song.timeSignature, song.backing || backingKindFor(song.style))}`;

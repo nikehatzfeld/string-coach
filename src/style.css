@@ -570,3 +570,22 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .cp-bar { position: relative; min-height: 3.2rem; border-radius: 10px; font-weight: 800; font-size: 1.05rem; background: var(--panel-solid); }
 .cp-bar small { position: absolute; top: 3px; left: 6px; font-size: 0.65rem; color: var(--muted); font-weight: 600; }
 .cp-bar.on { outline: 3px solid var(--accent); } .cp-bar.good { background: rgba(79,209,165,0.3); } .cp-bar.bad { background: rgba(255,90,90,0.25); }
+/* ---------- Flûte à bec ---------- */
+.recorder-board { display: flex; align-items: center; gap: 1.2rem; padding: 0.4rem 1rem; background: rgba(21,25,37,0.7); border-bottom: 1px solid var(--border); min-height: 150px; }
+.rb-note { display: flex; flex-direction: column; align-items: center; }
+.rb-lg { flex: 1 1 55%; } .rb-sm { flex: 1 1 22%; opacity: 0.75; }
+.rb-name { font-weight: 800; font-size: 1.6rem; } .rb-sm .rb-name { font-size: 1.05rem; color: var(--ok); }
+.rb-name small { font-size: 0.6em; opacity: 0.6; margin-left: 2px; }
+.rb-svg { width: 100%; max-width: 520px; height: auto; } .rb-svg.ghost { opacity: 0.35; max-width: 360px; }
+.rb-body { fill: #e9dcc3; stroke: #b39b72; stroke-width: 2; }
+.rb-mouth { fill: #cdb994; }
+.rb-sep { stroke: rgba(0,0,0,0.15); stroke-width: 2; stroke-dasharray: 4 4; }
+.rb-closed { fill: #1b1f2a; stroke: #1b1f2a; stroke-width: 2; }
+.rb-open { fill: #fff; stroke: #1b1f2a; stroke-width: 2; }
+.rb-hn { font-size: 11px; text-anchor: middle; fill: var(--muted); font-weight: 700; }
+.rb-hand { font-size: 11px; text-anchor: middle; fill: var(--muted); }
+.rb-tip { margin: 0; color: var(--accent); font-size: 0.9rem; }
+.rb-empty { display: flex; align-items: center; gap: 1rem; width: 100%; }
+/* ---------- Courbe de hauteur (voix) ---------- */
+.pitch-trace-host { background: rgba(21,25,37,0.85); border-bottom: 1px solid var(--border); }
+.pitch-trace { display: block; width: 100%; height: 220px; }

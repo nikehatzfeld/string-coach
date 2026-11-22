@@ -1,7 +1,7 @@
 import { openMicTest } from './mic-test';
 import { BADGES, currentStreak, dailyMinutes, dueReviews, levelInfo, levelTitle } from '../game/progress';
 import { persist, progress, todayChallenge } from '../game/store';
-import { INSTRUMENTS, type InstrumentId } from '../songs/instruments';
+import { INSTRUMENT_IDS, INSTRUMENTS, type InstrumentId } from '../songs/instruments';
 import { LIBRARY, STYLES } from '../songs/library';
 import type { Song } from '../songs/alphatex';
 import { prefs, savePrefs } from '../state/prefs';
@@ -67,7 +67,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
       <button id="toMicTest" title="Vérifier que le micro entend ton instrument">🎤 Test micro</button>
       <button id="account" class="account" hidden></button>
       <div class="seg" role="group" aria-label="Instrument">
-        ${(['violin', 'guitar'] as InstrumentId[]).map((id) => `<button data-inst="${id}" aria-pressed="${prefs.instrument === id}">${id === 'violin' ? '🎻' : '🎸'} ${INSTRUMENTS[id].label}</button>`).join('')}
+        ${INSTRUMENT_IDS.map((id) => `<button data-inst="${id}" aria-pressed="${prefs.instrument === id}">${INSTRUMENTS[id].icon} ${INSTRUMENTS[id].label}</button>`).join('')}
       </div>
     </header>
     <main class="home">
