@@ -59,6 +59,7 @@ def main():
         song['level'] = LEVEL[song['id'].removeprefix('vivaldi-')]
         for k in ('metrics', 'bars', 'inst'):
             song.pop(k, None)
+        song['origin'] = 'Violin'
         new.append(song)
         print(f"OK {song['id']}: {song['notation'].count('|') + 1} mesures, niveau {song['level']}")
     ids = {s['id'] for s in new}

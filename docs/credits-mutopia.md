@@ -307,3 +307,202 @@ Mélodies extraites automatiquement (scripts/build_pd_library.py) des fichiers M
 | Les Quatre Saisons n° 2 · L'Été (3 mvts) | A. Vivaldi | CC BY-SA 3.0 | https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=336 |
 | Les Quatre Saisons n° 3 · L'Automne (3 mvts) | A. Vivaldi | CC BY-SA 3.0 | https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=350 |
 | Les Quatre Saisons n° 4 · L'Hiver (3 mvts) | A. Vivaldi | CC BY-SA 3.0 | https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=351 |
+
+## Guitare classique (scripts/build_guitar.py) — toutes les notes
+
+| Titre | Compositeur | Licence | Source |
+|---|---|---|---|
+| 12 Etudes, No. 8 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O6/sorf-op6n08/sorf-op6n08.mid |
+| 14 Canons - 1 | J. S. Bach | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/BachJS/BWV1087/bwv-1087-01-g/bwv-1087-01-g.mid |
+| 14 Canons - 2 | J. S. Bach | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/BachJS/BWV1087/bwv-1087-02-g/bwv-1087-02-g.mid |
+| 14 Canons - 4 | J. S. Bach | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/BachJS/BWV1087/bwv-1087-04-g/bwv-1087-04-g.mid |
+| 18 Progressive Lessons, No. 1 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O51/giuliani-o51-01/giuliani-o51-01.mid |
+| 18 Progressive Lessons, No. 3 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O51/giuliani-o51-03/giuliani-o51-03.mid |
+| 25 Progressive Studies, No. 13 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O60/sor_op60-13/sor_op60-13.mid |
+| 25 Progressive Studies, No. 6 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O60/sor_op60-06/sor_op60-06.mid |
+| 25 Progressive Studies, No. 7 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O60/sor_op60-07/sor_op60-07.mid |
+| 25 Progressive Studies, No. 8 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O60/sor_op60-08/sor_op60-08.mid |
+| Andantino | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/SorF_Andantino/SorF_Andantino.mid |
+| Divertissements, No. 3 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O78/giuliani-op78n03/giuliani-op78n03.mid |
+| Guitar-Skole no. 1 : Waltz, op. 241, no 1 | F. Carulli | CC BY 4.0 | https://www.mutopiaproject.org/ftp/CarulliF/guitar-skole-no-01/guitar-skole-no-01.mid |
+| Guitar-Skole no. 10 : Menuett, fra det 17de Aarhundrede | N. Coste | CC BY 3.0 | https://www.mutopiaproject.org/ftp/CosteN/guitar-skole-no-10/guitar-skole-no-10.mid |
+| Guitar-Skole no. 11 : Tempo di Valse | F. Carulli | CC BY 4.0 | https://www.mutopiaproject.org/ftp/CarulliF/guitar-skole-no-11/guitar-skole-no-11.mid |
+| Guitar-Skole no. 18 : Landler | F. Sor | CC BY 3.0 | https://www.mutopiaproject.org/ftp/SorF/guitar-skole-no-18/guitar-skole-no-18.mid |
+| Guitar-Skole no. 2 : Andante, op. 35, no. 1 | F. Sor | CC BY 3.0 | https://www.mutopiaproject.org/ftp/SorF/guitar-skole-no-02/guitar-skole-no-02.mid |
+| Guitar-Skole no. 3 : Allegretto, op. 44, no. 2 | F. Sor | CC BY 3.0 | https://www.mutopiaproject.org/ftp/SorF/guitar-skole-no-03/guitar-skole-no-03.mid |
+| Guitar-Skole no. 4 : Andante | J. K. Mertz | CC BY 3.0 | https://www.mutopiaproject.org/ftp/MertzJK/guitar-skole-no-04/guitar-skole-no-04.mid |
+| Guitar-Skole no. 6 : Waltz, op. 241, no. 4 | F. Carulli | CC BY 4.0 | https://www.mutopiaproject.org/ftp/CarulliF/guitar-skole-no-06/guitar-skole-no-06.mid |
+| Les Favorites, No. 5 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O11/aguado-op11n05/aguado-op11n05.mid |
+| Op. 35, Study No. 1 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no1/sorf_op35_no1.mid |
+| Op. 35, Study No. 18 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no18/sorf_op35_no18.mid |
+| Op. 35, Study No. 2 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no2/sorf_op35_no2.mid |
+| Op. 35, Study No. 3 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no3/sorf_op35_no3.mid |
+| Six Petites Pièces, No. 4 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O45/sorf-op45n04/sorf-op45n04.mid |
+| 14 Canons - 3 | J. S. Bach | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/BachJS/BWV1087/bwv-1087-03-g/bwv-1087-03-g.mid |
+| 16 Studies for the Guitar | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n01/giuliani-op59n01.mid |
+| 16 Studies for the Guitar | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n03/giuliani-op59n03.mid |
+| 16 Studies for the Guitar: No. 10 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n10/giuliani-op59n10.mid |
+| 16 Studies for the Guitar: No. 12 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n12/giuliani-op59n12.mid |
+| 16 Studies for the Guitar: No. 15 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n15/giuliani-op59n15.mid |
+| 16 Studies for the Guitar: No. 16 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n16/giuliani-op59n16.mid |
+| 16 Studies for the Guitar: No. 5 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n05/giuliani-op59n05.mid |
+| 16 Studies for the Guitar: No. 7 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n07/giuliani-op59n07.mid |
+| 18 Progressive Lessons, No. 10 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O51/giuliani-o51-10/giuliani-o51-10.mid |
+| 18 Progressive Lessons, No. 2 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O51/giuliani-o51-02/giuliani-o51-02.mid |
+| 18 Progressive Lessons, No. 6 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O51/giuliani-o51-06/giuliani-o51-06.mid |
+| 18 Progressive Lessons, No. 7 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O51/giuliani-o51-07/giuliani-o51-07.mid |
+| 24 Studies for the Guitar, No. 15 | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No15/GiulianiOp100No15.mid |
+| 24 Studies for the Guitar, No. 2 | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No2/GiulianiOp100No2.mid |
+| 25 Leçons Progressives, no 3 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O60/sor_op60-03/sor_op60-03.mid |
+| 25 Leçons Progressives, no 4 | F. Sor | CC BY-SA 2.5 | https://www.mutopiaproject.org/ftp/SorF/O60/sor_op60-04/sor_op60-04.mid |
+| 25 Leçons Progressives, no 5 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O60/sor_op60-05/sor_op60-05.mid |
+| 25 Progressive Studies, No. 10 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O60/sor_op60-10/sor_op60-10.mid |
+| Divertissements pour la guitare, n°1 Andante | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O1/sor_op1_1/sor_op1_1.mid |
+| Divertissements, No. 4 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O78/giuliani-op78n04/giuliani-op78n04.mid |
+| Guitar-Skole no. 14 : Andantino | J. K. Mertz | CC BY 3.0 | https://www.mutopiaproject.org/ftp/MertzJK/guitar-skole-no-14/guitar-skole-no-14.mid |
+| Guitar-Skole no. 15 : Allegretto | M. Carcassi | CC BY 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/guitar-skole-no-15/guitar-skole-no-15.mid |
+| Guitar-Skole no. 17 : Tempo di Valse | F. Carulli | CC BY 4.0 | https://www.mutopiaproject.org/ftp/CarulliF/guitar-skole-no-17/guitar-skole-no-17.mid |
+| Guitar-Skole no. 20 : Poco Allegro | F. Carulli | CC BY 4.0 | https://www.mutopiaproject.org/ftp/CarulliF/guitar-skole-no-20/guitar-skole-no-20.mid |
+| Guitar-Skole no. 21 : Tempo di marcia | J. K. Mertz | CC BY 3.0 | https://www.mutopiaproject.org/ftp/MertzJK/guitar-skole-no-21/guitar-skole-no-21.mid |
+| Guitar-Skole no. 22 : Allegretto | M. Carcassi | CC BY 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/guitar-skole-no-22/guitar-skole-no-22.mid |
+| Guitar-Skole no. 24 : Gavotte, fra. det 17de Aarhundrede | N. Coste | CC BY 3.0 | https://www.mutopiaproject.org/ftp/CosteN/guitar-skole-no-24/guitar-skole-no-24.mid |
+| Guitar-Skole no. 5 : Andantino | J. K. Mertz | CC BY 3.0 | https://www.mutopiaproject.org/ftp/MertzJK/guitar-skole-no-05/guitar-skole-no-05.mid |
+| Guitar-Skole no. 7 : Andante (Studies in Style, no. 3) | J. K. Mertz | CC BY 3.0 | https://www.mutopiaproject.org/ftp/MertzJK/guitar-skole-no-07/guitar-skole-no-07.mid |
+| Guitar-Skole no. 9 : Adagio | J. K. Mertz | CC BY 3.0 | https://www.mutopiaproject.org/ftp/MertzJK/guitar-skole-no-09/guitar-skole-no-09.mid |
+| Les Favorites, No. 2 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O11/aguado-op11n02/aguado-op11n02.mid |
+| Les Favorites, No. 6 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O11/aguado-op11n06/aguado-op11n06.mid |
+| No. 14: Etude | F. Sor | Domaine public | https://www.mutopiaproject.org/ftp/SorF/O35/Sor_Etude_Opus35_14/Sor_Etude_Opus35_14.mid |
+| Op. 35, Study No. 11 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no11/sorf_op35_no11.mid |
+| Op. 35, Study No. 12 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no12/sorf_op35_no12.mid |
+| Op. 35, Study No. 19 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no19/sorf_op35_no19.mid |
+| Op. 35, Study No. 21 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no21/sorf_op35_no21.mid |
+| Op. 35, Study No. 22 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no22/sorf_op35_no22.mid |
+| Op. 35, Study No. 23 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no23/sorf_op35_no23.mid |
+| Op. 35, Study No. 4 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no4/sorf_op35_no4.mid |
+| Op. 35, Study No. 8 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no8/sorf_op35_no8.mid |
+| Six Petites Pièces, No. 1 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O45/sorf-op45n01/sorf-op45n01.mid |
+| Six Petites Pièces, No. 3 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O45/sorf-op45n03/sorf-op45n03-mids.zip |
+| Six Petites Pièces, No. 4 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O4/AguadoOp4No4/AguadoOp4No4.mid |
+| 12 Etudes, No. 1 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O6/sorf-op6n01/sorf-op6n01.mid |
+| 12 Etudes, No. 12 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O6/sorf-op6n12/sorf-op6n12.mid |
+| 12 Etudes, No. 2 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O6/sorf-op6n02/sorf-op6n02.mid |
+| 12 Etudes, No. 3 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O6/sorf-op6n03/sorf-op6n03.mid |
+| 12 Etudes, No. 6 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O6/sorf-op6n06/sorf-op6n06.mid |
+| 12 Etudes, No. 9 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O6/sorf-op6n09/sorf-op6n09.mid |
+| 16 Studies for the Guitar | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n02/giuliani-op59n02.mid |
+| 16 Studies for the Guitar: 4 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n04/giuliani-op59n04.mid |
+| 16 Studies for the Guitar: No. 11 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n11/giuliani-op59n11.mid |
+| 16 Studies for the Guitar: No. 13 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n13/giuliani-op59n13.mid |
+| 16 Studies for the Guitar: No. 14 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n14/giuliani-op59n14.mid |
+| 16 Studies for the Guitar: No. 6 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n06/giuliani-op59n06.mid |
+| 16 Studies for the Guitar: No. 8 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n08/giuliani-op59n08.mid |
+| 16 Studies for the Guitar: No. 9 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O59/giuliani-op59n09/giuliani-op59n09.mid |
+| 18 Progressive Lessons, No. 4 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O51/giuliani-o51-04/giuliani-o51-04.mid |
+| 18 Progressive Lessons, No. 5 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O51/giuliani-o51-05/giuliani-o51-05.mid |
+| 18 Progressive Lessons, No. 8 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O51/giuliani-o51-08/giuliani-o51-08.mid |
+| 24 Studies for the Guitar, No. 10 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No10/GiulianiOp100No10.mid |
+| 24 Studies for the Guitar, No. 16 | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No16/GiulianiOp100No16.mid |
+| 24 Studies for the Guitar, No. 4 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No4/GiulianiOp100No4.mid |
+| 24 Studies for the Guitar, No. 6 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No6/GiulianiOp100No6.mid |
+| 24 Studies for the Guitar, No. 7 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No7/GiulianiOp100No7.mid |
+| 24 Studies for the Guitar, No. 8 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No8/GiulianiOp100No8.mid |
+| 24 Studies for the Guitar, No. 9 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No9/GiulianiOp100No9.mid |
+| 25 Progressive Studies, No. 11 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O60/sor_op60-11/sor_op60-11.mid |
+| 25 Progressive Studies, No. 12 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O60/sor_op60-12/sor_op60-12.mid |
+| 25 Progressive Studies, No. 9 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O60/sor_op60-09/sor_op60-09.mid |
+| 25 Studies: No. 13 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-13/carcassi-op60-13.mid |
+| 25 Studies: No. 14 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-14/carcassi-op60-14.mid |
+| 25 Studies: No. 16 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-16/carcassi-op60-16.mid |
+| 25 Studies: No. 17 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-17/carcassi-op60-17.mid |
+| 25 Studies: No. 18 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-18/carcassi-op60-18.mid |
+| 25 Studies: No. 21 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-21/carcassi-op60-21.mid |
+| 25 Studies: No. 24 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-24/carcassi-op60-24.mid |
+| 8 Petites Pièces for Guitar, No. 1 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O3/aguado-op03n01/aguado-op03n01.mid |
+| 8 Petites Pièces for Guitar, No. 2 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O3/aguado-op03n02/aguado-op03n02.mid |
+| 8 Petites Pièces for Guitar, No. 4 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O3/aguado-op03n04/aguado-op03n04.mid |
+| 8 Petites Pièces for Guitar, No. 7 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O3/aguado-op03n07/aguado-op03n07.mid |
+| Adelita | F. Tarrega | CC BY-SA 2.5 | https://www.mutopiaproject.org/ftp/TarregaF/adelita/adelita.mid |
+| Air varié | J. Küffner | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/KuffnerJ/air-varie/air-varie-mids.zip |
+| Allegro in G Major | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/g-major-allegro/g-major-allegro.mid |
+| Andante Largo | F. Sor | CC BY-SA 2.5 | https://www.mutopiaproject.org/ftp/SorF/O5/sor-op5-5/sor-op5-5.mid |
+| Divertissements, No. 2 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O78/giuliani-op78n02/giuliani-op78n02.mid |
+| Divertissements, No. 5 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O78/giuliani-op78n05/giuliani-op78n05.mid |
+| Etude 1 | M. Carcassi | Domaine public | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-01/carcassi-op60-01.mid |
+| Etude 10 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-10/carcassi-op60-10.mid |
+| Etude 11 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-11/carcassi-op60-11.mid |
+| Etude 5 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-05/carcassi-op60-05.mid |
+| Etude 6 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-06/carcassi-op60-06.mid |
+| Etude 8 | M. Carcassi | Domaine public | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-08/carcassi-op60-08.mid |
+| Etudes, No. 10 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O1/giuliani-op1n10/giuliani-op1n10.mid |
+| Guitar-Skole no. 12 : Cantabile | J. K. Mertz | CC BY 3.0 | https://www.mutopiaproject.org/ftp/MertzJK/guitar-skole-no-12/guitar-skole-no-12.mid |
+| Guitar-Skole no. 16 : Moderato | J. K. Mertz | CC BY 3.0 | https://www.mutopiaproject.org/ftp/MertzJK/guitar-skole-no-16/guitar-skole-no-16.mid |
+| Guitar-Skole no. 19 : Allegretto | M. Carcassi | CC BY 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/guitar-skole-no-19/guitar-skole-no-19.mid |
+| Guitar-Skole no. 23 : Allegro | N. Coste | CC BY 3.0 | https://www.mutopiaproject.org/ftp/CosteN/guitar-skole-no-23/guitar-skole-no-23.mid |
+| Guitar-Skole no. 8 : Andantino, Andante, op. 241, no. 5 | F. Carulli | CC BY 4.0 | https://www.mutopiaproject.org/ftp/CarulliF/guitar-skole-no-08/guitar-skole-no-08.mid |
+| Les Favorites | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O11/aguado-op11n01/aguado-op11n01.mid |
+| Les Favorites, No. 10 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O11/aguado-op11n10/aguado-op11n10.mid |
+| Les Favorites, No. 3 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O11/aguado-op11n03/aguado-op11n03.mid |
+| Les Favorites, No. 4 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O11/aguado-op11n04/aguado-op11n04.mid |
+| Les Favorites, No. 7 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O11/aguado-op11n07/aguado-op11n07.mid |
+| Les Favorites, No. 8 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O11/aguado-op11n08/aguado-op11n08.mid |
+| Les Favorites, No. 9 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O11/aguado-op11n09/aguado-op11n09.mid |
+| Op. 35, Study No. 10 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no10/sorf_op35_no10.mid |
+| Op. 35, Study No. 13 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no13/sorf_op35_no13.mid |
+| Op. 35, Study No. 15 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no15/sorf_op35_no15.mid |
+| Op. 35, Study No. 16 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no16/sorf_op35_no16.mid |
+| Op. 35, Study No. 17 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no17/sorf_op35_no17.mid |
+| Op. 35, Study No. 20 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no20/sorf_op35_no20.mid |
+| Op. 35, Study No. 5 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no5/sorf_op35_no5.mid |
+| Op. 35, Study No. 6 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no6/sorf_op35_no6.mid |
+| Op. 35, Study No. 9 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no9/sorf_op35_no9.mid |
+| Preludes in Progressive Keys from Méthode complète pour Guitare | M. Carcassi | Domaine public | https://www.mutopiaproject.org/ftp/CarcassiM/O59/CarcassiMethodPreludes/CarcassiMethodPreludes.mid |
+| Recuerdos de la Luna | Jeffrey Olson | Domaine public | https://www.mutopiaproject.org/ftp/OlsonJJ/recuerdos-luna/recuerdos-luna.mid |
+| Six Caprices, No. 1 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O26/carcassi-op26-01/carcassi-op26-01.mid |
+| Six Caprices, No. 2 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O26/carcassi-op26-02/carcassi-op26-02.mid |
+| Six Petites Pièces, No. 2 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O4/AguadoOp4No2/AguadoOp4No2-mids.zip |
+| Six Petites Pièces, No. 2 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O45/sorf-op45n02/sorf-op45n02.mid |
+| Six Petites Pièces, No. 3 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O4/AguadoOp4No3/AguadoOp4No3.mid |
+| Six Petites Pièces, No. 5 | D. Aguado | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/AguadoD/O4/AguadoOp4No5/AguadoOp4No5.mid |
+| Six Petites Pièces, No. 5 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O45/sorf-op45n05/sorf-op45n05.mid |
+| Six Variations for Guitar | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O38/SixVariations/SixVariations-mids.zip |
+| Six divertissements pour la guitare, n°3 Andantino | F. Sor | CC BY-SA 2.0 | https://www.mutopiaproject.org/ftp/SorF/O2/sor_op2_3/sor_op2_3.mid |
+| Spanish Romance | Anonyme | CC BY-SA 2.5 | https://www.mutopiaproject.org/ftp/Anonymous/spanish-romance/spanish-romance.mid |
+| Trois Sonatines, No. 2 | M. Carcassi | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O1/carcassi-op1n02/carcassi-op1n02.mid |
+| Trois Sonatines, No. 3 | M. Carcassi | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O1/carcassi-op1n03/carcassi-op1n03.mid |
+| Tyrolienne | D. Joly | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/JolyD/JolyD_Tyrolienne/JolyD_Tyrolienne.mid |
+| Vals no. 3 | J. Brahms | Domaine public | https://www.mutopiaproject.org/ftp/BrahmsJ/O39/brahms-vals3/brahms-vals3.mid |
+| Vals no. 9 | J. Brahms | Domaine public | https://www.mutopiaproject.org/ftp/BrahmsJ/O39/brahms-vals9/brahms-vals9.mid |
+| 12 Etudes, No. 10 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O6/sorf-op6n10/sorf-op6n10.mid |
+| 12 Etudes, No. 11 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O6/sorf-op6n11/sorf-op6n11.mid |
+| 12 Etudes, No. 5 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O6/sorf-op6n05/sorf-op6n05.mid |
+| 18 Progressive Lessons, No. 9 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O51/giuliani-o51-09/giuliani-o51-09.mid |
+| 24 Studies for the Guitar, No. 1 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No1/GiulianiOp100No1.mid |
+| 24 Studies for the Guitar, No. 11 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No11/GiulianiOp100No11.mid |
+| 24 Studies for the Guitar, No. 12 | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No12/GiulianiOp100No12.mid |
+| 24 Studies for the Guitar, No. 14 | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No14/GiulianiOp100No14.mid |
+| 24 Studies for the Guitar, No. 18 | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No18/GiulianiOp100No18.mid |
+| 24 Studies for the Guitar, No. 19 | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No19/GiulianiOp100No19.mid |
+| 24 Studies for the Guitar, No. 20 | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No20/GiulianiOp100No20.mid |
+| 24 Studies for the Guitar, No. 22 | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No22/GiulianiOp100No22.mid |
+| 24 Studies for the Guitar, No. 23 | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No23/GiulianiOp100No23.mid |
+| 24 Studies for the Guitar, No. 24 | M. Giuliani | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No24/GiulianiOp100No24.mid |
+| 24 Studies for the Guitar, No. 3 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No3/GiulianiOp100No3.mid |
+| 24 Studies for the Guitar, No. 5 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O100/GiulianiOp100No5/GiulianiOp100No5.mid |
+| 25 Studies: No. 19 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-19/carcassi-op60-19.mid |
+| 25 Studies: No. 22 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-22/carcassi-op60-22.mid |
+| 25 Studies: No. 23 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-23/carcassi-op60-23.mid |
+| Divertissements, No. 1 | M. Giuliani | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/GiulianiM/O78/giuliani-op78n01/giuliani-op78n01.mid |
+| Etude 12 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-12/carcassi-op60-12.mid |
+| Etude 15 | M. Carcassi | Domaine public | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-15/carcassi-op60-15.mid |
+| Etude 3 | M. Carcassi | Domaine public | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-03/carcassi-op60-03.mid |
+| Etude 7 | M. Carcassi | Domaine public | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-07/carcassi-op60-07.mid |
+| Etude 9 | M. Carcassi | Domaine public | https://www.mutopiaproject.org/ftp/CarcassiM/O60/carcassi-op60-09/carcassi-op60-09.mid |
+| Etude in A minor | J. K. Mertz | Domaine public | https://www.mutopiaproject.org/ftp/MertzJK/mertz_etude/mertz_etude.mid |
+| Op. 35, Study No. 24 | F. Sor | CC BY-SA 4.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no24/sorf_op35_no24.mid |
+| Op. 35, Study No. 7 | F. Sor | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/SorF/O35/sorf_op35_no7/sorf_op35_no7.mid |
+| Prelude to Suite in C Major | J. S. Bach | Domaine public | https://www.mutopiaproject.org/ftp/BachJS/BWV997/Bach_Preludio_BWV997/Bach_Preludio_BWV997.mid |
+| Recuerdos de la Alhambra | F. Tarrega | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/TarregaF/recuerdos/recuerdos.mid |
+| Six Caprices, No. 4 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O26/carcassi-op26-04/carcassi-op26-04.mid |
+| Six Caprices, No. 5 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O26/carcassi-op26-05/carcassi-op26-05.mid |
+| Six Caprices, No. 6 | M. Carcassi | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/CarcassiM/O26/carcassi-op26-06/carcassi-op26-06.mid |
+| Study in A Minor | D. Aguado | CC BY-SA 3.0 | https://www.mutopiaproject.org/ftp/AguadoD/aminor-study/aminor-study.mid |

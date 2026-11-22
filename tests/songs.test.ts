@@ -57,6 +57,16 @@ describe('bibliothèque', () => {
           const score = alphaTab.importer.ScoreLoader.loadAlphaTex(tex);
           const staff = score.tracks[0].staves[0];
           const [low, high] = instrumentRange(inst);
+          if (song.tex && inst.id === 'guitar') {
+            // Partition complète (basse + mélodie) : notes jouables sur la guitare, cordes distinctes par accord.
+            const beats = staff.bars.flatMap((b) => b.voices[0].beats);
+            expect(beats.some((b) => b.notes.length > 0)).toBe(true);
+            for (const b of beats) {
+              expect(new Set(b.notes.map((n) => n.string)).size).toBe(b.notes.length);
+              for (const n of b.notes) expect(n.fret).toBeLessThanOrEqual(12);
+            }
+            return;
+          }
           const played = staff.bars.flatMap((b) => b.voices[0].beats).flatMap((b) => b.notes).map((n) => n.realValue);
           const expected = parseNotation(song.notation).flat().filter((e) => e.kind !== 'rest').map((e) => e.midi!);
           expect(played.length).toBe(expected.length);

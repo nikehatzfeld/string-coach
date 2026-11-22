@@ -51,7 +51,7 @@ describe('affichage', () => {
   });
   it('chaque morceau : doigts 0 à 4, un nom par note, positions marquées', () => {
     for (const song of LIBRARY) {
-      for (const inst of [V, G]) {
+      for (const inst of song.tex ? [V] : [V, G]) {
         const score = alphaTab.importer.ScoreLoader.loadAlphaTex(songToAlphaTex(song, inst));
         const beats = score.tracks[0].staves[0].bars.flatMap((b) => b.voices[0].beats);
         for (const b of beats) {

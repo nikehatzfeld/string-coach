@@ -15,6 +15,8 @@ import { persist, progress, setPracticeActive, todayChallenge } from '../game/st
 import { prefs, savePrefs } from '../state/prefs';
 import { openMicTest } from './mic-test';
 import { RecorderBoard } from './recorder-board';
+import { SingJudge } from '../game/sing';
+import { SingLane } from '../game/sing-lane';
 import { LyricsStrip } from './lyrics-strip';
 import { LYRICS, lyricSyllables } from '../songs/lyrics';
 import { PitchTrace } from './voice-board';
@@ -806,8 +808,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   });
 
   // ---------- Mode jeu ----------
-  let highway: Highway | null = null;
-  let judge: GameJudge | null = null;
+  let highway: Highway | SingLane | null = null;
+  let judge: GameJudge | SingJudge | null = null;
   let gameKeeper = new ScoreKeeper(0);
   let gameRunning = false;
   let lastTick = 0;
@@ -854,6 +856,17 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   function setupGame() {
     highway?.destroy();
     const notes = buildGameNotes();
+    if (inst.kind === 'voice') {
+      // Voix : piste de chant (barres à tenir + paroles), marge de timing avant / après chaque note.
+      judge = new SingJudge(notes, { latencyMs: prefs.latencyMs, toleranceCents: Math.max(30, prefs.tolerance) });
+      const lane = new SingLane($<HTMLCanvasElement>('highway'), notes);
+      lane.toleranceCents = Math.max(30, prefs.tolerance);
+      highway = lane;
+      highway.sync(notes[0] ? notes[0].tick - 960 * 2 : 0, ticksPerMs, false);
+      gameKeeper = new ScoreKeeper(notes.length);
+      updateGameHud();
+      return;
+    }
     judge = new GameJudge(notes, { latencyMs: prefs.latencyMs, toleranceCents: Math.max(40, prefs.tolerance + 10) });
     const lanes = inst.kind === 'strings' ? [...inst.stringNamesFr].reverse() : ['Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
     highway = new Highway($<HTMLCanvasElement>('highway'), notes, lanes);
@@ -899,6 +912,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     const ok = await startMic((r) => {
       if (!gameRunning || !judge || !highway) return;
       const heard = r.freq ? freqToMidiFloat(r.freq, prefs.a4) : null;
+      if (highway instanceof SingLane) highway.heard = heard;
       for (const ev of judge.update(heard, highway.tick, highway.speed, r.rms)) {
         gameKeeper.register(ev.judgment);
         highway.feedback(ev.note, ev.judgment);

@@ -20,7 +20,7 @@ export class LyricsStrip {
     let from = 0;
     syl.forEach((s, i) => {
       cur.push(s);
-      if (/[,.;:!?]$/.test(s) || cur.length >= 10) {
+      if (/[,.;:!?]$/.test(s) || (cur.length >= 10 && !s.endsWith('-'))) {
         this.lines.push({ from, syl: cur });
         cur = [];
         from = i + 1;

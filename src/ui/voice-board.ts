@@ -127,7 +127,8 @@ export class PitchTrace {
     const band = (m: number, color: string) => {
       const t = this.toleranceCents / 100;
       g.fillStyle = color;
-      g.fillRect(left, y(m + t), w - left, Math.max(3, y(m - t) - y(m + t)));
+      const hh = Math.max(16, y(m - t) - y(m + t));
+      g.fillRect(left, y(m) - hh / 2, w - left, hh);
     };
     if (this.nextTarget !== null && this.nextTarget !== this.targets[0]) band(this.nextTarget, 'rgba(79,209,165,0.08)');
     if (this.partner !== null) band(this.partner, 'rgba(170,120,255,0.25)');
@@ -138,7 +139,7 @@ export class PitchTrace {
     g.lineCap = 'round';
     g.lineJoin = 'round';
     this.series.forEach((pts, s) => {
-      g.lineWidth = 5;
+      g.lineWidth = 9;
       let prev: { t: number; m: number } | null = null;
       for (const p of pts) {
         if (p.m === null) {

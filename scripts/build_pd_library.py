@@ -137,6 +137,7 @@ def work(c):
     try:
         song = import_pd.convert(spec)
         song['inst'] = c['inst']
+        song['origin'] = c['inst']  # instrument du catalogue Mutopia (répertoire par instrument)
         song['popular'] = c.get('popular', False)
         return song, None
     except Exception as e:  # noqa: BLE001

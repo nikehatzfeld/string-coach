@@ -2,7 +2,7 @@ import { openMicTest } from './mic-test';
 import { BADGES, currentStreak, dailyMinutes, dueReviews, levelInfo, levelTitle } from '../game/progress';
 import { persist, progress, todayChallenge } from '../game/store';
 import { INSTRUMENT_IDS, INSTRUMENTS, type InstrumentId } from '../songs/instruments';
-import { LIBRARY, STYLES } from '../songs/library';
+import { songFor, LIBRARY, STYLES } from '../songs/library';
 import type { Song } from '../songs/alphatex';
 import { prefs, savePrefs } from '../state/prefs';
 import { fetchEntry, loadVault, lock, prepareAddition, unlock, type VaultState } from '../vault/vault-client';
@@ -47,7 +47,8 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
     .map((id) => LIBRARY.find((s) => s.id === id))
     .filter((s): s is Song => !!s)
     .slice(0, 8);
-  const songs = LIBRARY.filter(
+  const mine = LIBRARY.filter((s) => songFor(s, prefs.instrument));
+  const songs = mine.filter(
     (s) =>
       (!filters.style || s.style === filters.style) &&
       (!filters.level || s.level === filters.level) &&
@@ -118,7 +119,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
           <button class="chip" data-style="" aria-pressed="${!filters.style}">Tous</button>
           ${STYLES.map((s) => `<button class="chip" data-style="${esc(s)}" aria-pressed="${filters.style === s}">${STYLE_LOOK[s]?.icon ?? ''} ${esc(s)}</button>`).join('')}
         </div>
-        ${filters.style || filters.level || filters.full || filters.famous || filters.search ? `<div class="filters"><button class="chip reset-filters" data-reset>✕ Tout afficher (${LIBRARY.length} morceaux)</button><span class="muted">Filtres actifs : ${[filters.search && `« ${esc(filters.search)} »`, filters.style, filters.level && LEVEL_LABEL[filters.level], filters.full && 'morceaux complets', filters.famous && 'incontournables'].filter(Boolean).join(', ')}</span></div>` : ''}
+        ${filters.style || filters.level || filters.full || filters.famous || filters.search ? `<div class="filters"><button class="chip reset-filters" data-reset>✕ Tout afficher (${mine.length} morceaux)</button><span class="muted">Filtres actifs : ${[filters.search && `« ${esc(filters.search)} »`, filters.style, filters.level && LEVEL_LABEL[filters.level], filters.full && 'morceaux complets', filters.famous && 'incontournables'].filter(Boolean).join(', ')}</span></div>` : ''}
         <div class="filters chips levels">
           ${[0, 1, 2, 3, 4, 5].map((l) => `<button class="chip" data-level="${l}" aria-pressed="${(filters.level ?? 0) === l}">${l ? LEVEL_LABEL[l] : 'Tous niveaux'}</button>`).join('')}
           <button class="chip" data-full aria-pressed="${filters.full}">📜 Morceaux complets</button>

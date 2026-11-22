@@ -2,7 +2,10 @@ import { STYLE_ORDER, type Song } from './alphatex';
 import { EXERCISES } from './exercises';
 import { CHRISTMAS, CLASSICAL_MORE, FOLK_WORLD, KIDS } from './library-more';
 import PD_LIBRARY from './pd-library.json';
+import PD_GUITAR from './pd-guitar.json';
 import { easyVersion } from './simplify';
+import { LYRICS } from './lyrics';
+import type { InstrumentId } from './instruments';
 
 /**
  * Morceaux du domaine public et exercices, transcrits de mémoire en notation compacte
@@ -317,7 +320,8 @@ const FAMOUS: [string, boolean][] = [
   ['la-marseillaise', false],
 ];
 
-const BASE: Song[] = [...[...CORE, ...KIDS, ...CLASSICAL_MORE, ...CHRISTMAS, ...FOLK_WORLD].filter(keepShort), ...FULL];
+const GUITAR_CLASSICAL: Song[] = PD_GUITAR as unknown as Song[];
+const BASE: Song[] = [...[...CORE, ...KIDS, ...CLASSICAL_MORE, ...CHRISTMAS, ...FOLK_WORLD].filter(keepShort), ...FULL, ...GUITAR_CLASSICAL];
 const famousIds = new Map(FAMOUS);
 const EASY: Song[] = [];
 for (const s of BASE) {
@@ -329,3 +333,35 @@ for (const s of BASE) {
 export const LIBRARY: Song[] = [...BASE, ...EASY, ...EXERCISES];
 
 export const STYLES = STYLE_ORDER.filter((st) => LIBRARY.some((s) => s.style === st));
+
+const FOR_ALL = new Set(['Comptines', 'Chanson française', 'Noël', 'Folk & monde', 'Chants & cantiques', 'Gospel & jazz', 'Blues', 'Fêtes', 'Gammes & arpèges', 'Exercices']);
+
+/**
+ * Répertoire par instrument : chansons, folk, Noël, blues… pour tous ; le répertoire classique
+ * suit l'instrument d'origine de la partition (violon, flûte, voix) ; la guitare garde les chansons,
+ * les morceaux à accords et les mélodies faciles des méthodes.
+ */
+export function songFor(song: Song, inst: InstrumentId): boolean {
+  if (song.instruments) return song.instruments.includes(inst);
+  const ex = song as Song & { only?: InstrumentId };
+  if (ex.only) return ex.only === inst;
+  if (song.id.endsWith('~facile')) {
+    const orig = BY_ID.get(song.id.replace('~facile', ''));
+    // Les versions faciles servent aussi à la guitare (mélodie simplifiée).
+    return inst === 'guitar' || (orig ? songFor(orig, inst) : true);
+  }
+  if (FOR_ALL.has(song.style)) return true;
+  const o = song.origin;
+  switch (inst) {
+    case 'violin':
+      return true;
+    case 'recorder':
+      return !o || ['Flute', 'Recorder', 'Oboe', 'Clarinet', 'Voice', 'Piano'].includes(o);
+    case 'voice':
+      return o === 'Voice' || !!LYRICS[song.id] || (!o && song.level <= 2);
+    case 'guitar':
+      // Classique : seulement les mélodies faciles écrites pour les méthodes (pas les pièces de concert).
+      return !o && song.level <= 2;
+  }
+}
+const BY_ID = new Map(LIBRARY.map((s) => [s.id, s]));

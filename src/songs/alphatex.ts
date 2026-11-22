@@ -1,4 +1,4 @@
-import type { Instrument } from './instruments';
+import type { Instrument, InstrumentId } from './instruments';
 import { bestOctaveShift, placeMelody, positionLabel, solfege, type Placed } from './positions';
 import { backingKindFor, backingTracks, hasChords, type BackingKind } from './backing';
 import { parseNotation, type ParsedBar } from './notation';
@@ -41,6 +41,12 @@ export interface Song {
   position?: number;
   /** Incontournable (filtre « ⭐ Incontournables » de l'accueil). */
   famous?: boolean;
+  /** Instrument d'origine de la partition importée (catalogue Mutopia : Violin, Flute, Voice, Piano…). */
+  origin?: string;
+  /** Partition complète prête à afficher (guitare classique : basse + mélodie), prioritaire sur la notation. */
+  tex?: string;
+  /** Instruments pour lesquels le morceau est proposé (sinon déduit du style et de l'origine). */
+  instruments?: InstrumentId[];
   /** Morceau complet importé d'une partition libre (source et licence à créditer). */
   source?: { url: string; license: string };
 }
@@ -100,6 +106,7 @@ export function songMidiRange(bars: ParsedBar[]): [number, number] {
 
 /** Convertit un morceau de la bibliothèque en alphaTex pour un instrument. */
 export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: boolean; keySignature?: boolean } = {}): string {
+  if (song.tex && inst.id === 'guitar') return song.tex;
   if (inst.kind !== 'strings') return melodicToAlphaTex(song, inst, opts);
   const bars = parseNotation(song.notation);
   // Exercices à corde ou position imposée : hauteurs telles qu'écrites.
