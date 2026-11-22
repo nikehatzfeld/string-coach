@@ -54,7 +54,7 @@ function harmony(): void {
   window.scrollTo({ top: 0 });
 }
 
-function chords(tab: 'dict' | 'course' | 'changes' | 'songs' = 'dict'): void {
+function chords(tab: 'dict' | 'course' | 'prog' | 'changes' | 'songs' = 'dict'): void {
   closePlayer();
   closeChordPlay();
   returnTo = 'chords';

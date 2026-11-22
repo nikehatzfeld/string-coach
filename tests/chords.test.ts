@@ -38,3 +38,19 @@ describe('accords de guitare', () => {
     expect(r.capo).toBeGreaterThan(0);
   });
 });
+
+describe('enchaînements', () => {
+  it('4, 6 et 8 accords, tous jouables', async () => {
+    const { PROGRESSIONS, chartChords, customProgression, randomProgression } = await import('../src/courses/chords-content');
+    const sizes = { '4 accords': 4, '6 accords': 6, '8 accords': 8 } as Record<string, number>;
+    for (const g of PROGRESSIONS)
+      for (const c of g.charts) {
+        expect(c.bars.length, c.title).toBe(sizes[g.name]);
+        for (const ch of chartChords(c)) expect(shapeFor(ch), `${c.title} ${ch}`).toBeTruthy();
+      }
+    expect(customProgression('G D Em C')!.bars.length).toBe(4);
+    const r = randomProgression(['G', 'C', 'D'], 16);
+    expect(r.bars.length).toBe(16);
+    for (let i = 1; i < 16; i++) expect(r.bars[i][0].chord).not.toBe(r.bars[i - 1][0].chord);
+  });
+});

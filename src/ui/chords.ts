@@ -1,5 +1,5 @@
 import { StrumSynth } from '../audio/strum';
-import { chart, chartChords, chartFromSong, chordLessons, CHORD_CHARTS, type ChordChart } from '../courses/chords-content';
+import { chart, chartChords, chartFromSong, chordLessons, CHORD_CHARTS, customProgression, PROGRESSIONS, randomProgression, type ChordChart } from '../courses/chords-content';
 import { mdToHtml } from '../courses/harmony-content';
 import { persist, progress, setPracticeActive } from '../game/store';
 import { ChordListener, matchChord } from '../practice/chord-detector';
@@ -9,7 +9,7 @@ import { prefs } from '../state/prefs';
 import { chordDiagram } from './chord-diagram';
 import { esc } from './dom';
 
-type Tab = 'dict' | 'course' | 'changes' | 'songs';
+type Tab = 'dict' | 'course' | 'prog' | 'changes' | 'songs';
 const DONE_KEY = 'string-coach:chords-done';
 const doneSet = (): Set<number> => {
   try {
@@ -28,6 +28,7 @@ export function renderChords(app: HTMLElement, back: () => void, play: (c: Chord
   const tabs: [Tab, string][] = [
     ['dict', '📖 Accords'],
     ['course', '🎓 Cours'],
+    ['prog', '🔗 Enchaînements'],
     ['changes', '🔁 Changements'],
     ['songs', '🎵 Morceaux'],
   ];
@@ -40,6 +41,7 @@ export function renderChords(app: HTMLElement, back: () => void, play: (c: Chord
   let body = '';
   if (tab === 'dict') body = dictHtml();
   else if (tab === 'course') body = lessonN ? lessonHtml(lessonN) : courseHtml();
+  else if (tab === 'prog') body = progHtml();
   else if (tab === 'changes') body = changesHtml();
   else body = songsHtml();
   app.innerHTML = `${head}<main class="home chords-page">${body}</main>`;
@@ -77,6 +79,19 @@ export function renderChords(app: HTMLElement, back: () => void, play: (c: Chord
       app.querySelectorAll<HTMLButtonElement>('[data-chord]').forEach((b) => b.addEventListener('click', () => openChord(b.dataset.chord!)));
     }
   }
+  // ---------- Enchaînements ----------
+  if (tab === 'prog') {
+    const all = PROGRESSIONS.flatMap((g) => g.charts);
+    app.querySelectorAll<HTMLButtonElement>('[data-prog]').forEach((b) => b.addEventListener('click', () => play(all.find((c) => c.id === b.dataset.prog)!)));
+    app.querySelector('#pCustom')?.addEventListener('click', () => {
+      const c = customProgression(app.querySelector<HTMLInputElement>('#pText')!.value, Number(app.querySelector<HTMLInputElement>('#pBpm')!.value) || 70);
+      if (c) play(c);
+    });
+    app.querySelector('#pRandom')?.addEventListener('click', () => {
+      const pool = [...app.querySelectorAll<HTMLInputElement>('[data-pool]:checked')].map((x) => x.value);
+      if (pool.length >= 2) play(randomProgression(pool, 16, Number(app.querySelector<HTMLInputElement>('#pBpm')!.value) || 60));
+    });
+  }
   // ---------- Changements ----------
   if (tab === 'changes') wireChanges(app, play);
   // ---------- Morceaux ----------
@@ -97,6 +112,22 @@ function dictHtml(): string {
     ${CHORD_FAMILIES.map(
       (f) => `<h2>${esc(f.name)}</h2><div class="cd-grid">${f.chords.map((c) => `<button class="cd-card" data-chord="${esc(c)}">${chordDiagram(c)}</button>`).join('')}</div>`,
     ).join('')}`;
+}
+
+function progHtml(): string {
+  const card = (c: ChordChart) => {
+    const chords = c.bars.map((b) => b[0]?.chord).filter(Boolean) as string[];
+    return `<button class="ch-song" data-prog="${esc(c.id)}"><strong>${esc(chords.map(chordNameFr).join(' – '))}</strong><span class="muted">${esc(c.subtitle ?? '')}</span><span class="ch-chords">${esc(c.title)}</span></button>`;
+  };
+  const POOL = ['G', 'C', 'D', 'Em', 'Am', 'E', 'A', 'Dm', 'F', 'Bm', 'E7', 'A7', 'D7', 'B7'];
+  return `<p class="hint">Des enchaînements qui font des morceaux connus, à jouer en boucle dans le lecteur (rythme, capo, vérification au micro). Commence par 4 accords, puis 6, puis 8.</p>
+    ${PROGRESSIONS.map((g) => `<h2>${esc(g.name)}</h2><div class="ch-songs">${g.charts.map(card).join('')}</div>`).join('')}
+    <h2>Mon enchaînement</h2>
+    <div class="toolbar ch-pick"><input id="pText" placeholder="ex. G D Em C" value="G D Em C" /><label>♩ <input id="pBpm" type="number" min="40" max="160" value="66" /></label><button id="pCustom" class="primary">▶ Jouer en boucle</button></div>
+    <h2>Enchaînement aléatoire (16 mesures)</h2>
+    <p class="hint">Coche les accords à mélanger : l'app les enchaîne au hasard, pour réagir vite à n'importe quel changement.</p>
+    <div class="ch-pool">${POOL.map((c) => `<label class="chip"><input type="checkbox" data-pool value="${c}" ${['G', 'C', 'D', 'Em'].includes(c) ? 'checked' : ''}/> ${esc(chordNameFr(c))}</label>`).join('')}</div>
+    <button id="pRandom" class="primary">🎲 Lancer</button>`;
 }
 
 function courseHtml(): string {

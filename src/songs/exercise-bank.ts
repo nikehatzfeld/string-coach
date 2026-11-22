@@ -172,7 +172,7 @@ for (const [rname, pattern] of RHYTHMS)
   for (const k of MAJOR_KEYS.slice(0, 3)) {
     const notes: { midi: number; d: number }[] = [];
     for (const m of updown(MAJOR, k.root)) for (const d of pattern) notes.push({ midi: m, d });
-    add({ title: `Gamme de ${FR[k.name]} : ${rname}`, category: 'Rythmes', level: (pattern.length > 2 ? 2 : 1) as Key['level'], key: keySig(k), how: 'Chaque note de la gamme répétée sur le rythme, archet / médiator régulier.', notation: pack(notes, k.flat) });
+    add({ title: `Gamme de ${FR[k.name]} : ${rname}`, category: 'Rythmes', level: (pattern.length > 2 ? 2 : 1) as Key['level'], key: keySig(k), how: 'Chaque note de la gamme répétée sur le rythme, attaque bien régulière.', notation: pack(notes, k.flat) });
   }
 // 11. Rythmes pointés et syncopes (6)
 for (const k of MAJOR_KEYS.slice(0, 6)) {

@@ -609,3 +609,14 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .fb-dot { stroke: #fff; stroke-width: 2.5; }
 .fb-note { font-size: 15px; font-weight: 800; }
 .fb-finger { font-size: 18px; }
+.ch-pool { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 0.4rem 0 0.8rem; }
+.ch-pool .chip { display: inline-flex; gap: 0.3rem; align-items: center; }
+#pText { min-width: 220px; }
+/* Paroles karaoké */
+.lyrics-strip { padding: 0.35rem 1rem; background: linear-gradient(90deg, rgba(180,140,255,0.12), rgba(90,169,255,0.08)); border-bottom: 1px solid var(--border); text-align: center; }
+.lyrics-strip[hidden] { display: none; }
+.ly-now { font-size: 1.5rem; font-weight: 700; letter-spacing: 0.01em; }
+.ly-now span { transition: color 0.15s, transform 0.15s; display: inline-block; }
+.ly-now .done { color: var(--ok); opacity: 0.75; }
+.ly-now .now { color: var(--accent); transform: scale(1.18); text-shadow: 0 0 12px rgba(255,181,71,0.55); }
+.ly-next { font-size: 0.95rem; color: var(--muted); }

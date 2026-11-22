@@ -105,3 +105,66 @@ export function chordLessons(): ChordLesson[] {
 export function chartChords(c: ChordChart): string[] {
   return [...new Set(c.bars.flat().map((x) => x.chord))];
 }
+
+/** Enchaînements d'accords à travailler en boucle, classés par nombre d'accords (une mesure par accord). */
+const P = (id: string, title: string, chords: string, subtitle: string, bpm = 76, pattern = 'pop'): ChordChart =>
+  chart(id, title, chords.split(' ').join(' | '), [4, 4], bpm, { subtitle, pattern });
+
+export const PROGRESSIONS: { name: string; charts: ChordChart[] }[] = [
+  {
+    name: '4 accords',
+    charts: [
+      P('p4-axis', 'I – V – vi – IV (Sol)', 'G D Em C', 'comme Let It Be, With or Without You, Someone Like You'),
+      P('p4-axis-c', 'I – V – vi – IV (Do)', 'C G Am F', 'comme No Woman No Cry, Let It Be (avec un barré)'),
+      P('p4-50s', 'Années 50 : I – vi – IV – V', 'G Em C D', 'comme Stand by Me, Every Breath You Take', 72),
+      P('p4-vi', 'vi – IV – I – V', 'Em C G D', 'comme Zombie ; Despacito (en Si mineur : Bm G D A)', 84),
+      P('p4-mad', 'Em – G – D – A', 'Em G D A', 'comme Mad World', 70, 'arpege'),
+      P('p4-creep', 'G – B – C – Cm', 'G B C Cm', 'comme Creep (2 barrés)', 72),
+      P('p4-anda', 'Cadence andalouse', 'Am G F E', 'comme Hit the Road Jack, flamenco', 90),
+      P('p4-sultans', 'Dm – C – Bb – A', 'Dm C Bb A', 'comme Sultans of Swing (couplet)', 100),
+      P('p4-blowin', 'I – IV – V – I', 'G C D G', 'comme Blowin’ in the Wind', 80, 'boom-chuck'),
+      P('p4-alabama', 'I – bVII – IV – I', 'D C G G', 'comme Sweet Home Alabama', 98),
+    ],
+  },
+  {
+    name: '6 accords',
+    charts: [
+      P('p6-knock', 'G – D – Am – G – D – C', 'G D Am G D C', 'comme Knockin’ on Heaven’s Door', 68),
+      P('p6-rising', 'Am – C – D – F – Am – E', 'Am C D F Am E', 'comme House of the Rising Sun', 66, 'arpege'),
+      P('p6-heyjoe', 'C – G – D – A – E – E', 'C G D A E E', 'comme Hey Joe (cycle des quintes)', 84, 'croches'),
+      P('p6-canon', 'D – A – Bm – F#m – G – A', 'D A Bm F#m G A', 'début de la grille du Canon de Pachelbel', 66, 'arpege'),
+      P('p6-greensleeves', 'Am – G – F – E – Am – E', 'Am G F E Am E', 'Greensleeves (simplifié)', 72, 'arpege'),
+      P('p6-pop', 'C – G – Am – Em – F – G', 'C G Am Em F G', 'grille pop en Do (I V vi iii IV V)', 80),
+    ],
+  },
+  {
+    name: '8 accords',
+    charts: [
+      P('p8-canon', 'Canon de Pachelbel', 'D A Bm F#m G D G A', 'la grille complète', 66, 'arpege'),
+      P('p8-letitbe', 'C – G – Am – F – C – G – F – C', 'C G Am F C G F C', 'comme le couplet de Let It Be', 72),
+      P('p8-hallelujah', 'C – Am – C – Am – F – G – C – G', 'C Am C Am F G C G', 'comme le couplet de Hallelujah (Cohen)', 60, 'valse-arp'),
+      P('p8-wywh', 'C – D – Am – G – D – C – Am – G', 'C D Am G D C Am G', 'comme Wish You Were Here', 64),
+      P('p8-hotel', 'Bm – F# – A – E – G – D – Em – F#', 'Bm F# A E G D Em F#', 'comme Hotel California (barrés)', 74, 'arpege'),
+      P('p8-rising', 'Am – C – D – F – Am – C – E – E', 'Am C D F Am C E E', 'House of the Rising Sun complet', 66, 'arpege'),
+      P('p8-blues', 'Blues court', 'A7 D7 A7 A7 D7 D7 E7 A7', 'blues en La, version 8 mesures', 90, 'boom-chuck'),
+    ],
+  },
+];
+
+/** Enchaînement saisi librement (« G D Em C »), une mesure par accord. */
+export function customProgression(text: string, bpm = 70): ChordChart | null {
+  const chords = text.trim().split(/[\s,|–-]+/).filter(Boolean);
+  if (!chords.length) return null;
+  return chart(`custom-${chords.join('-')}`, `Mon enchaînement : ${chords.join(' – ')}`, chords.join(' | '), [4, 4], bpm, { pattern: 'plaque' });
+}
+
+/** Enchaînement aléatoire de `n` mesures parmi une liste d'accords (jamais deux fois le même de suite). */
+export function randomProgression(pool: string[], n = 16, bpm = 60, rnd: () => number = Math.random): ChordChart {
+  const out: string[] = [];
+  for (let i = 0; i < n; i++) {
+    let c = pool[Math.floor(rnd() * pool.length)];
+    if (pool.length > 1) while (c === out[i - 1]) c = pool[Math.floor(rnd() * pool.length)];
+    out.push(c);
+  }
+  return chart(`random-${Date.now()}`, 'Enchaînement aléatoire', out.join(' | '), [4, 4], bpm, { subtitle: pool.join(' · '), pattern: 'plaque' });
+}

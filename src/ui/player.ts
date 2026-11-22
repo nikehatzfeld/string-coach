@@ -15,6 +15,8 @@ import { persist, progress, setPracticeActive, todayChallenge } from '../game/st
 import { prefs, savePrefs } from '../state/prefs';
 import { openMicTest } from './mic-test';
 import { RecorderBoard } from './recorder-board';
+import { LyricsStrip } from './lyrics-strip';
+import { LYRICS, lyricSyllables } from '../songs/lyrics';
 import { PitchTrace } from './voice-board';
 import { recorderTip } from '../songs/recorder';
 import { chartFromSong } from '../courses/chords-content';
@@ -35,6 +37,8 @@ type Mode = 'live' | 'step' | 'game';
 export function sourceId(s: Source): string {
   return s.kind === 'library' ? s.song.id : `${s.origin}:${s.id}`;
 }
+
+const ATTACK: Record<string, string> = { violin: 'nouveau coup d’archet', guitar: 'repince la corde', recorder: 'nouveau coup de langue « tu »', voice: 'nouvelle syllabe' };
 
 let cleanup: (() => void) | null = null;
 
@@ -96,9 +100,9 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         ${[1, 3, 5, 10, 0].map((r) => `<option value="${r}" ${prefs.repeat === r ? 'selected' : ''}>${r === 0 ? '🔁 ∞' : r === 1 ? '🔁 1 fois' : `🔁 ${r} fois`}</option>`).join('')}
       </select>
       <button id="ksBtn" class="more" aria-pressed="${prefs.keySignatures}" title="Armure à la clé, ou dièses et bémols écrits devant chaque note">Armure</button>
-      <label class="only-step more">Tolérance <input id="tol" type="range" min="10" max="60" step="5" value="${prefs.tolerance}" /> <output id="tolOut">±${prefs.tolerance} cents</output></label>
+      <label class="no-live ${inst.kind === 'voice' ? '' : 'more'}" title="Justesse demandée">Justesse <input id="tol" type="range" min="10" max="100" step="5" value="${prefs.tolerance}" /> <output id="tolOut">±${prefs.tolerance} cents</output></label>
       <button id="stepHold" class="only-step more" aria-pressed="${prefs.stepHold}" title="Tenir chaque note sa durée écrite (au tempo choisi)">⏱ Tenir la durée</button>
-      <button id="stepDetache" class="only-step more" aria-pressed="${prefs.stepDetache}" title="Chaque note doit être attaquée : coup d'archet ou petit silence entre deux notes">✂ Détaché</button>
+      <button id="stepDetache" class="only-step more" aria-pressed="${prefs.stepDetache}" title="Chaque note doit être attaquée : ${inst.id === 'violin' ? 'coup d’archet' : inst.id === 'guitar' ? 'nouveau coup de médiator ou de doigt' : inst.id === 'recorder' ? 'coup de langue « tu »' : 'nouvelle syllabe'} ou petit silence entre deux notes">✂ Détaché</button>
       <button id="restart" class="only-step more">↻ Recommencer</button>
       <button id="micTest" class="more">🎤 Test micro</button>
       <label class="no-live more" title="Fréquence du La : 440 Hz standard, ou celle de ton accordage">La = <input id="a4" type="number" min="415" max="466" step="0.5" value="${prefs.a4}" /> Hz</label>
@@ -106,6 +110,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     </div>
     <div id="micHelp" class="mic-help" role="status" hidden></div>
     <div id="voiceMsg" class="voice-msg" role="status" hidden></div>
+    <div id="lyrics"></div>
     <div class="viz">
       <section id="neck" class="neck no-game" ${prefs.showNeck ? '' : 'hidden'}></section>
       <div id="circleBox" class="circle-box no-game" ${prefs.showCircle ? '' : 'hidden'}></div>
@@ -437,6 +442,29 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   }
   api.scoreLoaded.on(() => setTimeout(computePlacements, 0));
 
+  // ---------- Paroles (karaoké) ----------
+  const lyrics = new LyricsStrip($('lyrics'));
+  const lyricIndex = new Map<alphaTab.model.Beat, number>();
+  function computeLyrics() {
+    lyricIndex.clear();
+    const text = source.kind === 'library' ? LYRICS[source.song.id] : undefined;
+    if (!text) return lyrics.setSyllables([]);
+    const syl = lyricSyllables(text);
+    let k = 0;
+    for (const b of v.trackBeats) if (!b.isRest && b.notes.length && !b.notes.every((n) => n.isTieDestination)) lyricIndex.set(b, k++);
+    lyrics.setSyllables(syl);
+  }
+  api.scoreLoaded.on(() => setTimeout(computeLyrics, 0));
+  // Voix : échelle verticale fixe = tessiture du morceau.
+  api.scoreLoaded.on(() =>
+    setTimeout(() => {
+      if (!trace) return;
+      const ms = v.trackBeats.filter((b) => !b.isRest).flatMap((b) => b.notes.map((n) => n.realValue));
+      if (ms.length) trace.setRange(Math.min(...ms), Math.max(...ms));
+      trace.toleranceCents = prefs.tolerance;
+    }, 0),
+  );
+
   const topFingering = (beat: alphaTab.model.Beat) => {
     const top = beatFingerings(beat).reduce<BoardNote | null>((a, b) => (!a || b.midi > a.midi ? b : a), null);
     if (!top) return null;
@@ -474,6 +502,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     return undefined;
   };
   api.playedBeatChanged.on((beat) => {
+    if (mode !== 'step' && lyricIndex.has(beat)) lyrics.setIndex(lyricIndex.get(beat)!);
     if (mode !== 'live' && !(mode === 'game' && prefs.gameView === 'score')) return;
     const named = (b: alphaTab.model.Beat | undefined) => (b ? beatFingerings(b).map((f) => ({ ...f, name: beatName(b, f.midi) })) : []);
     const n1 = nextSounding(beat);
@@ -650,6 +679,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     $('tNote').innerHTML = `${name}<small>${octave}</small>`;
     $('tPos').textContent = `${/♯/.test(name) ? 'dièse · ' : /♭/.test(name) ? 'bémol · ' : ''}${midiName(t.midi, 'en')} · ${stringLabel(beat)}`;
     v.focusBeat(beat);
+    lyrics.setIndex(lyricIndex.get(beat) ?? -1);
     if (prefs.autoHear) api.playBeat(beat);
     circle.set({ target: ((t.midi % 12) + 12) % 12 });
     const cur = topFingering(beat);
@@ -683,7 +713,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         setVerdict('À toi de jouer…', '');
         break;
       case 'listening':
-        setVerdict(prefs.stepDetache ? 'Détache : nouveau coup d’archet pour cette note' : 'Relâche puis rejoue la note', '');
+        setVerdict(prefs.stepDetache ? `Détache : ${ATTACK[inst.id]} pour cette note` : 'Relâche puis rejoue la note', '');
         break;
       case 'too-low':
         setVerdict(`Trop bas (${heard}, ${Math.round(u.cents!)} cents)`, 'bad');
@@ -772,6 +802,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     savePrefs();
     $('tolOut').textContent = `±${prefs.tolerance} cents`;
     if (trainer) trainer.options.toleranceCents = prefs.tolerance;
+    if (trace) trace.toleranceCents = prefs.tolerance;
   });
 
   // ---------- Mode jeu ----------
@@ -794,6 +825,19 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         continue;
       }
       const finger = f.finger ?? suggestedFinger(f.fret, inst);
+      if (inst.kind !== 'strings') {
+        // Flûte, voix : une piste par nom de note (Do à Si) ; la voix affiche la syllabe à chanter.
+        const syl = lyricIndex.has(beat) && source.kind === 'library' && LYRICS[source.song.id] ? lyricSyllables(LYRICS[source.song.id])[lyricIndex.get(beat)!] : undefined;
+        notes.push({
+          tick: beat.absolutePlaybackStart,
+          duration: beat.playbackDuration,
+          midi: f.midi,
+          lane: [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][f.midi % 12],
+          label: inst.kind === 'voice' && syl ? syl.replace(/[-,.;:!?]+$/, '') : beatName(beat, f.midi).replace(/♯|♭/, ''),
+          name: f.name ?? beatName(beat, f.midi),
+        });
+        continue;
+      }
       notes.push({
         tick: beat.absolutePlaybackStart,
         duration: beat.playbackDuration,
@@ -811,7 +855,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     highway?.destroy();
     const notes = buildGameNotes();
     judge = new GameJudge(notes, { latencyMs: prefs.latencyMs, toleranceCents: Math.max(40, prefs.tolerance + 10) });
-    const lanes = [...inst.stringNamesFr].reverse();
+    const lanes = inst.kind === 'strings' ? [...inst.stringNamesFr].reverse() : ['Do', 'Ré', 'Mi', 'Fa', 'Sol', 'La', 'Si'];
     highway = new Highway($<HTMLCanvasElement>('highway'), notes, lanes);
     highway.sync(notes[0] ? notes[0].tick - 960 * 2 : 0, ticksPerMs, false);
     gameKeeper = new ScoreKeeper(notes.length);
