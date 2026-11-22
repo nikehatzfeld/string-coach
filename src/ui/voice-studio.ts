@@ -105,6 +105,11 @@ export function renderVoiceStudio(app: HTMLElement, back: () => void, tab: Tab =
     </div>`;
   const $ = <T extends HTMLElement>(id: string) => app.querySelector<T>(`#${id}`)!;
   const trace = new PitchTrace($('vTrace'), 'ta voix');
+  // Échelle verticale fixe : ta tessiture (mesurée dans le miroir), avec de la marge.
+  {
+    const [rl, rh] = savedRange();
+    trace.setRange(rl - 4, rh + 4);
+  }
   const synth = new VoiceSynth();
   let mic: MicPitchDetector | null = null;
   let onPitch: (m: number | null, t: number) => void = () => {};
@@ -405,7 +410,133 @@ export function renderVoiceStudio(app: HTMLElement, back: () => void, tab: Tab =
         <button id="dGo" class="primary">▶ Chanter</button>
       </div>
       <div class="v-big"><strong id="dPct">—</strong><span class="muted" id="dInfo"></span></div>
-      ${headphones}`;
+      ${headphones}
+      <h2>3. Deux chanteurs</h2>
+      <p class="hint">Un seul micro ne sait pas séparer deux voix en même temps. Deux solutions : <strong>deux micros</strong> (deux casques-micros USB, par exemple) branchés sur cet appareil, ou <strong>chacun son tour</strong> avec un seul micro, puis on compare les scores.</p>
+      <div class="toolbar">
+        <label>Mode <select id="mMode"><option value="duo">2 micros, en même temps</option><option value="turns">Chacun son tour (1 micro)</option></select></label>
+        <label>Micro 1 <select id="mA"></select></label>
+        <label class="duo-only">Micro 2 <select id="mB"></select></label>
+      </div>
+      <div class="toolbar">
+        <label>Morceau <select id="mSong">${songs.map((s) => `<option value="${s.id}">${esc(s.title)}</option>`).join('')}</select></label>
+        <label class="duo-only">Chanteur 2 <select id="mPart"><option value="third-below">tierce au-dessous</option><option value="melody">même mélodie</option><option value="canon">canon (2 mesures après)</option></select></label>
+        <label>♩ <input id="mBpm" type="number" min="40" max="160" value="80" /></label>
+        <button id="mGo" class="primary">▶ C'est parti</button>
+      </div>
+      <div class="v-range"><span>Chanteur 1 : <strong id="mS1">—</strong></span><span>Chanteur 2 : <strong id="mS2">—</strong></span><span id="mMsg" class="muted"></span></div>`;
+    // ---- Deux chanteurs ----
+    void (async () => {
+      const devs = (await navigator.mediaDevices?.enumerateDevices().catch(() => [])) ?? [];
+      const ins = devs.filter((d) => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default');
+      const opts = (sel: number) =>
+        `<option value="">Micro par défaut</option>` + ins.map((d, i) => `<option value="${esc(d.deviceId)}" ${i === sel ? 'selected' : ''}>${esc(d.label || `Micro ${i + 1}`)}</option>`).join('');
+      $('mA').innerHTML = opts(-1);
+      $('mB').innerHTML = opts(ins.length > 1 ? 1 : -1);
+    })();
+    const syncMode = () => app.querySelectorAll<HTMLElement>('.duo-only').forEach((el) => (el.hidden = $<HTMLSelectElement>('mMode').value !== 'duo'));
+    $('mMode').addEventListener('change', syncMode);
+    syncMode();
+    const extraMics: MicPitchDetector[] = [];
+    stops.push(() => extraMics.splice(0).forEach((m) => void m.stop()));
+    /** Joue un morceau pour 1 ou 2 chanteurs ; renvoie le % de justesse de chacun. */
+    const runSong = (lines: TimedNote[][], bpm: number, feeds: ((cb: (m: number | null, t: number) => void) => void)[], done: (pcts: number[]) => void) => {
+      const spb = 60 / bpm;
+      const count = 4;
+      const t0 = synth.ctx.currentTime + 0.2;
+      for (let i = 0; i < count; i++) stops.push(synth.note(84, t0 + i * spb, 0.05));
+      const startPerf = performance.now() + 200 + count * spb * 1000;
+      const end = Math.max(...lines.flat().map((n) => n.start + n.dur));
+      const ok = lines.map(() => 0);
+      const tot = lines.map(() => 0);
+      const all = lines.flat().map((n) => n.midi);
+      trace.setRange(Math.min(...all), Math.max(...all));
+      let finished = false;
+      feeds.forEach((feed, k) =>
+        feed((m, t) => {
+          if (finished) return;
+          const beat = (t - startPerf) / 1000 / spb;
+          if (beat < 0) return;
+          if ($('mMsg').textContent === 'décompte…') $('mMsg').textContent = '🎤 Chantez !';
+          if (beat > end + 0.5) {
+            finished = true;
+            trace.show([], [], [], 0);
+            trace.show([], [], [], 1);
+            done(ok.map((o, i) => Math.round((o / Math.max(1, tot[i])) * 100)));
+            return;
+          }
+          const target = noteAt(lines[k], beat);
+          trace.show(target ? [{ midi: target.midi }] : [], [], [], k);
+          if (!target) return;
+          tot[k]++;
+          if (m !== null) {
+            let d = m - target.midi;
+            while (d > 6) d -= 12;
+            while (d < -6) d += 12;
+            if (Math.abs(d) * 100 <= trace.toleranceCents) ok[k]++;
+          }
+          $(k === 0 ? 'mS1' : 'mS2').textContent = `${Math.round((ok[k] / Math.max(1, tot[k])) * 100)} %`;
+        }),
+      );
+    };
+    $('mGo').addEventListener('click', async () => {
+      stopSounds();
+      void synth.ctx.resume();
+      void mic?.stop();
+      mic = null;
+      const song = songs.find((s) => s.id === $<HTMLSelectElement>('mSong').value)!;
+      const bpm = Number($<HTMLInputElement>('mBpm').value) || 80;
+      const mel = melodyTimeline(song);
+      const barBeats = (song.timeSignature[0] * 4) / song.timeSignature[1];
+      const start = async (deviceId: string, singer: number, cb: (m: number | null, t: number) => void) => {
+        const d = new MicPitchDetector({ deviceId, minClarity: 0.65 });
+        await d.start((r) => {
+          const midi = r.freq ? freqToMidiFloat(r.freq, prefs.a4) : null;
+          trace.feed(midi, r.time, singer);
+          cb(midi, r.time);
+        });
+        extraMics.push(d);
+      };
+      try {
+        if ($<HTMLSelectElement>('mMode').value === 'duo') {
+          const part = $<HTMLSelectElement>('mPart').value;
+          const second = part === 'melody' ? mel : part === 'canon' ? mel.map((n) => ({ ...n, start: n.start + barBeats * 2 })) : harmonyLine(mel, 'third-below');
+          trace.names = ['Chanteur 1', 'Chanteur 2'];
+          $('mMsg').textContent = 'décompte…';
+          const cbs: ((m: number | null, t: number) => void)[] = [() => {}, () => {}];
+          await start($<HTMLSelectElement>('mA').value, 0, (m, t) => cbs[0](m, t));
+          await start($<HTMLSelectElement>('mB').value, 1, (m, t) => cbs[1](m, t));
+          runSong([mel, second], bpm, [(cb) => (cbs[0] = cb), (cb) => (cbs[1] = cb)], (p) => {
+            extraMics.splice(0).forEach((m) => void m.stop());
+            $('mMsg').textContent = p[0] === p[1] ? 'Égalité !' : `🏆 Chanteur ${p[0] > p[1] ? 1 : 2} gagne`;
+            award(Math.round((p[0] + p[1]) / 10));
+          });
+        } else {
+          // Chacun son tour : même mélodie, même micro.
+          trace.names = ['Chanteur 1', 'Chanteur 2'];
+          let cb: (m: number | null, t: number) => void = () => {};
+          await start($<HTMLSelectElement>('mA').value, 0, (m, t) => cb(m, t));
+          $('mMsg').textContent = '🎤 Chanteur 1 : à toi après le décompte';
+          runSong([mel], bpm, [(c) => (cb = c)], (p1) => {
+            $('mS1').textContent = `${p1[0]} %`;
+            $('mMsg').textContent = '🎤 Chanteur 2 : prépare-toi…';
+            extraMics.splice(0).forEach((m) => void m.stop());
+            later(async () => {
+              let cb2: (m: number | null, t: number) => void = () => {};
+              await start($<HTMLSelectElement>('mA').value, 1, (m, t) => cb2(m, t));
+              runSong([[], mel], bpm, [() => {}, (c) => (cb2 = c)], (p2) => {
+                extraMics.splice(0).forEach((m) => void m.stop());
+                $('mMsg').textContent = p1[0] === p2[1] ? 'Égalité !' : `🏆 Chanteur ${p1[0] > p2[1] ? 1 : 2} gagne (${p1[0]} % contre ${p2[1]} %)`;
+                award(Math.round((p1[0] + p2[1]) / 10));
+              });
+            }, 2500);
+          });
+        }
+      } catch {
+        $('mMsg').textContent = 'Micro refusé ou indisponible (vérifie le choix des micros).';
+      }
+    });
+
     $('dHold').addEventListener('click', async () => {
       if (!(await ensureMic())) return;
       void synth.ctx.resume();
@@ -458,6 +589,8 @@ export function renderVoiceStudio(app: HTMLElement, back: () => void, tab: Tab =
         app2 = mel;
         user = harmonyLine(mel, part as 'third-below' | 'third-above');
       }
+      const all2 = [...user, ...app2].map((n) => n.midi);
+      trace.setRange(Math.min(...all2), Math.max(...all2));
       const spb = 60 / bpm;
       const count = barBeats; // une mesure de décompte
       const t0 = synth.ctx.currentTime + 0.2;
