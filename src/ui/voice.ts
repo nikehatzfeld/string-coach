@@ -14,6 +14,7 @@ export type VoiceAction =
   | 'slower'
   | 'metronome'
   | 'loop'
+  | 'line'
   | 'mic'
   | 'hear'
   | 'mode-live'
@@ -48,6 +49,7 @@ const RULES: [RegExp, VoiceAction][] = [
   [/\b(suivant|suivante|passe|passer|next)\b/, 'next'],
   [/\b(precedent|precedente|recule|reculer|retour)\b/, 'prev'],
   [/\b(metronome)\b/, 'metronome'],
+  [/\b(ligne|cette ligne)\b/, 'line'],
   [/\b(boucle|en boucle|repete|repeter)\b/, 'loop'],
   [/\b(micro|microphone)\b/, 'mic'],
   [/\b(ecoute la note|ecouter la note|la note|ecoute)\b/, 'hear'],
@@ -128,7 +130,7 @@ export function startVoice(onCommand: (c: VoiceCommand, heard: string) => void, 
   };
   try {
     rec.start();
-    onStatus('🗣 À l’écoute : « joue », « stop », « suivant », « recommence », « plus vite », « tempo 80 », « métronome »…', true);
+    onStatus('🗣 À l’écoute : « joue », « stop », « suivant », « recommence », « plus vite », « tempo 80 », « la ligne », « métronome »…', true);
   } catch {
     onStatus('Impossible de démarrer les commandes vocales.', false);
   }

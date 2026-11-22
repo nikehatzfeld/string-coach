@@ -20,13 +20,15 @@ export interface MicOptions {
   noiseFactor: number;
   minFreq: number;
   maxFreq: number;
+  /** Micro à utiliser (deviceId) ; vide = défaut. */
+  deviceId?: string;
 }
 
 /**
  * Seuils volontairement bas : sur téléphone et tablette, sans contrôle automatique du gain,
  * le micro capte beaucoup plus faiblement qu'un ordinateur. Le bruit de fond est mesuré en continu.
  */
-const DEFAULTS: MicOptions = { minClarity: 0.78, minRms: 0.0015, noiseFactor: 2.5, minFreq: 70, maxFreq: 2200 };
+const DEFAULTS: MicOptions = { minClarity: 0.7, minRms: 0.0015, noiseFactor: 2.5, minFreq: 70, maxFreq: 2200 };
 
 /** Écoute le micro et renvoie la hauteur jouée environ 60 fois par seconde. */
 export class MicPitchDetector {
@@ -41,6 +43,17 @@ export class MicPitchDetector {
     this.opts = { ...DEFAULTS, ...opts };
   }
 
+  /** Micro réellement utilisé et filtres appliqués (pour le diagnostic). */
+  get info(): { label: string; filtered: string[] } {
+    const t = this.stream?.getAudioTracks()[0];
+    const st = (t?.getSettings() ?? {}) as MediaTrackSettings & { voiceIsolation?: boolean };
+    const filtered: string[] = [];
+    if (st.noiseSuppression) filtered.push('réduction de bruit');
+    if (st.voiceIsolation) filtered.push('isolement de la voix');
+    if (st.echoCancellation) filtered.push('annulation d’écho');
+    return { label: t?.label ?? '', filtered };
+  }
+
   get running(): boolean {
     return this.ctx !== null;
   }
@@ -53,7 +66,8 @@ export class MicPitchDetector {
     const resumed = this.ctx.resume().catch(() => {});
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+        // Filtres « appel vidéo » coupés : la réduction de bruit et l'isolement de la voix effacent les notes tenues d'un instrument.
+        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, voiceIsolation: false, channelCount: 1, ...(this.opts.deviceId ? { deviceId: { exact: this.opts.deviceId } } : {}) } as MediaTrackConstraints,
       });
     } catch (err) {
       if ((err as DOMException)?.name === 'NotAllowedError') {
@@ -61,7 +75,7 @@ export class MicPitchDetector {
         throw err;
       }
       // Certains appareils refusent ces réglages : micro par défaut.
-      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: this.opts.deviceId ? { deviceId: this.opts.deviceId } : true });
     }
     await resumed;
     // Si le navigateur a quand même suspendu l'audio, on le relance au prochain geste.

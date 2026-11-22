@@ -39,10 +39,11 @@ export class NoteCircle {
   order: 'chromatic' | 'fifths' = 'chromatic';
   private state: CircleState = { tonic: 0, scale: SCALES.major.steps };
 
-  constructor(host: HTMLElement) {
+  /** compact : cadrage serré, sans légendes (à côté du manche). */
+  constructor(host: HTMLElement, private readonly compact = false) {
     this.svg = document.createElementNS(NS, 'svg');
-    this.svg.setAttribute('viewBox', '0 0 300 300');
-    this.svg.setAttribute('class', 'note-circle');
+    this.svg.setAttribute('viewBox', compact ? '14 14 272 272' : '0 0 300 300');
+    this.svg.setAttribute('class', compact ? 'note-circle compact' : 'note-circle');
     this.svg.setAttribute('role', 'img');
     host.appendChild(this.svg);
     this.svg.addEventListener('click', () => {
@@ -95,14 +96,15 @@ export class NoteCircle {
       const cls = ['nc-node', isScale ? 'in' : 'out', isTonic ? 'tonic' : '', isChord ? 'chord' : '', target === pc ? 'target' : '', heard === pc ? (isChord ? 'heard-chord' : isScale ? 'heard-in' : 'heard-out') : '']
         .filter(Boolean)
         .join(' ');
-      this.el('circle', { cx: x, cy: y, r: target === pc ? 22 : 18, class: cls });
+      this.el('circle', { cx: x, cy: y, r: (target === pc ? 22 : 18) + (this.compact ? 2 : 0), class: cls });
       this.el('text', { x, y: y + 4, class: `nc-label ${isScale ? 'in' : 'out'}` }, noteName(pc, flat));
       if (isScale) {
         const [dx, dy] = this.pos(pc, 80);
         this.el('text', { x: dx, y: dy + 4, class: 'nc-degree' }, DEGREES[(pc - tonic + 12) % 12]);
       }
     }
-    this.el('text', { x: 150, y: 146, class: 'nc-center' }, noteName(tonic, flat));
+    this.el('text', { x: 150, y: this.compact ? 158 : 146, class: 'nc-center' }, noteName(tonic, flat));
+    if (this.compact) return;
     this.el('text', { x: 150, y: 164, class: 'nc-center-sub' }, this.order === 'chromatic' ? 'cercle chromatique' : 'cercle des quintes');
     this.el('text', { x: 150, y: 296, class: 'nc-hint' }, 'clic : chromatique ↔ quintes');
   }

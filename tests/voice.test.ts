@@ -14,6 +14,7 @@ describe('commandes vocales', () => {
     ['moins vite', 'slower'],
     ['métronome', 'metronome'],
     ['en boucle', 'loop'],
+    ['boucle la ligne', 'line'],
     ['mode jeu', 'mode-game'],
     ['pas à pas', 'mode-step'],
     ['écoute la note', 'hear'],

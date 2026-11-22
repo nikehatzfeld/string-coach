@@ -77,6 +77,13 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - Cours « Harmonie & improvisation » 16 leçons (docs/cours-harmonie.md) + atelier (grilles, bourdon, micro qui classe les notes).
 - docs/generiques-films-series.md : 63 génériques à importer via le coffre (protégés).
 
+## v0.10 (22/11/2026)
+- Micro : filtres « appel » coupés (voiceIsolation), seuil de clarté 0,7, choix du micro (⚙), diagnostic si du son arrive sans note nette (filtre voix Mac/Windows/casque).
+- Écran plus compact : cercle agrandi, bandeaux d'aide supprimés, titre/accordage retirés de la partition.
+- Boucle de travail : « 📏 Ligne en cours » ou « ✂ Choisir des mesures… » dans le menu des parties (+ voix « la ligne »).
+- Les Quatre Saisons de Vivaldi : 12 mouvements, partie soliste (Mutopia, CC BY-SA) via scripts/add_pieces.py.
+- Aquarium (Saint-Saëns) : aucune source libre MIDI/MusicXML trouvée (Mutopia, IMSLP) → via coffre.
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |

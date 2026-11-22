@@ -31,6 +31,8 @@ export interface Prefs {
   backing: boolean;
   /** Mode jeu : retard du micro à compenser (ms). */
   latencyMs: number;
+  /** Micro choisi (deviceId), vide = micro par défaut. */
+  micId: string;
 }
 
 const KEY = 'string-coach:prefs';
@@ -51,6 +53,7 @@ const DEFAULTS: Prefs = {
   showCircle: true,
   backing: true,
   latencyMs: 80,
+  micId: '',
 };
 
 function load(): Prefs {

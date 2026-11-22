@@ -69,6 +69,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         <button id="bpmReset" class="ghost" title="Tempo d'origine">↺</button>
       </div>
       <select id="section" aria-label="Partie à travailler" hidden></select>
+      <span id="rangeBox" class="range-box" hidden>mes. <input id="rFrom" type="number" min="1" inputmode="numeric" aria-label="Première mesure" /> à <input id="rTo" type="number" min="1" inputmode="numeric" aria-label="Dernière mesure" /> <button id="rOk" class="primary" title="Travailler ces mesures en boucle">🔁</button></span>
       <button id="voiceBtn" aria-pressed="false" title="Commandes vocales (mains libres)">🗣 Voix</button>
       <button id="moreBtn" class="ghost more-btn" aria-expanded="false" aria-label="Plus de réglages">⚙</button>
       <button id="loop" class="only-live more" aria-pressed="false">Boucle</button>
@@ -91,6 +92,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       <button id="ksBtn" class="more" aria-pressed="${prefs.keySignatures}" title="Armure à la clé, ou dièses et bémols écrits devant chaque note">Armure</button>
       <label class="only-step more">Tolérance <input id="tol" type="range" min="10" max="60" step="5" value="${prefs.tolerance}" /> <output id="tolOut">±${prefs.tolerance} cents</output></label>
       <button id="restart" class="only-step more">↻ Recommencer</button>
+      <label class="no-live more">🎤 <select id="micSel" aria-label="Micro"><option value="">Micro par défaut</option></select></label>
     </div>
     <div id="micHelp" class="mic-help" role="status" hidden></div>
     <div id="voiceMsg" class="voice-msg" role="status" hidden></div>
@@ -98,7 +100,6 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       <section id="neck" class="neck no-game" ${prefs.showNeck ? '' : 'hidden'}></section>
       <div id="circleBox" class="circle-box no-game" ${prefs.showCircle ? '' : 'hidden'}></div>
     </div>
-    <div id="stepGuide" class="step-guide only-step">🎯 <strong>Pas à pas</strong> : clique sur <strong>▶ Commencer</strong> (ou dis « joue »), puis joue la note en orange sur le manche. L'app attend qu'elle soit juste avant de passer à la suivante. Pas de tempo : prends ton temps. 🔊 pour entendre la note, ▶ pour la passer. Pour jouer en rythme avec l'accompagnement, passe en <strong>🎮 Jeu & play-along</strong>.</div>
     <section id="step" class="step only-step">
       <div class="target">
         <strong id="tNote">–</strong>
@@ -106,7 +107,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       </div>
       <div class="tuner" aria-live="polite">
         <div class="bar"><div class="zone"></div><div id="needle" class="needle" hidden></div></div>
-        <div class="tuner-line"><span id="verdict" class="verdict">Active le micro</span><span id="progress" class="muted"></span><span id="sCombo"></span><span id="sScore" class="muted">0 pt</span></div>
+        <div class="tuner-line"><span id="verdict" class="verdict">Clique ▶ Commencer</span><span id="progress" class="muted"></span><span id="sCombo"></span><span id="sScore" class="muted">0 pt</span></div>
       </div>
       <div class="step-actions">
         <button id="micBtn" class="primary">▶ Commencer</button>
@@ -189,18 +190,81 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     } else api.playbackRange = null;
     api.tickPosition = r ? r.start : 0;
   }
-  api.scoreLoaded.on((score) => {
-    sections = sectionsFor(score.masterBars.length, source.kind === 'library' ? source.song.sections : undefined);
-    sectionSel.hidden = sections.length === 0;
+  /** Clé de progression d'une partie (prédéfinie : n°, choisie : plage de mesures). */
+  const sectionKey = () => {
+    if (!section) return '';
+    const i = sections.indexOf(section);
+    return i >= 0 ? `#${i + 1}` : `#m${section.first + 1}-${section.last + 1}`;
+  };
+  let barCount = 0;
+  function fillSections() {
+    sectionSel.hidden = barCount < 2;
+    const custom = section && !sections.includes(section) ? section : null;
     sectionSel.innerHTML =
       `<option value="">Morceau entier</option>` +
-      sections.map((s, i) => `<option value="${i}">${esc(s.name)} · mes. ${s.first + 1}-${s.last + 1}</option>`).join('');
+      sections.map((s, i) => `<option value="${i}">${esc(s.name)} · mes. ${s.first + 1}-${s.last + 1}</option>`).join('') +
+      (custom ? `<option value="c">🔁 ${esc(custom.name)}</option>` : '') +
+      `<option value="line">📏 Ligne en cours (en boucle)</option><option value="pick">✂ Choisir des mesures…</option>`;
+    sectionSel.value = custom ? 'c' : section ? String(sections.indexOf(section)) : '';
+  }
+  api.scoreLoaded.on((score) => {
+    barCount = score.masterBars.length;
+    sections = sectionsFor(barCount, source.kind === 'library' ? source.song.sections : undefined);
+    section = null;
+    fillSections();
   });
+  /** Mesure où se trouve le curseur (lecture ou note à jouer). */
+  function cursorBar(): number {
+    const mbs = api.score?.masterBars ?? [];
+    const tick = api.tickPosition;
+    let bar = 0;
+    for (let i = 0; i < mbs.length; i++) if (mbs[i].start <= tick) bar = i;
+    return bar;
+  }
+  /** Mesures de la ligne affichée qui contient la mesure donnée. */
+  function lineOf(bar: number): [number, number] {
+    for (const sys of api.renderer.boundsLookup?.staffSystems ?? []) {
+      const idx = sys.bars.map((b) => b.index);
+      if (idx.includes(bar)) return [Math.min(...idx), Math.max(...idx)];
+    }
+    return [bar, Math.min(barCount - 1, bar + 3)];
+  }
+  /** Travaille une plage de mesures en boucle, dans tous les modes. */
+  function loopBars(first: number, last: number) {
+    first = Math.max(0, Math.min(barCount - 1, first));
+    last = Math.max(first, Math.min(barCount - 1, last));
+    section = { name: `Mesures ${first + 1}-${last + 1}`, first, last };
+    fillSections();
+    $('rangeBox').hidden = true;
+    if (!api.isLooping) $('loop').click();
+    const rep = $<HTMLSelectElement>('repeat');
+    if (rep.value !== '0') {
+      rep.value = '0';
+      rep.dispatchEvent(new Event('change'));
+    }
+    applySection();
+    setMode(mode);
+  }
   sectionSel.addEventListener('change', () => {
-    section = sectionSel.value === '' ? null : sections[Number(sectionSel.value)];
+    const v = sectionSel.value;
+    if (v === 'line') return loopBars(...lineOf(cursorBar()));
+    if (v === 'pick') {
+      const [a, b] = section ? [section.first, section.last] : lineOf(cursorBar());
+      $<HTMLInputElement>('rFrom').value = String(a + 1);
+      $<HTMLInputElement>('rTo').value = String(b + 1);
+      $<HTMLInputElement>('rFrom').max = $<HTMLInputElement>('rTo').max = String(barCount);
+      $('rangeBox').hidden = false;
+      $<HTMLInputElement>('rFrom').focus();
+      return;
+    }
+    if (v === 'c') return;
+    $('rangeBox').hidden = true;
+    section = v === '' ? null : sections[Number(v)];
     applySection();
     setMode(mode);
   });
+  $('rOk').addEventListener('click', () => loopBars(Number($<HTMLInputElement>('rFrom').value) - 1, Number($<HTMLInputElement>('rTo').value) - 1));
+  ['rFrom', 'rTo'].forEach((id) => $(id).addEventListener('keydown', (e) => (e as KeyboardEvent).key === 'Enter' && $('rOk').click()));
 
   const backingTracks = () => (source.kind === 'library' ? (api.score?.tracks.slice(1) ?? []) : []);
   /** Volume relatif de l'accompagnement : la mélodie reste devant. */
@@ -452,21 +516,31 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     const slow = setTimeout(() => {
       if (pending) micHelp('⏳ Toujours en attente du micro : regarde en haut de l’écran, le navigateur te demande l’autorisation. Si rien n’apparaît, clique sur l’icône 🔒 ou 🎤 à gauche de l’adresse › Micro › Autoriser, puis recharge la page.');
     }, 5000);
-    const m = new MicPitchDetector();
+    const m = new MicPitchDetector({ deviceId: prefs.micId });
     mic = m;
     try {
-      let heardSomething = false;
+      let pitched = 0;
+      let loud = 0;
+      const t0 = performance.now();
+      let warned = false;
       await m.start((r) => {
-        if (!heardSomething && r.level > 0.2) {
-          heardSomething = true;
-          micHelp(null);
+        if (r.level > 0.2) loud++;
+        if (r.freq) pitched++;
+        // Du son mais jamais de hauteur nette après 8 s : un filtre « voix » efface probablement l'instrument.
+        if (!warned && pitched < 10 && loud > 60 && performance.now() - t0 > 8000) {
+          warned = true;
+          micHelp(noPitchHelp(m.info));
         }
+        if (pitched === 10 && warned) micHelp(null);
         showMic(r);
         onReading(r);
       });
       pending = false;
       clearTimeout(slow);
-      micHelp('✅ Micro activé. Joue une note : la barre verte doit bouger. Si elle reste vide, vérifie le micro choisi dans les réglages son de ton ordinateur.');
+      const info = m.info;
+      micHelp(info.filtered.length ? noPitchHelp(info) : null);
+      const heardEl = document.getElementById('sHeard');
+      if (heardEl) heardEl.title = `Micro : ${info.label || 'par défaut'}`;
       setPracticeActive(true);
       return true;
     } catch (err) {
@@ -609,7 +683,6 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     setVerdict('Autorise le micro…', '');
     const ok = await startMic((r) => trainer && onUpdate(trainer.update(r.freq, r.time, r.rms), r.time));
     $('micBtn').textContent = ok ? '⏹ Arrêter' : '▶ Commencer';
-    if (ok) $('stepGuide').hidden = true;
     if (ok) setVerdict('À toi de jouer…', '');
     else setVerdict('Micro indisponible (voir le message ci-dessus)', 'bad');
   });
@@ -632,6 +705,21 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   $('skip').addEventListener('click', skip);
   $('prev').addEventListener('click', back);
   $('restart').addEventListener('click', () => setupTrainer());
+  // Choix du micro (utile si le micro par défaut est un casque ou un micro virtuel qui filtre l'instrument).
+  const micSel = $<HTMLSelectElement>('micSel');
+  async function fillMics() {
+    const devs = (await navigator.mediaDevices?.enumerateDevices().catch(() => [])) ?? [];
+    const ins = devs.filter((d) => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default');
+    micSel.innerHTML = '<option value="">Micro par défaut</option>' + ins.map((d, i) => `<option value="${esc(d.deviceId)}" ${d.deviceId === prefs.micId ? 'selected' : ''}>${esc(d.label || `Micro ${i + 1}`)}</option>`).join('');
+  }
+  void fillMics();
+  navigator.mediaDevices?.addEventListener?.('devicechange', () => void fillMics());
+  micSel.addEventListener('focus', () => void fillMics());
+  micSel.addEventListener('change', () => {
+    prefs.micId = micSel.value;
+    savePrefs();
+    if (mic) $('micBtn').click(); // arrête : le prochain ▶ utilisera le nouveau micro
+  });
   const tol = $<HTMLInputElement>('tol');
   tol.addEventListener('input', () => {
     prefs.tolerance = Number(tol.value);
@@ -817,7 +905,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     const outcome = recordResult(
       progress,
       {
-        songId: section ? `${songId}#${sections.indexOf(section) + 1}` : songId,
+        songId: section ? `${songId}${sectionKey()}` : songId,
         style: source.kind === 'library' ? source.song.style : undefined,
         mode: m,
         score: k.score,
@@ -840,7 +928,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
           ? `🚀 3 passages propres : tempo monté à ${bpmInput.value} BPM (+${outcome.tempoChange})`
           : `🐢 Tempo baissé à ${bpmInput.value} BPM (−${-outcome.tempoChange}) pour consolider`;
     } else {
-      const streak = progress.songs[section ? `${songId}#${sections.indexOf(section) + 1}` : songId]?.cleanStreak ?? 0;
+      const streak = progress.songs[section ? `${songId}${sectionKey()}` : songId]?.cleanStreak ?? 0;
       if (streak > 0) tempoNote = `Passages propres : ${streak} / 3 avant de monter le tempo`;
     }
     // Exercice : validé avec 3 étoiles au tempo cible ou plus vite.
@@ -923,7 +1011,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   }
 
   // ---------- Cercle des notes ----------
-  const circle = new NoteCircle($('circleBox'));
+  const circle = new NoteCircle($('circleBox'), true);
   const sc = source.kind === 'library' ? scaleFromKey(source.song.key) : null;
   circle.set(sc ? { tonic: sc.tonic, scale: sc.scale, flat: sc.flat } : { tonic: 0, scale: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] });
   $('circleBtn').addEventListener('click', () => {
@@ -1029,6 +1117,10 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       case 'metronome':
         isMetronomeRunning() ? stopMetronome() : startMetronome();
         break;
+      case 'line':
+        loopBars(...lineOf(cursorBar()));
+        voiceMsg('🔁 Ligne en boucle', true);
+        break;
       case 'loop':
         if (mode === 'live') $('loop').click();
         else {
@@ -1086,6 +1178,15 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
 }
 
 /** Explication claire d'un échec d'accès au micro. */
+function noPitchHelp(info: { label: string; filtered: string[] }): string {
+  const f = info.filtered.length ? ` Filtres actifs : <strong>${info.filtered.join(', ')}</strong>.` : '';
+  return `🎻 Le micro <strong>${info.label || 'par défaut'}</strong> capte du son mais aucune note nette.${f} Un filtre « voix » efface sans doute l'instrument :
+    <br>• Mac : Centre de contrôle › <strong>Mode micro › Standard</strong> (pas « Isolement de la voix »).
+    <br>• Windows : Paramètres › Son › micro › désactive <strong>Effets audio / Effets de studio / Voice Focus</strong>.
+    <br>• Casque Bluetooth / AirPods : utilise plutôt le micro de l'ordinateur.
+    <br>• Coupe 🗣 Voix pour tester.`;
+}
+
 function micErrorText(err: unknown): string {
   const name = (err as DOMException)?.name ?? '';
   switch (name) {

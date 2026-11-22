@@ -432,7 +432,7 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 /* Manche + cercle côte à côte */
 .viz { display: flex; align-items: stretch; gap: 0; }
 .viz .neck { flex: 1 1 auto; min-width: 0; }
-.circle-box { flex: 0 0 auto; width: 210px; padding: 0.2rem 0.6rem; background: rgba(21, 25, 37, 0.7); border-bottom: 1px solid var(--border); }
+.circle-box { flex: 0 0 auto; width: 250px; padding: 0.15rem 0.4rem; display: flex; align-items: center; justify-content: center; background: rgba(21, 25, 37, 0.7); border-bottom: 1px solid var(--border); }
 .circle-box[hidden] { display: none; }
 .player:not(.mode-step) .circle-box { display: none; }
 .note-circle { width: 100%; height: auto; max-height: 230px; cursor: pointer; }
@@ -454,7 +454,11 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .nc-center { font-size: 22px; font-weight: 800; text-anchor: middle; fill: var(--text); }
 .nc-center-sub { font-size: 9px; text-anchor: middle; fill: var(--muted); }
 .nc-hint { font-size: 9px; text-anchor: middle; fill: var(--muted); }
-@media (max-width: 760px) { .circle-box { width: 130px; } .nc-hint, .nc-center-sub { display: none; } }
+.circle-box .note-circle { width: 100%; height: 100%; max-height: 250px; cursor: pointer; }
+.note-circle.compact .nc-label { font-size: 14px; }
+.note-circle.compact .nc-degree { font-size: 12px; }
+.note-circle.compact .nc-center { font-size: 30px; }
+@media (max-width: 760px) { .circle-box { width: 150px; } .nc-hint, .nc-center-sub { display: none; } }
 
 /* Atelier d'improvisation et leçons */
 .improv { min-height: 100vh; }
@@ -479,3 +483,6 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .lesson .src { color: var(--muted); font-size: 0.7em; }
 .lesson-nav { display: flex; justify-content: space-between; gap: 0.5rem; margin: 1.5rem 0; }
 @media (max-width: 760px) { .improv-main { grid-template-columns: 1fr; } .chord-chart { grid-template-columns: repeat(4, 1fr); } }
+.range-box { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.9rem; }
+.range-box[hidden] { display: none; }
+.range-box input { width: 4.2em; min-height: 38px; }

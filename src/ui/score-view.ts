@@ -28,6 +28,11 @@ export class ScoreView {
         scrollOffsetY: -40,
       },
     });
+    // Place maximale à la musique : titre, auteurs et accordage sont déjà affichés ailleurs.
+    const E = alphaTab.NotationElement;
+    for (const el of [E.ScoreTitle, E.ScoreSubTitle, E.ScoreArtist, E.ScoreAlbum, E.ScoreWords, E.ScoreMusic, E.ScoreWordsAndMusic, E.ScoreCopyright, E.GuitarTuning])
+      this.api.settings.notation.elements.set(el, false);
+    this.api.updateSettings();
     if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) (window as unknown as { __at: unknown }).__at = this.api;
     this.api.scoreLoaded.on((score) => {
       this.beats = [];

@@ -71,3 +71,12 @@ describe('bibliothèque', () => {
     });
   }
 });
+
+describe('Quatre Saisons de Vivaldi', () => {
+  it('12 mouvements complets, partie soliste', async () => {
+    const { LIBRARY } = await import('../src/songs/library');
+    const v = LIBRARY.filter((s) => s.id.startsWith('vivaldi-'));
+    expect(v).toHaveLength(12);
+    expect(v.find((s) => s.id === 'vivaldi-spring-i')!.notation).toContain('G#5:8 G#5:8 G#5:8 F#5:16 E5:16 B5:4.');
+  });
+});

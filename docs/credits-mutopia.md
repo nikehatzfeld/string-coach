@@ -298,3 +298,12 @@ Mélodies extraites automatiquement (scripts/build_pd_library.py) des fichiers M
 | Wiegenlied | F. Schubert | Domaine public | https://www.mutopiaproject.org/ftp/SchubertF/D498/schubert_wiegen_lied/schubert_wiegen_lied.mid |
 | Winchester New | Traditionnel | Domaine public | https://www.mutopiaproject.org/ftp/Anonymous/WinchesterNew/WinchesterNew.mid |
 | Woodworth (hymntune) | W. B. Bradbury | Domaine public | https://www.mutopiaproject.org/ftp/BradburyWB/woodworth/woodworth.mid |
+
+## Ajouts (scripts/add_pieces.py) — partie soliste
+
+| Titre | Compositeur | Licence | Source |
+|---|---|---|---|
+| Les Quatre Saisons n° 1 · Le Printemps (3 mvts) | A. Vivaldi | CC BY-SA 3.0 | https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=301 |
+| Les Quatre Saisons n° 2 · L'Été (3 mvts) | A. Vivaldi | CC BY-SA 3.0 | https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=336 |
+| Les Quatre Saisons n° 3 · L'Automne (3 mvts) | A. Vivaldi | CC BY-SA 3.0 | https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=350 |
+| Les Quatre Saisons n° 4 · L'Hiver (3 mvts) | A. Vivaldi | CC BY-SA 3.0 | https://www.mutopiaproject.org/cgibin/piece-info.cgi?id=351 |
