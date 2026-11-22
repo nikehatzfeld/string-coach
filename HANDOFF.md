@@ -103,6 +103,15 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - Manche : plus grand, couleur par corde, corde à vide mise en évidence, longueur vibrante animée.
 - Paroles domaine public (src/songs/lyrics.ts, 12 chansons, test syllabes = notes).
 
+## v0.14 (22/11/2026)
+- Répertoire par instrument (src/songs/library.ts songFor, champ origin) + 192 pièces de guitare classique complètes (scripts/build_guitar.py → pd-guitar.json, champ tex).
+- Voix : courbe à échelle fixe, lissée, justesse réglable ; jeu de chant karaoké (src/game/sing.ts, sing-lane.ts) ; paroles karaoké partout (lyrics-strip.ts) ; 17 chansons à paroles ; deux chanteurs (2 micros / chacun son tour).
+- Guitare : enchaînements 4/6/8 accords, libre, aléatoire.
+- Transcription audio → partition (Basic Pitch, public/basic-pitch, src/practice/transcribe.ts), « Mes morceaux » en localStorage.
+- Cinéma & TV : 14 œuvres libres (Satie, Debussy, Strauss, Verdi…).
+- Design system « scène néon » (fin de src/style.css, polices Unbounded + Space Grotesk).
+- Plus d'« archet » hors violon.
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |

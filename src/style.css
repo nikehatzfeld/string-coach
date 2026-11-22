@@ -622,3 +622,127 @@ input[type='range'] { accent-color: var(--accent); width: 8rem; }
 .ly-next { font-size: 0.95rem; color: var(--muted); }
 .tr-modal { text-align: left; } .tr-row { display: flex; gap: 0.5rem; align-items: center; margin: 0.4rem 0; }
 .tr-list { list-style: none; padding: 0; max-height: 10rem; overflow: auto; } .tr-list li { display: flex; justify-content: space-between; }
+
+/* =====================================================================
+   DESIGN SYSTEM « SCÈNE NÉON » (v2)
+   Nuit violette, dégradés rose → violet → cyan, verre et lumière.
+   Jaune électrique = ce qu'il faut jouer maintenant. Vert menthe = réussi.
+   ===================================================================== */
+:root {
+  --bg: #0a0618;
+  --bg-2: #120a2a;
+  --panel: rgba(255, 255, 255, 0.055);
+  --panel-solid: #1a1236;
+  --panel-2: #241a48;
+  --border: rgba(190, 160, 255, 0.16);
+  --text: #f4efff;
+  --muted: #b3a8d6;
+  --accent: #ffd23f;
+  --accent-2: #ff3d9a;
+  --violet: #8b5cf6;
+  --cyan: #22d3ee;
+  --ok: #34f5c5;
+  --bad: #ff4d6d;
+  --focus: #22d3ee;
+  --radius: 22px;
+  --grad: linear-gradient(120deg, #ff3d9a 0%, #8b5cf6 50%, #22d3ee 100%);
+  --grad-warm: linear-gradient(120deg, #ffd23f 0%, #ff3d9a 100%);
+  --glow-pink: 0 0 24px rgba(255, 61, 154, 0.45);
+  --glow-cyan: 0 0 24px rgba(34, 211, 238, 0.4);
+  --font-ui: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-display: 'Unbounded', 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-ui);
+}
+body {
+  background:
+    radial-gradient(900px 600px at 0% 0%, rgba(139, 92, 246, 0.28), transparent 60%),
+    radial-gradient(800px 500px at 100% 10%, rgba(255, 61, 154, 0.2), transparent 60%),
+    radial-gradient(900px 700px at 50% 120%, rgba(34, 211, 238, 0.16), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+}
+/* Aurores lentes en fond */
+body::before {
+  content: ''; position: fixed; inset: -20%; z-index: -1; pointer-events: none;
+  background:
+    conic-gradient(from 0deg at 30% 40%, transparent 0 40%, rgba(255, 61, 154, 0.08) 50%, transparent 60% 100%),
+    conic-gradient(from 180deg at 70% 60%, transparent 0 40%, rgba(34, 211, 238, 0.07) 50%, transparent 60% 100%);
+  filter: blur(40px);
+  animation: aurora 26s linear infinite;
+}
+@keyframes aurora { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { body::before { animation: none; } }
+
+h1, h2, h3, .brand h1, .ptitle h1 { font-family: var(--font-display); letter-spacing: -0.01em; }
+h2 { font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.04em; }
+h2::before { content: ''; width: 10px; height: 10px; border-radius: 3px; background: var(--grad); box-shadow: var(--glow-pink); align-self: center; }
+.brand h1 { font-size: 1.35rem; font-weight: 800; }
+.logo { filter: drop-shadow(0 0 12px rgba(255, 61, 154, 0.7)); }
+
+/* Boutons : pilules lumineuses */
+button, select { border-radius: 999px; background: rgba(255, 255, 255, 0.06); border: 1px solid var(--border); }
+button:hover, select:hover { border-color: rgba(34, 211, 238, 0.55); box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.1); }
+button.primary { background: var(--grad); color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); box-shadow: var(--glow-pink); }
+button.primary:hover { box-shadow: 0 0 34px rgba(255, 61, 154, 0.6); filter: saturate(1.15); }
+button[aria-pressed='true'], .seg button[aria-pressed='true'] {
+  background: linear-gradient(120deg, #22d3ee, #8b5cf6); color: #fff; border-color: transparent; box-shadow: var(--glow-cyan);
+}
+.chip { border-radius: 999px; }
+input[type='text'], input[type='search'], input[type='password'], input[type='number'] { border-radius: 999px; background: rgba(255, 255, 255, 0.06); }
+input[type='range'] { accent-color: var(--accent-2); }
+.seg { border-radius: 999px; background: rgba(10, 6, 24, 0.6); }
+
+/* En-tête en verre, liseré néon */
+.top { background: rgba(10, 6, 24, 0.72); border-bottom: 1px solid transparent; box-shadow: 0 1px 0 rgba(255, 61, 154, 0.35), 0 8px 30px rgba(0, 0, 0, 0.35); }
+
+/* Cartes : verre + bordure dégradée */
+.card, .tile, .ch-song, .cd-card, .cp-now, .modal, .tuner-panel, .metro-panel {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(160deg, rgba(36, 26, 72, 0.92), rgba(18, 10, 42, 0.92)) padding-box,
+    linear-gradient(140deg, rgba(255, 61, 154, 0.55), rgba(139, 92, 246, 0.35) 45%, rgba(34, 211, 238, 0.5)) border-box;
+  border-radius: var(--radius);
+}
+.card { transition: transform 0.18s cubic-bezier(0.2, 0.9, 0.3, 1.3), box-shadow 0.2s; }
+.card:hover { transform: translateY(-4px) rotate(-0.4deg); box-shadow: 0 14px 34px hsla(var(--hue), 90%, 55%, 0.35), var(--glow-pink); }
+.card .style { color: hsl(var(--hue), 95%, 78%); font-weight: 700; }
+.card .cicon { filter: drop-shadow(0 0 10px hsla(var(--hue), 90%, 60%, 0.8)); }
+.ch-song:hover, .cd-card:hover { box-shadow: var(--glow-cyan); }
+
+/* Barre d'outils et zones du lecteur */
+.toolbar { gap: 0.45rem; }
+.neck, .circle-box, .recorder-board, .pitch-trace-host { background: rgba(14, 8, 34, 0.75); }
+.score-scroll { border-radius: 18px 18px 0 0; }
+.fb-wood { fill: #1d1433; }
+.guitar .fb-wood { fill: #241740; }
+.fb-dot { filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.55)); }
+
+/* Mode pas à pas : la note en cours en grand néon */
+.target strong, #tNote { font-family: var(--font-display); background: var(--grad-warm); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 14px rgba(255, 61, 154, 0.5)); }
+.verdict.ok { color: var(--ok); text-shadow: 0 0 12px rgba(52, 245, 197, 0.6); }
+.verdict.bad { color: var(--bad); }
+
+/* Paroles karaoké */
+.lyrics-strip { background: linear-gradient(90deg, rgba(255, 61, 154, 0.16), rgba(139, 92, 246, 0.14), rgba(34, 211, 238, 0.14)); }
+.ly-now { font-family: var(--font-display); font-size: 1.45rem; }
+.ly-now .now { color: var(--accent); text-shadow: 0 0 16px rgba(255, 210, 63, 0.8); }
+.ly-now .done { color: var(--ok); }
+
+/* Jeu : piste avec halo */
+.highway, .cp-sheet .cp-bar.on { box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.4), 0 0 40px rgba(139, 92, 246, 0.25); }
+.cp-bar { border-radius: 14px; }
+.cp-bar.on { outline: 2px solid var(--accent); }
+.cp-pattern span.on { background: var(--grad-warm); color: #fff; }
+
+/* Boutons flottants */
+.metro-fab, .tuner-fab { background: rgba(26, 18, 54, 0.9); backdrop-filter: blur(10px); }
+.metro-fab { border-color: rgba(255, 61, 154, 0.6); box-shadow: var(--glow-pink); }
+.tuner-fab { border-color: rgba(34, 211, 238, 0.6); box-shadow: var(--glow-cyan); }
+
+/* Diagrammes d'accords et flûte : touches de couleur */
+.cd-dot, .cd-barre { fill: var(--accent-2); }
+.cd-finger { fill: #fff; }
+.cd-open { stroke: var(--ok); }
+
+/* Accessibilité : contraste du focus */
+:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
