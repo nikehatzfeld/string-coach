@@ -96,6 +96,13 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - Accordeur flottant (🎚 Accordeur) à côté du métronome, sur toutes les pages.
 - Comptes : Supabase branché (src/cloud/config.ts) ; reste à exécuter docs/supabase.sql + Site URL côté Supabase.
 
+## v0.13 (22/11/2026)
+- Guitare : page 🎸 Accords (44 diagrammes, cours 11 leçons docs/cours-accords.md, changements en 1 minute, 17 grilles + morceaux à accords), lecteur d'accords (12 rythmes, capo/tonalité facile, guitare synthétique Karplus-Strong), reconnaissance d'accords au micro (chroma, src/practice/chord-detector.ts).
+- Flûte à bec soprano (doigtés baroques WFG, src/songs/recorder.ts) et voix comme instruments (partition seule, src/songs/alphatex.ts melodicToAlphaTex) ; parcours 12 semaines pour chacun.
+- Studio voix (src/ui/voice-studio.ts) : miroir/tessiture, écho, sirène, parole (intonation), deux voix (intervalles tenus, tierces, canon).
+- Manche : plus grand, couleur par corde, corde à vide mise en évidence, longueur vibrante animée.
+- Paroles domaine public (src/songs/lyrics.ts, 12 chansons, test syllabes = notes).
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |

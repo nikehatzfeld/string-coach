@@ -111,3 +111,19 @@ describe('flûte à bec', () => {
     expect(tex).not.toContain('\\tuning');
   });
 });
+
+describe('paroles', () => {
+  it('une syllabe par note pour chaque chanson', async () => {
+    const { LYRICS, lyricSyllables } = await import('../src/songs/lyrics');
+    for (const [id, text] of Object.entries(LYRICS)) {
+      const song = LIBRARY.find((s) => s.id === id);
+      expect(song, id).toBeTruthy();
+      const notes = parseNotation(song!.notation).flat().filter((e) => e.kind === 'note').length;
+      expect(lyricSyllables(text).length, id).toBe(notes);
+    }
+  });
+  it('les paroles apparaissent dans la partition', () => {
+    const tex = songToAlphaTex(LIBRARY.find((s) => s.id === 'frere-jacques')!, INSTRUMENTS.voice);
+    expect(tex).toContain('Frè- re Ja- cques');
+  });
+});

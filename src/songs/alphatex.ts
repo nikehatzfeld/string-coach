@@ -2,6 +2,7 @@ import type { Instrument } from './instruments';
 import { bestOctaveShift, placeMelody, positionLabel, solfege, type Placed } from './positions';
 import { backingKindFor, backingTracks, hasChords, type BackingKind } from './backing';
 import { parseNotation, type ParsedBar } from './notation';
+import { LYRICS, lyricSyllables } from './lyrics';
 
 export const STYLE_ORDER = [
   'Comptines',
@@ -72,6 +73,20 @@ export function songHasBacking(song: Song): boolean {
 }
 
 const NAMES_PLACEHOLDER = '%%NOMS%%';
+
+/** 2e ligne de texte : paroles (domaine public) si le morceau en a, une syllabe par note. */
+function lyricsLine(song: Song, bars: ParsedBar[]): string {
+  const text = LYRICS[song.id];
+  if (!text) return '';
+  const syl = lyricSyllables(text);
+  let k = 0;
+  const out: string[] = [];
+  for (const ev of bars.flat()) {
+    if (ev.kind === 'note') out.push(syl[k++] ?? '');
+    else if (ev.kind === 'tie') out.push('_');
+  }
+  return `\\lyrics "${escape(out.join(' '))}"`;
+}
 const DUR_TEX: Record<number, string> = { 1: '1', 2: '2', 4: '4', 8: '8', 16: '16' };
 
 function escape(s: string): string {
@@ -105,6 +120,7 @@ export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: b
     ...(song.key && opts.keySignature !== false ? [`\\ks ${song.key}`] : []),
     `\\track "${inst.label}"`,
     `\\lyrics "${NAMES_PLACEHOLDER}"`,
+    ...(LYRICS[song.id] ? [lyricsLine(song, bars)] : []),
     `\\staff {score tabs}`,
     `\\instrument ${inst.alphaTexInstrument}`,
     `\\tuning (${inst.tuningNames.join(' ')})`,
@@ -262,6 +278,7 @@ function melodicToAlphaTex(song: Song, inst: Instrument, opts: { backing?: boole
     ...(song.key && opts.keySignature !== false ? [`\\ks ${song.key}`] : []),
     `\\track "${inst.label}"`,
     `\\lyrics "${escape(names.join(' '))}"`,
+    ...(LYRICS[song.id] ? [lyricsLine(song, bars)] : []),
     `\\staff {score}`,
     `\\instrument ${inst.alphaTexInstrument}`,
   ].join('\n');
