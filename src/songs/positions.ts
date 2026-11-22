@@ -56,8 +56,8 @@ function placeIn(midi: number, position: number, inst: Instrument): Placed | nul
 }
 
 /** Coûts : rester en position basse et changer le moins possible. */
-const HEIGHT_COST = 4;
-const SHIFT_COST = 6;
+const HEIGHT_COST = 6;
+const SHIFT_COST = 9;
 const SHIFT_DISTANCE_COST = 0.5;
 const SLIDE_COST = 5;
 
@@ -163,4 +163,21 @@ const NAMES_FLAT = ['Do', 'Ré♭', 'Ré', 'Mi♭', 'Mi', 'Fa', 'Sol♭', 'Sol',
 /** Nom de note en solfège, avec ♯ ou ♭ selon l'orthographe écrite. */
 export function solfege(midi: number, spelledFlat: boolean): string {
   return (spelledFlat ? NAMES_FLAT : NAMES)[((midi % 12) + 12) % 12];
+}
+
+/** Variante du doigt au violon : « bas » (un demi-ton plus bas que d'habitude) ou « haut ». */
+export function fingerVariant(p: Placed, inst: Instrument): '' | 'bas' | 'haut' {
+  if (inst.id !== 'violin' || p.finger === 0) return '';
+  const base = VIOLIN_BASE[p.position];
+  if (base === undefined) return '';
+  const o = p.fret - base;
+  if (o === -1 || o === 1) return 'bas';
+  if (o === 4) return 'haut';
+  return '';
+}
+
+/** Doigt affiché : « 2 », « 2↓ » (bas), « 3↑ » (haut), « 0 » (corde à vide). */
+export function fingerLabel(p: Placed, inst: Instrument): string {
+  const v = fingerVariant(p, inst);
+  return `${p.finger}${v === 'bas' ? '↓' : v === 'haut' ? '↑' : ''}`;
 }

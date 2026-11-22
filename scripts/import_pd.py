@@ -203,7 +203,7 @@ def metrics(melody, bar_len, tempo, n_bars):
 
 
 def level_for(m, transpose_to_violin):
-    """1 débutant, 2 intermédiaire, 3 avancé-intermédiaire, 4 trop difficile."""
+    """1 débutant, 2 élémentaire, 3 intermédiaire, 4 avancé, 5 virtuose."""
     high = m['high'] + transpose_to_violin
     if m['nps'] <= 2.2 and m['span'] <= 15 and high <= 83 and m['sixteenths'] <= 0.1 and m['leaps'] <= 0.02:
         return 1
@@ -211,7 +211,9 @@ def level_for(m, transpose_to_violin):
         return 2
     if m['nps'] <= 6 and m['span'] <= 29 and high <= 93 and m['leaps'] <= 0.12:
         return 3
-    return 4
+    if m['nps'] <= 8 and m['span'] <= 36 and high <= 100:
+        return 4
+    return 5
 
 
 def violin_shift(low, high):

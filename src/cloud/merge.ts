@@ -57,6 +57,7 @@ export function mergeProgress(a: Progress, b: Progress): Progress {
       bestCombo: Math.max(a.totals.bestCombo, b.totals.bestCombo),
     },
     challengeDoneDay: maxStr(a.challengeDoneDay, b.challengeDoneDay),
+    validated: { ...(b.validated ?? {}), ...(a.validated ?? {}) },
     course,
   };
 }

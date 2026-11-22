@@ -15,7 +15,7 @@ export function on<K extends keyof HTMLElementEventMap>(
   root.querySelectorAll<HTMLElement>(selector).forEach((el) => el.addEventListener(type, (e) => handler(el, e)));
 }
 
-export const LEVEL_LABEL = ['', 'Débutant', 'Intermédiaire', 'Avancé'];
+export const LEVEL_LABEL = ['', 'Débutant', 'Élémentaire', 'Intermédiaire', 'Avancé', 'Virtuose'];
 
 export const STYLE_LOOK: Record<string, { icon: string; hue: number }> = {
   Comptines: { icon: '🧸', hue: 330 },

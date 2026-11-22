@@ -18,7 +18,7 @@ export const STYLE_ORDER = [
 ] as const;
 export type Style = (typeof STYLE_ORDER)[number];
 
-export type Level = 1 | 2 | 3;
+export type Level = 1 | 2 | 3 | 4 | 5;
 
 export interface Song {
   id: string;
@@ -104,14 +104,31 @@ export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: b
   const events = bars.flat();
   const sounding = events.filter((e) => e.kind === 'note');
   // Notes hors tessiture (au-delà de la 17e case, ou sous la corde la plus grave) : ramenées d'une octave.
-  const ceiling = Math.max(...inst.tuning) + (inst.id === 'violin' ? 17 : 17);
+  // Passages hors tessiture : on décale la mesure entière d'une octave (pas note par note, ce qui
+  // créerait des sauts absurdes), en gardant le même décalage tant qu'il convient.
+  const ceiling = Math.max(...inst.tuning) + 17;
   const floor = Math.min(...inst.tuning);
+  const fits = (lo: number, hi: number, t: number) => lo + t >= floor && hi + t <= ceiling;
+  let barShift = 0;
+  const shiftByEvent = new Map<object, number>();
+  for (const bar of bars) {
+    const ms = bar.filter((e) => e.kind !== 'rest').map((e) => (e.midi as number) + shift);
+    if (ms.length) {
+      const lo = Math.min(...ms);
+      const hi = Math.max(...ms);
+      if (!fits(lo, hi, barShift)) {
+        const options = [0, -12, 12, -24, 24].filter((t) => fits(lo, hi, t));
+        barShift = options.length ? options[0] : 0;
+      }
+    }
+    for (const e of bar) shiftByEvent.set(e, barShift);
+  }
   const fold = (m: number) => {
     while (m > ceiling) m -= 12;
     while (m < floor) m += 12;
     return m;
   };
-  const placed = placeMelody(sounding.map((e) => fold((e.midi as number) + shift)), inst);
+  const placed = placeMelody(sounding.map((e) => fold((e.midi as number) + shift + (shiftByEvent.get(e) ?? 0))), inst);
   const usesShifts = placed.some((p) => p.position !== 1);
 
   let k = 0;

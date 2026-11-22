@@ -25,6 +25,10 @@ export interface BoardNote extends Fingering {
   finger?: number;
   /** Nom affiché (avec ♯ ou ♭). */
   name?: string;
+  /** Doigt affiché avec sa variante (« 2↓ » = doigt bas, « 3↑ » = doigt haut). */
+  label?: string;
+  /** Position de la main gauche. */
+  position?: number;
 }
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -165,6 +169,12 @@ export class Fingerboard {
     }
 
     // Notes
+    // Position en cours et légende des doigts bas / haut.
+    const cur = this.current[0];
+    if (cur?.position && this.inst.id === 'violin') {
+      const txt = cur.position === 1 ? '1re position' : `${cur.position}e position`;
+      this.el('text', { x: this.width - this.right, y: 14, class: 'fb-pos' }, `${txt}  ·  ↓ doigt bas  ↑ doigt haut`);
+    }
     for (const note of this.later) this.drawNote(note, 'later');
     for (const note of this.next) this.drawNote(note, 'next');
     for (const note of this.current) this.drawNote(note, 'current');
@@ -177,7 +187,7 @@ export class Fingerboard {
     const cx = this.fingerX(note.fret);
     const cy = this.y(note.string);
     const finger = note.finger ?? suggestedFinger(note.fret, this.inst);
-    const label = finger === null ? String(note.fret) : String(finger);
+    const label = note.label ?? (finger === null ? String(note.fret) : String(finger));
     const name = note.name ?? midiName(note.midi);
     if (kind === 'current') {
       this.el('circle', { cx, cy, r: 14, class: 'fb-dot' });

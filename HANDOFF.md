@@ -58,6 +58,15 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - Mode jeu : audio débloqué pendant le clic « Jouer » (Safari / Android)
 - Non vérifiable ici : comportement sur l'appareil réel de l'utilisateur
 
+## v0.8 (22/11/2026)
+
+- Doigtés : passages hors tessiture décalés par mesure entière (plus de zigzags), changements de position moins fréquents (coûts ajustés), doigts bas / haut (« 2↓ », « 3↑ ») et position en cours affichés sur le manche et dans le pas à pas
+- 5 niveaux (Débutant, Élémentaire, Intermédiaire, Avancé, Virtuose) ; 289 morceaux complets dont 60 avancés / virtuoses (sonates, concertos et pièces pour violon solo inclus)
+- 203 exercices générés (src/songs/exercise-bank.ts), page Exercices, validation à 3 étoiles au tempo cible, badges
+- Métronome global (src/ui/metronome.ts)
+- Bouton « Tout afficher » quand un filtre est actif
+- Limite : dans la partition, le doigt bas / haut n'apparaît que par le chiffre (alphaTab n'affiche que des chiffres) ; la flèche est sur le manche et dans le pas à pas
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |

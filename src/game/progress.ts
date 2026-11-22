@@ -48,6 +48,8 @@ export interface Progress {
   challengeDoneDay: string | null;
   /** Parcours suivi par instrument : semaine courante, durée de séance, éléments faits par jour. */
   course?: Record<string, CourseState>;
+  /** Exercices validés (3 étoiles au tempo cible) : identifiant → jour. */
+  validated?: Record<string, string>;
 }
 
 export interface CourseState {
@@ -221,6 +223,9 @@ export const BADGES: BadgeDef[] = [
   { id: 'notes-1000', icon: '🎻', name: 'Mille notes', description: 'Jouer 1 000 notes justes', check: (p) => p.totals.notes >= 1000 },
   { id: 'hour', icon: '⏱️', name: 'Une heure de pratique', description: '60 minutes au total', check: (p) => p.totals.minutes >= 60 },
   { id: 'scales', icon: '🎼', name: 'Gammiste', description: 'Réussir 10 gammes ou arpèges', check: (p) => finishedCount(p, (id) => id.startsWith('gamme-') || id.startsWith('arpege-') || id.startsWith('penta-') || id.startsWith('blues-')) >= 10 },
+  { id: 'ex-10', icon: '💪', name: 'Technicien', description: 'Valider 10 exercices', check: (p) => Object.keys(p.validated ?? {}).length >= 10 },
+  { id: 'ex-50', icon: '🏋️', name: 'Bosseur', description: 'Valider 50 exercices', check: (p) => Object.keys(p.validated ?? {}).length >= 50 },
+  { id: 'ex-150', icon: '🥇', name: 'Maître des gammes', description: 'Valider 150 exercices', check: (p) => Object.keys(p.validated ?? {}).length >= 150 },
   { id: 'challenge', icon: '🎯', name: 'Défi relevé', description: 'Réussir un défi du jour', check: (p) => p.challengeDoneDay !== null },
 ];
 

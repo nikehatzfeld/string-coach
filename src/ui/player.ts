@@ -3,12 +3,13 @@ import { synth } from '@coderline/alphatab';
 import { sectionsFor, songToAlphaTex, type Section, type Song } from '../songs/alphatex';
 import { fingerNote, INSTRUMENTS } from '../songs/instruments';
 import { freqToMidiFloat, midiName } from '../songs/notation';
-import { solfege } from '../songs/positions';
+import { fingerLabel, fingerVariant, placeMelody, positionLabel, solfege, type Placed } from '../songs/positions';
 import { MicPitchDetector, type PitchReading } from '../practice/pitch-detector';
 import { StepTrainer, type StepTarget, type TrainerUpdate } from '../practice/step-trainer';
 import { GameJudge, type GameNote } from '../game/judge';
 import { Highway } from '../game/highway';
-import { recordResult } from '../game/progress';
+import { checkBadges, recordResult } from '../game/progress';
+import type { Exercise } from '../songs/exercise-bank';
 import { ScoreKeeper, type Judgment } from '../game/scoring';
 import { persist, progress, setPracticeActive, todayChallenge } from '../game/store';
 import { prefs, savePrefs } from '../state/prefs';
@@ -16,6 +17,7 @@ import { Fingerboard, suggestedFinger, type BoardNote } from './fingerboard';
 import { ScoreView, type ViewMode } from './score-view';
 import { byId as $, esc } from './dom';
 import { showResults } from './results';
+import { setSuggestedTempo } from './metronome';
 
 export type Source =
   | { kind: 'library'; song: Song }
@@ -304,9 +306,27 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     if (written && written !== '_') return written;
     return solfege(midi, beat.voice.bar.masterBar.keySignature < 0);
   }
+  /** Placement calculé (position, doigt bas/haut) de chaque note de la mélodie, pour les morceaux de la bibliothèque. */
+  const placements = new Map<alphaTab.model.Beat, Placed>();
+  function computePlacements() {
+    placements.clear();
+    if (source.kind !== 'library') return;
+    const beats = v.trackBeats.filter((b) => !b.isRest && b.notes.length && !b.notes.every((n) => n.isTieDestination));
+    const midis = beats.map((b) => Math.max(...b.notes.map((n) => n.realValue)));
+    try {
+      placeMelody(midis, inst).forEach((p, i) => placements.set(beats[i], p));
+    } catch {
+      /* note hors tessiture : on garde les doigts de la partition */
+    }
+  }
+  api.scoreLoaded.on(() => setTimeout(computePlacements, 0));
+
   const topFingering = (beat: alphaTab.model.Beat) => {
     const top = beatFingerings(beat).reduce<BoardNote | null>((a, b) => (!a || b.midi > a.midi ? b : a), null);
-    return top ? { ...top, name: beatName(beat, top.midi) } : null;
+    if (!top) return null;
+    const p = placements.get(beat);
+    const extra = p && p.fret === top.fret && p.string === top.string ? { label: fingerLabel(p, inst), position: p.position } : {};
+    return { ...top, name: beatName(beat, top.midi), ...extra };
   };
 
   function stringLabel(beat: alphaTab.model.Beat): string {
@@ -315,8 +335,11 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     const sName = `corde de ${inst.stringNamesFr[f.string - 1]}`;
     if (f.fret === 0) return `${sName}, à vide`;
     const finger = f.finger ?? suggestedFinger(f.fret, inst);
-    const doigt = finger ? `, doigt ${finger}` : '';
-    return inst.id === 'violin' ? `${sName}${doigt}` : `${sName}, case ${f.fret}${doigt}`;
+    const p = placements.get(beat);
+    const variant = p ? fingerVariant(p, inst) : '';
+    const doigt = finger ? `, doigt ${finger}${variant ? ` ${variant}` : ''}` : '';
+    const pos = p ? ` · ${positionLabel(p.position, inst)}` : '';
+    return inst.id === 'violin' ? `${sName}${doigt}${pos}` : `${sName}, case ${f.fret}${doigt}${pos}`;
   }
 
   const board = new Fingerboard($('neck'), inst);
@@ -596,7 +619,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         midi: f.midi,
         lane: inst.tuning.length - f.string,
         // Violon : doigt ; guitare : case (comme sur la tablature).
-        label: inst.id === 'violin' ? String(finger ?? f.fret) : String(f.fret),
+        label: inst.id === 'violin' ? (f.label ?? String(finger ?? f.fret)) : String(f.fret),
         name: f.name,
       });
     }
@@ -767,6 +790,19 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       const streak = progress.songs[section ? `${songId}#${sections.indexOf(section) + 1}` : songId]?.cleanStreak ?? 0;
       if (streak > 0) tempoNote = `Passages propres : ${streak} / 3 avant de monter le tempo`;
     }
+    // Exercice : validé avec 3 étoiles au tempo cible ou plus vite.
+    const ex = source.kind === 'library' ? (source.song as Partial<Exercise>) : null;
+    if (ex?.targetBpm && songId.startsWith('ex-') && !section) {
+      const playedBpm = Number(bpmInput.value) - (outcome.tempoChange > 0 ? outcome.tempoChange : 0);
+      if (stars === 3 && playedBpm >= ex.targetBpm && !progress.validated?.[songId]) {
+        progress.validated = { ...(progress.validated ?? {}), [songId]: new Date().toISOString().slice(0, 10) };
+        outcome.newBadges.push(...checkBadges(progress, null));
+        persist();
+        tempoNote = `✅ Exercice validé à ${playedBpm} BPM !`;
+      } else if (!progress.validated?.[songId]) {
+        tempoNote = `${tempoNote ? `${tempoNote} · ` : ''}Objectif de validation : 3 étoiles à ${ex.targetBpm} BPM (joué à ${playedBpm})`;
+      }
+    }
     const act = await showResults({
       tempoNote,
       title: section ? `${title} · ${section.name}` : title,
@@ -805,7 +841,9 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     onExit();
   }
 
+  setSuggestedTempo(() => Number(bpmInput.value) || null);
   cleanup = () => {
+    setSuggestedTempo(null);
     gameRunning = false;
     stopMic();
     highway?.destroy();

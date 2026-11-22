@@ -34,7 +34,9 @@ Le micro nécessite HTTPS ou `localhost`. Pour tester sur mobile : `npm run buil
 | Pas à pas | La note suivante est indiquée (nom, corde, position) ; l'app n'avance que si la note jouée au micro est juste et tenue 80 ms (tolérance réglable ±10 à ±60 cents) |
 | Manche | Schéma du violon ou de la guitare (bouton « Manche ») : note en cours avec le doigt conseillé, note suivante en pointillés ; positions calculées sur la vraie géométrie de la corde, comme les LEDs du manche DIY |
 | Violon | Tablature en demi-tons par corde, repères type « rubans » de 1re position sur le manche |
-| Morceaux complets | 212 morceaux entiers (Marche turque, Lettre à Élise, menuets de Bach, Canon de Pachelbel, Soldier's Joy, cantiques, Noël…) extraits des partitions libres du Mutopia Project, niveaux débutant à intermédiaire : [crédits et licences](docs/credits-mutopia.md) |
+| Morceaux complets | 289 morceaux entiers, 5 niveaux (débutant → virtuose) (Marche turque, Lettre à Élise, menuets de Bach, Canon de Pachelbel, Soldier's Joy, cantiques, Noël…) extraits des partitions libres du Mutopia Project, niveaux débutant à intermédiaire : [crédits et licences](docs/credits-mutopia.md) |
+| Exercices | 203 exercices techniques générés (gammes dans toutes les tonalités, mineures, arpèges, tierces, rythmes, intervalles, cordes à vide, schémas de doigts, démanchés, spider, arpèges aux doigts), validés par 3 étoiles au tempo cible |
+| Métronome | Bouton flottant sur toutes les pages : BPM, mesure, accent, tempo tapé, synchro avec le morceau (touche M) |
 | Cours | Parcours de 12 semaines violon et guitare, séance du jour de 15/20/30 min (échauffement, technique, morceau, jeu, révision), minuteur pour les exercices hors app : [sources pédagogiques](docs/pedagogie.md) |
 | Entraînement | Tempo +4 BPM après 3 passages propres, −2 après un passage raté ; révisions espacées (J+1, J+3, J+7, J+14, puis mensuelles) |
 | Bibliothèque | 92 morceaux courts du domaine public : 22 classiques, 10 chants de Noël, comptines, folk du monde, gospel, blues, et 38 gammes et arpèges générés automatiquement ; filtres par style et par niveau ; armures à la clé |

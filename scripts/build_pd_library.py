@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 import import_pd  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-INSTRUMENTS = ['Violin', 'Flute', 'Recorder', 'Voice']
+INSTRUMENTS = ['Violin', 'Flute', 'Recorder', 'Voice', 'Viola', 'Oboe', 'Clarinet']
 # Pièces de piano populaires dont la main droite fait une belle mélodie.
 EXTRA = [
     ('Marche turque (Rondo alla turca)', 'W. A. Mozart', 'https://www.mutopiaproject.org/ftp/MozartWA/KV331/KV331_3_RondoAllaTurca/KV331_3_RondoAllaTurca.mid', 'Public Domain', 'Classique', 110),
@@ -37,7 +37,7 @@ EXTRA = [
     ('Sonatine op. 36 n° 1', 'M. Clementi', 'https://www.mutopiaproject.org/ftp/ClementiM/O36/sonatina-1/sonatina-1-mids.zip', 'Public Domain', 'Classique', 110),
 ]
 POPULAR = re.compile(r'folk|traditional|christmas|carol|hymn|spiritual|popular|song|chanson|lied|lullaby|dance|march|waltz|jig|reel|hornpipe', re.I)
-SKIP_WORDS = re.compile(r'concerto|symphon|quartet|quintet|overture|ouverture|mass\b|messe|cantata|kantate|opera|oratorio|requiem|magnificat|motet|madrigal|passion|psalm|canons\b|fuga|fugue', re.I)
+SKIP_WORDS = re.compile(r'concerto|symphon|quartet|quintet|overture|ouverture|mass\b|messe|cantata|kantate|opera|oratorio|requiem|magnificat|motet|madrigal|passion|psalm|canons\b|fuga|fugue|octet|trio\b', re.I)
 STYLE_MAP = [
     (re.compile(r'christmas|carol|noël|noel', re.I), 'Noël'),
     (re.compile(r'hymn|sacred|spiritual|gospel', re.I), 'Chants & cantiques'),
@@ -104,7 +104,11 @@ def candidates(cache):
                 continue
             title = c[0]
             lic = license_of(c)
-            if not lic or SKIP_WORDS.search(title):
+            for_ = next((x for x in c if x.startswith('for ')), '')
+            if not lic or 'Orchestra:' in for_ or 'Voice (SATB), Orchestra' in for_:
+                continue
+            # Concertos et sonates gardés pour violon et flûte (partie soliste) ; ailleurs, œuvres longues écartées.
+            if SKIP_WORDS.search(title) and not (inst in ('Violin', 'Flute') and re.search(r'concerto|sonat|partita|romanze|romance', title, re.I)):
                 continue
             by = next((x for x in c if x.startswith('by ')), '')
             composer = re.sub(r'\s*\(.*?\)\s*$', '', by[3:]).strip() or 'Traditionnel'
@@ -160,7 +164,7 @@ def main(cache):
     kept = []
     ids = set()
     for s in sorted(songs, key=lambda x: (x['autoLevel'], x['title'])):
-        if s['autoLevel'] > 3 or not (8 <= s['bars'] <= 200):
+        if not (8 <= s['bars'] <= 400):
             continue
         if s['id'] in ids:
             continue

@@ -25,7 +25,7 @@ const filters: Filters = { style: null, level: null, search: '', full: false };
 
 export type OpenFn = (s: Source, mode?: 'live' | 'step' | 'game') => void;
 
-export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () => void = () => {}): Promise<void> {
+export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () => void = () => {}, onExercises: () => void = () => {}): Promise<void> {
   const [imports, vault] = await Promise.all([listImports(), loadVault()]);
   const lvl = levelInfo(progress.xp);
   const streak = currentStreak(progress);
@@ -57,6 +57,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
     <header class="top home-top">
       <div class="brand"><span class="logo">🎻</span><h1>String Coach</h1></div>
       <button id="toCourse" class="primary">🎓 Cours</button>
+      <button id="toExercises">💪 Exercices</button>
       <button id="account" class="account" hidden></button>
       <div class="seg" role="group" aria-label="Instrument">
         ${(['violin', 'guitar'] as InstrumentId[]).map((id) => `<button data-inst="${id}" aria-pressed="${prefs.instrument === id}">${id === 'violin' ? '🎻' : '🎸'} ${INSTRUMENTS[id].label}</button>`).join('')}
@@ -109,8 +110,9 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
           <button class="chip" data-style="" aria-pressed="${!filters.style}">Tous</button>
           ${STYLES.map((s) => `<button class="chip" data-style="${esc(s)}" aria-pressed="${filters.style === s}">${STYLE_LOOK[s]?.icon ?? ''} ${esc(s)}</button>`).join('')}
         </div>
+        ${filters.style || filters.level || filters.full || filters.search ? `<div class="filters"><button class="chip reset-filters" data-reset>✕ Tout afficher (${LIBRARY.length} morceaux)</button><span class="muted">Filtres actifs : ${[filters.search && `« ${esc(filters.search)} »`, filters.style, filters.level && LEVEL_LABEL[filters.level], filters.full && 'morceaux complets'].filter(Boolean).join(', ')}</span></div>` : ''}
         <div class="filters chips levels">
-          ${[0, 1, 2, 3].map((l) => `<button class="chip" data-level="${l}" aria-pressed="${(filters.level ?? 0) === l}">${l ? LEVEL_LABEL[l] : 'Tous niveaux'}</button>`).join('')}
+          ${[0, 1, 2, 3, 4, 5].map((l) => `<button class="chip" data-level="${l}" aria-pressed="${(filters.level ?? 0) === l}">${l ? LEVEL_LABEL[l] : 'Tous niveaux'}</button>`).join('')}
           <button class="chip" data-full aria-pressed="${filters.full}">📜 Morceaux complets</button>
           <span class="count">${songs.length} morceau${songs.length > 1 ? 'x' : ''}</span>
         </div>
@@ -138,7 +140,8 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
       </section>
     </main>`;
 
-  const rerender = () => renderHome(app, open, onCourse);
+  const rerender = () => renderHome(app, open, onCourse, onExercises);
+  app.querySelector('#toExercises')!.addEventListener('click', onExercises);
   app.querySelector('#toCourse')!.addEventListener('click', onCourse);
   bindAccount(app.querySelector<HTMLButtonElement>('#account')!);
 
@@ -154,6 +157,13 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
   });
   on(app, '[data-style]', 'click', (b) => {
     filters.style = b.dataset.style || null;
+    rerender();
+  });
+  on(app, '[data-reset]', 'click', () => {
+    filters.style = null;
+    filters.level = null;
+    filters.full = false;
+    filters.search = '';
     rerender();
   });
   on(app, '[data-full]', 'click', () => {
