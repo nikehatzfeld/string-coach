@@ -28,7 +28,7 @@ const filters: Filters = { style: null, level: null, search: '', full: false, fa
 
 export type OpenFn = (s: Source, mode?: 'live' | 'step' | 'game') => void;
 
-export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () => void = () => {}, onExercises: () => void = () => {}, onHarmony: () => void = () => {}, onChords: () => void = () => {}): Promise<void> {
+export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () => void = () => {}, onExercises: () => void = () => {}, onHarmony: () => void = () => {}, onChords: () => void = () => {}, onVoice: () => void = () => {}): Promise<void> {
   const [imports, vault] = await Promise.all([listImports(), loadVault()]);
   const lvl = levelInfo(progress.xp);
   const streak = currentStreak(progress);
@@ -64,6 +64,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
       <button id="toExercises">💪 Exercices</button>
       <button id="toHarmony">🎼 Harmonie</button>
       <button id="toChords">🎸 Accords</button>
+      <button id="toVoice">🎤 Studio voix</button>
       <button id="toMicTest" title="Vérifier que le micro entend ton instrument">🎤 Test micro</button>
       <button id="account" class="account" hidden></button>
       <div class="seg" role="group" aria-label="Instrument">
@@ -148,9 +149,10 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
       </section>
     </main>`;
 
-  const rerender = () => renderHome(app, open, onCourse, onExercises, onHarmony, onChords);
+  const rerender = () => renderHome(app, open, onCourse, onExercises, onHarmony, onChords, onVoice);
   app.querySelector('#toHarmony')!.addEventListener('click', onHarmony);
   app.querySelector('#toChords')!.addEventListener('click', () => onChords());
+  app.querySelector('#toVoice')!.addEventListener('click', () => onVoice());
   app.querySelector('#toMicTest')!.addEventListener('click', () => openMicTest());
   app.querySelector('#toExercises')!.addEventListener('click', onExercises);
   app.querySelector('#toCourse')!.addEventListener('click', onCourse);

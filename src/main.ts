@@ -6,6 +6,7 @@ import { consumeMarkDone, renderCourse } from './ui/course';
 import { renderExercises } from './ui/exercises';
 import { renderHarmony } from './ui/harmony';
 import { renderChords } from './ui/chords';
+import { closeVoiceStudio, renderVoiceStudio } from './ui/voice-studio';
 import { closeChordPlay, renderChordPlay } from './ui/chord-play';
 import type { ChordChart } from './courses/chords-content';
 import { closeImprov, renderImprov, type ImprovPreset } from './ui/improv';
@@ -30,9 +31,10 @@ let returnTo: 'home' | 'course' | 'exercises' | 'harmony' | 'chords' = 'home';
 function home(): void {
   closePlayer();
   closeChordPlay();
+  closeVoiceStudio();
   returnTo = 'home';
   closeImprov();
-  renderHome(app, play, course, exercises, harmony, chords);
+  renderHome(app, play, course, exercises, harmony, chords, voiceStudio);
   window.scrollTo({ top: 0 });
 }
 
@@ -57,6 +59,12 @@ function chords(tab: 'dict' | 'course' | 'changes' | 'songs' = 'dict'): void {
   closeChordPlay();
   returnTo = 'chords';
   renderChords(app, home, (c) => chordPlay(c, () => chords(tab === 'dict' ? 'songs' : tab)), tab);
+  window.scrollTo({ top: 0 });
+}
+
+function voiceStudio(): void {
+  closePlayer();
+  renderVoiceStudio(app, home);
   window.scrollTo({ top: 0 });
 }
 
