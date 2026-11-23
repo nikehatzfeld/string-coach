@@ -47,11 +47,12 @@ function bassNote(c: ChordShape, fifth = false): number {
   return n;
 }
 
-export type BackingKind = 'band' | 'strings';
+export type BackingKind = 'band' | 'strings' | 'beat';
 
 /** Style d'accompagnement selon le genre du morceau. */
 export function backingKindFor(style: string): BackingKind {
-  return ['Folk & monde', 'Gospel & jazz', 'Blues', 'Fêtes'].includes(style) ? 'band' : 'strings';
+  if (['Rap US', 'Rap français', 'R&B & soul', 'Électro & dance'].includes(style)) return 'beat';
+  return ['Folk & monde', 'Gospel & jazz', 'Blues', 'Fêtes', 'Pop & rock', 'Années 80', 'Années 90', 'Variété française', 'Reggae'].includes(style) ? 'band' : 'strings';
 }
 
 /** Accord actif au début de chaque temps de chaque mesure. */
@@ -85,6 +86,10 @@ export function hasChords(bars: ParsedBar[]): boolean {
 
 export function backingTracks(bars: ParsedBar[], timeSignature: [number, number], kind: BackingKind): string {
   const [num, den] = timeSignature;
+  if (kind === 'beat') {
+    if (num === 4 && den === 4) return beatTracks(bars);
+    kind = 'band';
+  }
   const barLen = (num * 4) / den; // en noires
   const compound = den === 8 && num % 3 === 0; // 6/8, 9/8 : pulsation à la noire pointée
   const pulse = compound ? 1.5 : 1;
@@ -147,6 +152,47 @@ export function backingTracks(bars: ParsedBar[], timeSignature: [number, number]
   ];
   if (kind === 'band') out.push(`\\track "Batterie" \\instrument percussion \\staff {score}\n${drumBars.join(' |\n')}`);
   return out.join('\n');
+}
+
+/**
+ * Beat hip-hop (4/4), en croches : grosse caisse sur 1, 3 et le « et » de 3, caisse claire sur 2 et 4,
+ * charleston sur toutes les croches (ouvert sur le dernier « et ») ; basse syncopée sur la fondamentale ;
+ * nappe de chœur tenue sur chaque accord.
+ */
+function beatTracks(bars: ParsedBar[]): string {
+  const grid = chordsByPulse(bars, 1, 4);
+  const KICK = 36;
+  const SNARE = 38;
+  const HAT = 42;
+  const OPEN = 46;
+  const drums = grid.map((row) => {
+    if (!row.some(Boolean)) return 'r.1';
+    const hits: number[][] = [[KICK, HAT], [HAT], [SNARE, HAT], [HAT], [KICK, HAT], [KICK, HAT], [SNARE, HAT], [OPEN]];
+    return hits.map((h) => `(${h.join(' ')}).8`).join(' ');
+  });
+  const bass = grid.map((row) => {
+    if (!row.some(Boolean)) return 'r.1';
+    const at = (beat: number) => row[beat] ?? row[0];
+    const n = (c: ChordShape | null, oct = 0) => (c ? `${texNote(bassNote(c) + oct)}` : 'r');
+    // Croches : 1 (noire pointée) · « et » de 2 · 3 (noire) · « et » de 3 · 4 (croche) · silence
+    return [`${n(at(0))}.4{d}`, `${n(at(1))}.8`, `${n(at(2))}.4`, `${n(at(2), 12)}.8`, `${n(at(3))}.8`].join(' ');
+  });
+  const pad = grid.map((row) => {
+    const parts: string[] = [];
+    let i = 0;
+    while (i < row.length) {
+      let j = i + 1;
+      while (j < row.length && row[j] === row[i]) j++;
+      parts.push(...splitDuration(j - i).map((d) => (row[i] ? `(${voicing(row[i]!).map(texNote).join(' ')}).${d}` : `r.${d}`)));
+      i = j;
+    }
+    return parts.join(' ');
+  });
+  return [
+    `\\track "Nappe" \\staff {score} \\instrument choiraahs\n${pad.join(' |\n')}`,
+    `\\track "Basse" \\staff {score} \\instrument electricbassfinger\n${bass.join(' |\n')}`,
+    `\\track "Batterie" \\instrument percussion \\staff {score}\n${drums.join(' |\n')}`,
+  ].join('\n');
 }
 
 /** Découpe une durée (en noires) en valeurs alphaTex : 4 → ronde, 3 → blanche pointée, 1,5 → noire pointée… */

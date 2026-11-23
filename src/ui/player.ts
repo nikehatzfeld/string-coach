@@ -493,6 +493,11 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   function computeLyrics() {
     lyricIndex.clear();
     const text = source.kind === 'library' ? lyricsOf(source.song) : undefined;
+    const hasMelody = v.trackBeats.some((b) => !b.isRest && b.notes.length);
+    if (!hasMelody && source.kind === 'library')
+      return lyrics.setMessage(
+        '🎤 <strong>Instru seule</strong> : ce morceau n’a ni mélodie ni paroles (grille d’accords). Appuie sur ▶ Lecture et chante ou rappe librement. Pour le karaoké : ajoute les paroles et la mélodie dans le fichier d’import, ou utilise <strong>🎧 Transcrire</strong> avec ton mp3 pour avoir l’instru originale.',
+      );
     if (!text) return lyrics.setSyllables([]);
     const syl = lyricSyllables(text);
     let k = 0;

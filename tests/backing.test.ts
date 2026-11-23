@@ -53,3 +53,17 @@ describe('parties', async () => {
     expect(sectionsFor(10, [['Couplet', 1, 4], ['Refrain', 5, 10]]).map((s) => s.name)).toEqual(['Couplet', 'Refrain']);
   });
 });
+
+describe('beat hip-hop', () => {
+  it('rap : batterie, basse et nappe, mesures complètes', async () => {
+    const { importLibrary } = await import('../src/songs/library-import');
+    const { songToAlphaTex } = await import('../src/songs/alphatex');
+    const { INSTRUMENTS } = await import('../src/songs/instruments');
+    const alphaTab = await import('@coderline/alphatab');
+    const r = importLibrary({ songs: [{ title: 'Rap test', style: 'Rap français', tempo: 88, chords: 'Am | F | C | G' }] });
+    const tex = songToAlphaTex(r.songs[0], INSTRUMENTS.voice);
+    const score = alphaTab.importer.ScoreLoader.loadAlphaTex(tex);
+    expect(score.tracks.map((t) => t.name)).toEqual(['Voix', 'Nappe', 'Basse', 'Batterie']);
+    for (const t of score.tracks.slice(1)) for (const b of t.staves[0].bars) expect(b.voices[0].beats.reduce((a, x) => a + x.playbackDuration, 0)).toBe(3840);
+  });
+});

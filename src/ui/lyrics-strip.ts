@@ -32,6 +32,13 @@ export class LyricsStrip {
     this.render();
   }
 
+  /** Message à la place des paroles (morceau sans paroles ni mélodie). */
+  setMessage(html: string): void {
+    this.lines = [];
+    this.host.hidden = false;
+    this.host.innerHTML = `<div class="ly-next">${html}</div>`;
+  }
+
   /** Syllabe en cours (index de la note chantée), -1 = avant le début. */
   setIndex(i: number): void {
     if (i === this.index) return;
