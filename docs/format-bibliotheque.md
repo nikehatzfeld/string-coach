@@ -32,7 +32,7 @@ puis gardés sur l'appareil, rangés dans leur style.
 | `title` | oui | texte |
 | `artist`, `year` | non | texte, nombre |
 | `instruments` | non | `violin`, `guitar`, `recorder` (flûte à bec), `voice` |
-| `style` | non | `Comptines`, `Chanson française`, `Classique`, `Cinéma & TV`, `Années 80`, `Années 90`, `Pop & rock`, `Variété française`, `Rap US`, `Rap français`, `Noël`, `Folk & monde`, `Chants & cantiques`, `Gospel & jazz`, `Blues`, `Fêtes`, `Gammes & arpèges`, `Exercices` (sinon « Mes morceaux ») |
+| `style` | non | `Comptines`, `Chanson française`, `Classique`, `Cinéma & TV`, `Années 80`, `Années 90`, `Pop & rock`, `Variété française`, `Rap US`, `Rap français`, `R&B & soul`, `Reggae`, `Électro & dance`, `Comédies musicales`, `Noël`, `Folk & monde`, `Chants & cantiques`, `Gospel & jazz`, `Blues`, `Fêtes`, `Gammes & arpèges`, `Exercices` (sinon « Mes morceaux ») |
 | `level` | non | 1 Débutant · 2 Élémentaire · 3 Intermédiaire · 4 Avancé · 5 Virtuose |
 | `tempo` | non | BPM de la noire (30–240) |
 | `timeSignature` | non | `[4,4]`, `[3,4]`, `[6,8]`, `[2,4]`… |

@@ -18,7 +18,7 @@ Tu es un musicien-pédagogue et un documentaliste musical. Je construis une bibl
       "artist": "…",
       "year": 1994,
       "instruments": ["violin" | "guitar" | "recorder" | "voice"],
-      "style": "Classique" | "Cinéma & TV" | "Années 80" | "Années 90" | "Pop & rock" | "Variété française" | "Rap US" | "Rap français" | "Folk & monde" | "Chanson française" | "Comptines" | "Noël" | "Blues" | "Gospel & jazz",
+      "style": "Classique" | "Cinéma & TV" | "Années 80" | "Années 90" | "Pop & rock" | "Variété française" | "Rap US" | "Rap français" | "R&B & soul" | "Reggae" | "Électro & dance" | "Comédies musicales" | "Folk & monde" | "Chanson française" | "Comptines" | "Noël" | "Blues" | "Gospel & jazz",
       "level": 1 à 5 (1 débutant, 2 élémentaire, 3 intermédiaire, 4 avancé, 5 virtuose),
       "tempo": BPM de la noire,
       "timeSignature": [4, 4],

@@ -5,7 +5,8 @@ import { userSongs } from '../state/user-songs';
 import { BADGES, currentStreak, dailyMinutes, dueReviews, levelInfo, levelTitle } from '../game/progress';
 import { persist, progress, todayChallenge } from '../game/store';
 import { INSTRUMENT_IDS, INSTRUMENTS, type InstrumentId } from '../songs/instruments';
-import { songFor, LIBRARY, STYLES } from '../songs/library';
+import { songFor, LIBRARY, VOCAL_GENRES } from '../songs/library';
+import { STYLE_ORDER } from '../songs/alphatex';
 import type { Song } from '../songs/alphatex';
 import { prefs, savePrefs } from '../state/prefs';
 import { fetchEntry, loadVault, lock, prepareAddition, unlock, type VaultState } from '../vault/vault-client';
@@ -123,7 +124,9 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
         </div>
         <div class="filters chips">
           <button class="chip" data-style="" aria-pressed="${!filters.style}">Tous</button>
-          ${STYLES.map((s) => `<button class="chip" data-style="${esc(s)}" aria-pressed="${filters.style === s}">${STYLE_LOOK[s]?.icon ?? ''} ${esc(s)}</button>`).join('')}
+          ${styleChips(mine, prefs.instrument === 'voice')
+            .map(([s, n]) => `<button class="chip ${n ? '' : 'empty'}" data-style="${esc(s)}" aria-pressed="${filters.style === s}" title="${n ? `${n} morceau${n > 1 ? 'x' : ''}` : 'Aucun morceau : ajoute-en avec 📥 Importer'}">${STYLE_LOOK[s]?.icon ?? ''} ${esc(s)}${n ? ` <small>${n}</small>` : ''}</button>`)
+            .join('')}
         </div>
         ${filters.style || filters.level || filters.full || filters.famous || filters.search ? `<div class="filters"><button class="chip reset-filters" data-reset>✕ Tout afficher (${mine.length} morceaux)</button><span class="muted">Filtres actifs : ${[filters.search && `« ${esc(filters.search)} »`, filters.style, filters.level && LEVEL_LABEL[filters.level], filters.full && 'morceaux complets', filters.famous && 'incontournables'].filter(Boolean).join(', ')}</span></div>` : ''}
         <div class="filters chips levels">
@@ -348,4 +351,12 @@ function bindVault(app: HTMLElement, v: VaultState, open: OpenFn, rerender: () =
       msg.textContent = (err as Error).message;
     }
   });
+}
+
+/** Filtres de styles : ceux de l'instrument (avec le nombre de morceaux) ; pour la voix, tous les genres chantés en tête. */
+function styleChips(songs: Song[], voice: boolean): [string, number][] {
+  const count = new Map<string, number>();
+  for (const s of songs) count.set(s.style, (count.get(s.style) ?? 0) + 1);
+  const order: string[] = voice ? [...VOCAL_GENRES, ...STYLE_ORDER.filter((s) => !(VOCAL_GENRES as readonly string[]).includes(s))] : [...STYLE_ORDER];
+  return order.filter((s) => count.get(s) || (voice && (VOCAL_GENRES as readonly string[]).includes(s))).map((s) => [s, count.get(s) ?? 0]);
 }

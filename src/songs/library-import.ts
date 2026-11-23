@@ -61,6 +61,29 @@ export function chordsToNotation(grid: string, ts: [number, number]): string {
     .join(' | ');
 }
 
+/** Style connu, ou alias courant (« Hip-hop », « Rock », « R&B »…), sinon « Mes morceaux ». */
+export function normalizeStyle(raw: string | undefined): Style {
+  if (!raw) return 'Mes morceaux';
+  if ((STYLE_ORDER as readonly string[]).includes(raw)) return raw as Style;
+  const r = raw.toLowerCase();
+  const fr = /fran|fr\b|french/.test(r);
+  if (/rap|hip.?hop|trap|drill/.test(r)) return fr ? 'Rap français' : 'Rap US';
+  if (/r&b|rnb|soul|funk/.test(r)) return 'R&B & soul';
+  if (/80/.test(r)) return 'Années 80';
+  if (/90/.test(r)) return 'Années 90';
+  if (/reggae|dancehall|ska/.test(r)) return 'Reggae';
+  if (/[ée]lectro|dance|house|techno/.test(r)) return 'Électro & dance';
+  if (/com[ée]die musicale|musical/.test(r)) return 'Comédies musicales';
+  if (/vari[ée]t[ée]/.test(r)) return 'Variété française';
+  if (/chanson/.test(r)) return 'Chanson française';
+  if (/pop|rock/.test(r)) return 'Pop & rock';
+  if (/film|cin[ée]|s[ée]rie|tv/.test(r)) return 'Cinéma & TV';
+  if (/jazz|gospel/.test(r)) return 'Gospel & jazz';
+  if (/folk|trad/.test(r)) return 'Folk & monde';
+  if (/classi/.test(r)) return 'Classique';
+  return 'Mes morceaux';
+}
+
 export function importLibrary(json: unknown): ImportReport {
   const errors: string[] = [];
   const warnings: string[] = [];
@@ -102,7 +125,7 @@ export function importLibrary(json: unknown): ImportReport {
       } else if (syl !== n) warnings.push(`${name} : ${syl} syllabes pour ${n} notes, le calage sera approximatif`);
     }
     const instruments = (s.instruments ?? []).filter((x) => IDS.includes(x));
-    const style: Style = (STYLE_ORDER as readonly string[]).includes(s.style ?? '') ? (s.style as Style) : 'Mes morceaux';
+    const style: Style = normalizeStyle(s.style);
     songs.push({
       id: `lib-${slug(`${s.title}-${s.artist ?? ''}`)}`,
       title: s.title.trim(),

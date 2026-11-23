@@ -26,3 +26,16 @@ describe('import de bibliothèque', () => {
     expect(r.errors).toHaveLength(3);
   });
 });
+
+describe('styles importés', () => {
+  it('alias courants rangés dans le bon genre', async () => {
+    const { normalizeStyle } = await import('../src/songs/library-import');
+    expect(normalizeStyle('Hip-hop')).toBe('Rap US');
+    expect(normalizeStyle('Rap FR')).toBe('Rap français');
+    expect(normalizeStyle('rap français')).toBe('Rap français');
+    expect(normalizeStyle('R&B')).toBe('R&B & soul');
+    expect(normalizeStyle('Rock')).toBe('Pop & rock');
+    expect(normalizeStyle('Années 90')).toBe('Années 90');
+    expect(normalizeStyle('inconnu')).toBe('Mes morceaux');
+  });
+});
