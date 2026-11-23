@@ -147,8 +147,10 @@ export function notesToNotation(all: TNote[], bpm: number, ts: [number, number] 
   return bars.join(' | ');
 }
 
-export function notesToSong(notes: TNote[], title: string, bpm: number, ts: [number, number] = [4, 4], withChords = true): Song {
+export function notesToSong(notes: TNote[], title: string, bpm: number, ts: [number, number] = [4, 4], withChords = true, audioId?: string): Song {
+  const first = melodyLine(notes)[0];
   return {
+    ...(audioId && first ? { audio: { id: audioId, offset: first.start } } : {}),
     id: `user-${Date.now()}`,
     title,
     composer: 'Ma transcription',
@@ -160,27 +162,97 @@ export function notesToSong(notes: TNote[], title: string, bpm: number, ts: [num
   };
 }
 
-/** Décode un fichier audio (ou vidéo) et le ramène en mono 22 050 Hz, comme l'attend Basic Pitch. */
-async function decodeTo22k(file: File): Promise<Float32Array> {
-  const buf = await file.arrayBuffer();
+async function decode(file: Blob): Promise<AudioBuffer> {
   const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
   const ctx = new Ctx();
-  const audio = await ctx.decodeAudioData(buf);
-  await ctx.close();
-  const off = new OfflineAudioContext(1, Math.ceil(audio.duration * 22050), 22050);
-  const src = off.createBufferSource();
-  src.buffer = audio;
-  src.connect(off.destination);
-  src.start();
-  const out = await off.startRendering();
-  return out.getChannelData(0);
+  try {
+    return await ctx.decodeAudioData(await file.arrayBuffer());
+  } finally {
+    void ctx.close();
+  }
 }
 
-export async function transcribeFile(file: File, onProgress: (p: number, msg: string) => void, maxSeconds = 240): Promise<TNote[]> {
-  onProgress(0, 'Lecture du fichier…');
-  let data = await decodeTo22k(file);
-  if (data.length > maxSeconds * 22050) data = data.subarray(0, maxSeconds * 22050);
-  onProgress(0.05, 'Chargement du modèle…');
+/**
+ * Rendu hors ligne d'un graphe sur un fichier stéréo.
+ * - « voix » : canal central (L+R), bande 100–4 000 Hz : là où la voix domine ;
+ * - « instru » : côté stéréo (L−R) qui annule ce qui est au centre (la voix), plus les graves du centre
+ *   (basse, grosse caisse) pour garder le groove. Technique classique du karaoké.
+ */
+async function render(audio: AudioBuffer, mode: 'voice' | 'instru', rate: number, maxSeconds: number): Promise<Float32Array> {
+  const len = Math.min(audio.length, Math.floor(audio.sampleRate * maxSeconds));
+  const off = new OfflineAudioContext(1, Math.ceil((len / audio.sampleRate) * rate), rate);
+  const src = off.createBufferSource();
+  src.buffer = audio;
+  const split = off.createChannelSplitter(2);
+  src.connect(split);
+  const L = off.createGain();
+  const R = off.createGain();
+  split.connect(L, 0);
+  split.connect(R, audio.numberOfChannels > 1 ? 1 : 0);
+  const filt = (type: BiquadFilterType, f: number) => {
+    const b = off.createBiquadFilter();
+    b.type = type;
+    b.frequency.value = f;
+    return b;
+  };
+  if (mode === 'voice') {
+    L.gain.value = 0.5;
+    R.gain.value = 0.5;
+    const hp = filt('highpass', 100);
+    const lp = filt('lowpass', 4000);
+    L.connect(hp);
+    R.connect(hp);
+    hp.connect(lp).connect(off.destination);
+  } else {
+    // Côté : L − R (la voix, au centre, s'annule).
+    L.gain.value = 0.9;
+    R.gain.value = -0.9;
+    const hp = filt('highpass', 140);
+    L.connect(hp);
+    R.connect(hp);
+    hp.connect(off.destination);
+    // Graves du centre : basse et grosse caisse.
+    const mL = off.createGain();
+    const mR = off.createGain();
+    mL.gain.value = 0.5;
+    mR.gain.value = 0.5;
+    split.connect(mL, 0);
+    split.connect(mR, audio.numberOfChannels > 1 ? 1 : 0);
+    const lp = filt('lowpass', 140);
+    mL.connect(lp);
+    mR.connect(lp);
+    lp.connect(off.destination);
+  }
+  src.start();
+  return (await off.startRendering()).getChannelData(0);
+}
+
+/** Mono 16 bits WAV (pour stocker l'instru calculée). */
+export function toWav(data: Float32Array, rate: number): Blob {
+  const buf = new ArrayBuffer(44 + data.length * 2);
+  const v = new DataView(buf);
+  const w = (o: number, t: string) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+  w(0, 'RIFF');
+  v.setUint32(4, 36 + data.length * 2, true);
+  w(8, 'WAVEfmt ');
+  v.setUint32(16, 16, true);
+  v.setUint16(20, 1, true);
+  v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true);
+  v.setUint32(28, rate * 2, true);
+  v.setUint16(32, 2, true);
+  v.setUint16(34, 16, true);
+  w(36, 'data');
+  v.setUint32(40, data.length * 2, true);
+  let peak = 0;
+  for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
+  const k = peak > 0.99 ? 0.99 / peak : 1;
+  for (let i = 0; i < data.length; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, data[i] * k)) * 32767, true);
+  return new Blob([buf], { type: 'audio/wav' });
+}
+
+async function pitchNotes(data: Float32Array, onProgress: (p: number, msg: string) => void): Promise<TNote[]> {
+  onProgress(0.15, 'Chargement du modèle…');
   const bp = await import('@spotify/basic-pitch');
   const model = new bp.BasicPitch(`${import.meta.env.BASE_URL}basic-pitch/model.json`);
   const frames: number[][] = [];
@@ -193,10 +265,50 @@ export async function transcribeFile(file: File, onProgress: (p: number, msg: st
       onsets.push(...o);
       contours.push(...c);
     },
-    (p) => onProgress(0.05 + p * 0.9, `Analyse : ${Math.round(p * 100)} %`),
+    (p) => onProgress(0.15 + p * 0.8, `Analyse des notes : ${Math.round(p * 100)} %`),
   );
-  onProgress(0.97, 'Notes…');
   const ev = bp.noteFramesToTime(bp.addPitchBendsToNoteEvents(contours, bp.outputToNotesPoly(frames, onsets, 0.5, 0.3, 8)));
-  onProgress(1, 'Terminé');
   return ev.map((n) => ({ start: n.startTimeSeconds, dur: n.durationSeconds, midi: n.pitchMidi, amp: n.amplitude }));
+}
+
+export interface TranscribeResult {
+  notes: TNote[];
+  /** Instru (voix retirée ou piste fournie), à jouer en play-along. */
+  instru: Blob | null;
+  /** La voix a été retirée par calcul (moins propre qu'une piste séparée). */
+  computedInstru: boolean;
+  /** Fichier mono : impossible de retirer la voix. */
+  mono: boolean;
+}
+
+/**
+ * Morceau complet → mélodie chantée + instru (voix retirée).
+ * Avec des pistes déjà séparées (voix et/ou instru), on les utilise telles quelles : meilleure qualité.
+ */
+export async function transcribeSong(
+  files: { mix?: File; voice?: File; instru?: File },
+  onProgress: (p: number, msg: string) => void,
+  maxSeconds = 300,
+): Promise<TranscribeResult> {
+  onProgress(0, 'Lecture du fichier…');
+  const mixBuf = files.mix ? await decode(files.mix) : null;
+  const voiceBuf = files.voice ? await decode(files.voice) : null;
+  if (!mixBuf && !voiceBuf) throw new Error('aucun fichier');
+  onProgress(0.05, 'Isolation de la voix…');
+  const voiceData = voiceBuf ? await render(voiceBuf, 'voice', 22050, maxSeconds) : await render(mixBuf!, 'voice', 22050, maxSeconds);
+  let instru: Blob | null = files.instru ?? null;
+  let computed = false;
+  const mono = !!mixBuf && mixBuf.numberOfChannels < 2;
+  if (!instru && mixBuf && !mono) {
+    onProgress(0.1, 'Création de l’instru (voix retirée)…');
+    instru = toWav(await render(mixBuf, 'instru', 32000, maxSeconds), 32000);
+    computed = true;
+  }
+  const notes = await pitchNotes(voiceData, onProgress);
+  onProgress(1, 'Terminé');
+  return { notes, instru, computedInstru: computed, mono };
+}
+
+export async function transcribeFile(file: File, onProgress: (p: number, msg: string) => void, maxSeconds = 240): Promise<TNote[]> {
+  return (await transcribeSong({ voice: file }, onProgress, maxSeconds)).notes;
 }

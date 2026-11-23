@@ -15,6 +15,7 @@ import { persist, progress, setPracticeActive, todayChallenge } from '../game/st
 import { prefs, savePrefs } from '../state/prefs';
 import { openMicTest } from './mic-test';
 import { RecorderBoard } from './recorder-board';
+import { loadAudio } from '../state/audio-store';
 import { SingJudge } from '../game/sing';
 import { SingLane } from '../game/sing-lane';
 import { LyricsStrip } from './lyrics-strip';
@@ -287,8 +288,49 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   const backingTracks = () => (source.kind === 'library' ? (api.score?.tracks.slice(1) ?? []) : []);
   /** Volume relatif de l'accompagnement : la mélodie reste devant. */
   const BACKING_VOLUME = 0.3;
+  // ---------- Instru originale (piste audio personnelle) ----------
+  const songAudio = source.kind === 'library' ? source.song.audio : undefined;
+  let instru: HTMLAudioElement | null = null;
+  let instruUrl = '';
+  if (songAudio) {
+    void loadAudio(songAudio.id)
+      .then((blob) => {
+        if (!blob) return;
+        instruUrl = URL.createObjectURL(blob);
+        instru = new Audio(instruUrl);
+        (instru as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;
+        instru.muted = !prefs.backing;
+        if (new URLSearchParams(location.search).has('debug')) (window as unknown as { __instru: unknown }).__instru = instru;
+        $('backing').hidden = false;
+        $('backing').textContent = '🎶 Instru originale';
+        applyBacking();
+      })
+      .catch(() => {});
+  }
+  /** Seconde de l'instru qui correspond à un tick de la partition (tempo d'origine du morceau). */
+  const instruTime = (tick: number) => (songAudio ? songAudio.offset + (tick / 960) * (60 / (source.kind === 'library' ? source.song.tempo : 120)) : 0);
+  const syncInstru = (tick: number, playing: boolean) => {
+    if (!instru) return;
+    instru.playbackRate = Math.max(0.5, Math.min(2, api.playbackSpeed || 1));
+    if (!playing) {
+      if (!instru.paused) instru.pause();
+      return;
+    }
+    const want = instruTime(tick);
+    if (Math.abs(instru.currentTime - want) > 0.25) instru.currentTime = Math.max(0, want);
+    if (instru.paused) void instru.play().catch(() => {});
+  };
+  api.playerPositionChanged.on((e) => syncInstru(e.currentTick, api.playerState === 1));
+  api.playerStateChanged.on((e) => syncInstru(api.tickPosition, e.state === 1));
+
   const applyBacking = () => {
     const t = backingTracks();
+    if (instru) {
+      // Avec l'instru originale, l'accompagnement synthétique se tait.
+      instru.muted = !prefs.backing;
+      if (t.length) api.changeTrackMute(t, true);
+      return;
+    }
     if (!t.length) return;
     api.changeTrackVolume(t, BACKING_VOLUME);
     api.changeTrackMute(t, !prefs.backing);
@@ -1283,6 +1325,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
 
   setSuggestedTempo(() => Number(bpmInput.value) || null);
   cleanup = () => {
+    instru?.pause();
+    if (instruUrl) URL.revokeObjectURL(instruUrl);
     stopVoice();
     setSuggestedTempo(null);
     gameRunning = false;

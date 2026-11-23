@@ -112,6 +112,11 @@ Fichier à lire en premier pour reprendre le travail depuis n'importe quel appar
 - Design system « scène néon » (fin de src/style.css, polices Unbounded + Space Grotesk).
 - Plus d'« archet » hors violon.
 
+## v0.15 (23/11/2026)
+- Voix : seulement chansons à paroles (+ instrus des genres chantés, + morceaux avec instru), justesse voix séparée (±60), tempo plafonné à 92, sons voix/chœur/flûte dans la banque, harmonisation automatique (src/songs/harmonize.ts).
+- Import de bibliothèque JSON (docs/format-bibliotheque.md, src/songs/library-import.ts) + prompt Grok (docs/prompt-grok-bibliotheque.md) ; genres Rap US/FR, R&B, Reggae, Électro, Comédies musicales.
+- Transcrire : voix retirée dans le navigateur (L−R + graves du centre) ou pistes séparées fournies ; instru stockée en IndexedDB (src/state/audio-store.ts), jouée synchronisée dans le lecteur (playbackRate, preservesPitch).
+
 ## Décisions prises
 
 | Sujet | Décision | Pourquoi |

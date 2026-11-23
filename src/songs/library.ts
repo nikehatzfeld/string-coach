@@ -362,7 +362,7 @@ export function songFor(song: Song, inst: InstrumentId): boolean {
     return inst === 'guitar' || (orig ? songFor(orig, inst) : true);
   }
   // Voix : les chansons qui ont des paroles ; pour les genres chantés (rap…), aussi les instrus seules (grille d'accords).
-  if (inst === 'voice') return !!lyricsOf(song) || (!!song.chords && (VOCAL_GENRES as readonly string[]).includes(song.style));
+  if (inst === 'voice') return !!lyricsOf(song) || !!song.audio || (!!song.chords && (VOCAL_GENRES as readonly string[]).includes(song.style));
   if (FOR_ALL.has(song.style)) return true;
   const o = song.origin;
   switch (inst) {

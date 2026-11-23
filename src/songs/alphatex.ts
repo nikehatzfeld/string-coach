@@ -56,6 +56,8 @@ export interface Song {
   famous?: boolean;
   /** Instrument d'origine de la partition importée (catalogue Mutopia : Violin, Flute, Voice, Piano…). */
   origin?: string;
+  /** Instru audio personnelle (IndexedDB) jouée en play-along ; offset = instant (s) de la 1re note de la mélodie. */
+  audio?: { id: string; offset: number };
   /** Paroles importées (une syllabe par note, tirets entre syllabes d'un mot). */
   lyrics?: string;
   /** Grille d'accords importée (« G | D | Em | C ») pour le lecteur d'accords. */

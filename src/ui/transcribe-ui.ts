@@ -1,5 +1,6 @@
 import type { Song } from '../songs/alphatex';
-import { estimateTempo, notesToSong, transcribeFile, type TNote } from '../practice/transcribe';
+import { estimateTempo, notesToSong, transcribeSong, type TranscribeResult } from '../practice/transcribe';
+import { deleteAudio, saveAudio } from '../state/audio-store';
 import { deleteUserSong, saveUserSong, userSongs } from '../state/user-songs';
 import { esc } from './dom';
 
@@ -13,9 +14,14 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
       .join('');
   back.innerHTML = `
     <div class="modal tr-modal" role="dialog" aria-label="Transcrire un enregistrement">
-      <h2>🎧 Transcrire un enregistrement</h2>
-      <p class="hint">Charge un fichier audio ou vidéo que tu possèdes (mp3, m4a, wav, mp4…). L'app en tire la mélodie et les accords. Tout se passe dans ton navigateur : le fichier et la partition restent sur cet appareil.</p>
-      <input id="trFile" type="file" accept="audio/*,video/*" />
+      <h2>🎧 Transcrire un morceau</h2>
+      <p class="hint">Charge un morceau que tu possèdes (mp3, m4a, wav, mp4…). L'app retire la voix pour en faire une <strong>instru</strong> et transcrit la <strong>mélodie chantée</strong> : tu chantes ensuite sur l'instru originale, avec la courbe et le score. Tout se passe dans ton navigateur et reste sur cet appareil.</p>
+      <label class="tr-row">Morceau complet <input id="trFile" type="file" accept="audio/*,video/*" /></label>
+      <details class="tr-adv"><summary>Meilleure qualité : j'ai déjà les pistes séparées (voix / instru)</summary>
+        <p class="hint">Sépare d'abord le morceau avec un outil dédié (vocalremover.org, lalal.ai, Moises, ou Demucs sur ton PC), puis charge les deux pistes ici.</p>
+        <label class="tr-row">Voix seule <input id="trVoice" type="file" accept="audio/*" /></label>
+        <label class="tr-row">Instru seule <input id="trInstru" type="file" accept="audio/*" /></label>
+      </details>
       <label class="tr-row">Titre <input id="trTitle" placeholder="Mon morceau" /></label>
       <label class="tr-row"><input id="trChords" type="checkbox" checked /> Ajouter les accords (accompagnement, guitare)</label>
       <div class="mic-meter big"><span class="lvl" id="trBar"></span></div>
@@ -29,38 +35,49 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
     </div>`;
   document.body.appendChild(back);
   const q = <T extends HTMLElement>(id: string) => back.querySelector<T>(`#${id}`)!;
-  let notes: TNote[] | null = null;
-  q('trFile').addEventListener('change', () => {
-    const f = q<HTMLInputElement>('trFile').files?.[0];
+  let res: TranscribeResult | null = null;
+  const pick = (id: string) => q<HTMLInputElement>(id).files?.[0];
+  const refresh = () => {
+    const f = pick('trFile') ?? pick('trVoice');
     q<HTMLButtonElement>('trGo').disabled = !f;
     if (f && !q<HTMLInputElement>('trTitle').value) q<HTMLInputElement>('trTitle').value = f.name.replace(/\.[^.]+$/, '');
-  });
+  };
+  ['trFile', 'trVoice', 'trInstru'].forEach((id) => q(id).addEventListener('change', refresh));
   q('trGo').addEventListener('click', async () => {
-    const f = q<HTMLInputElement>('trFile').files?.[0];
-    if (!f) return;
+    const files = { mix: pick('trFile'), voice: pick('trVoice'), instru: pick('trInstru') };
+    if (!files.mix && !files.voice) return;
     q<HTMLButtonElement>('trGo').disabled = true;
     try {
-      notes = await transcribeFile(f, (p, msg) => {
+      res = await transcribeSong(files, (p, msg) => {
         q('trBar').style.width = `${Math.round(p * 100)}%`;
         q('trMsg').textContent = msg;
       });
-      if (!notes.length) throw new Error('aucune note');
-      q<HTMLInputElement>('trBpm').value = String(estimateTempo(notes));
+      if (!res.notes.length) throw new Error('aucune note');
+      q<HTMLInputElement>('trBpm').value = String(estimateTempo(res.notes));
       q('trResult').hidden = false;
       q('trSave').hidden = false;
-      q('trMsg').textContent = `${notes.length} notes trouvées. Vérifie le tempo (il peut être détecté au double ou à la moitié), puis enregistre.`;
+      const instruMsg = res.instru
+        ? res.computedInstru
+          ? ' Instru créée en retirant la voix (il peut rester un peu de voix : pour mieux, utilise des pistes séparées).'
+          : ' Instru chargée.'
+        : res.mono
+          ? ' Fichier mono : impossible de retirer la voix, pas d’instru.'
+          : '';
+      q('trMsg').textContent = `${res.notes.length} notes trouvées.${instruMsg} Vérifie le tempo (il peut être détecté au double ou à la moitié), puis enregistre.`;
     } catch (e) {
       q('trMsg').textContent = `Analyse impossible : ${(e as Error).message || e}. Essaie un autre fichier (mp3, wav, m4a).`;
     } finally {
       q<HTMLButtonElement>('trGo').disabled = false;
     }
   });
-  q('trSave').addEventListener('click', () => {
-    if (!notes) return;
+  q('trSave').addEventListener('click', async () => {
+    if (!res) return;
     const ts = q<HTMLSelectElement>('trTs').value.split(',').map(Number) as [number, number];
-    const song = notesToSong(notes, q<HTMLInputElement>('trTitle').value || 'Ma transcription', Number(q<HTMLInputElement>('trBpm').value) || 90, ts, q<HTMLInputElement>('trChords').checked);
+    const audioId = res.instru ? `audio-${Date.now()}` : undefined;
+    const song = notesToSong(res.notes, q<HTMLInputElement>('trTitle').value || 'Ma transcription', Number(q<HTMLInputElement>('trBpm').value) || 90, ts, q<HTMLInputElement>('trChords').checked, audioId);
     if (!song.notation) return void (q('trMsg').textContent = 'Pas de mélodie exploitable.');
     try {
+      if (audioId && res.instru) await saveAudio(audioId, res.instru);
       saveUserSong(song);
     } catch {
       return void (q('trMsg').textContent = 'Stockage plein : supprime une ancienne transcription.');
@@ -79,6 +96,8 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
       if (s) onOpen(s);
     }
     if (del) {
+      const s = userSongs().find((x) => x.id === del);
+      if (s?.audio) void deleteAudio(s.audio.id).catch(() => {});
       deleteUserSong(del);
       q('trList').innerHTML = list() || '<li class="muted">aucune</li>';
       onChange();
