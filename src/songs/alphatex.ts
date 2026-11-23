@@ -3,6 +3,7 @@ import { bestOctaveShift, placeMelody, positionLabel, solfege, type Placed } fro
 import { backingKindFor, backingTracks, hasChords, type BackingKind } from './backing';
 import { parseNotation, type ParsedBar } from './notation';
 import { lyricsOf, lyricSyllables } from './lyrics';
+import { harmonize, needsHarmony } from './harmonize';
 
 export const STYLE_ORDER = [
   'Mes morceaux',
@@ -87,7 +88,16 @@ export function sectionsFor(barCount: number, defined?: [string, number, number]
 
 /** Le morceau a-t-il un accompagnement (accords notés) ? */
 export function songHasBacking(song: Song): boolean {
-  return song.backing !== false && hasChords(parseNotation(song.notation));
+  return !!backingBars(song, parseNotation(song.notation));
+}
+
+/** Accords de l'accompagnement : ceux notés, sinon harmonisation automatique (pas pour les exercices). */
+function backingBars(song: Song, bars: ParsedBar[]): ParsedBar[] | null {
+  if (song.backing === false) return null;
+  if (!needsHarmony(bars)) return hasChords(bars) ? bars : null;
+  if (song.style === 'Exercices' || song.style === 'Gammes & arpèges' || song.id.startsWith('ex-') || song.id.startsWith('tx-')) return hasChords(bars) ? bars : null;
+  const h = harmonize(bars, song.timeSignature);
+  return hasChords(h) ? h : null;
 }
 
 const NAMES_PLACEHOLDER = '%%NOMS%%';
@@ -230,9 +240,9 @@ export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: b
     .join(' |\n');
 
   const melody = `${header.replace(NAMES_PLACEHOLDER, escape(names.join(' ')))}\n${body}`;
-  const withBacking = (opts.backing ?? true) && song.backing !== false && hasChords(bars);
-  if (!withBacking) return melody;
-  return `${melody}\n${backingTracks(bars, song.timeSignature, song.backing || backingKindFor(song.style))}`;
+  const harm = backingBars(song, bars);
+  if (!(opts.backing ?? true) || !harm) return melody;
+  return `${melody}\n${backingTracks(harm, song.timeSignature, song.backing || backingKindFor(song.style))}`;
 }
 
 const TEX_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
@@ -302,7 +312,7 @@ function melodicToAlphaTex(song: Song, inst: Instrument, opts: { backing?: boole
     `\\instrument ${inst.alphaTexInstrument}`,
   ].join('\n');
   const melody = `${header}\n${body}`;
-  const withBacking = (opts.backing ?? true) && song.backing !== false && hasChords(bars);
-  if (!withBacking) return melody;
-  return `${melody}\n${backingTracks(bars, song.timeSignature, song.backing || backingKindFor(song.style))}`;
+  const harm = backingBars(song, bars);
+  if (!(opts.backing ?? true) || !harm) return melody;
+  return `${melody}\n${backingTracks(harm, song.timeSignature, song.backing || backingKindFor(song.style))}`;
 }

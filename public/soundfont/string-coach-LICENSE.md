@@ -1,6 +1,6 @@
 # Banque de sons string-coach.sf3
 
-Extrait (scripts/trim-soundfont.py) de MuseScore_General.sf3 v0.2 : violon, guitares nylon et acier, basses, cordes, batterie. Licence MIT, notices ci-dessous.
+Extrait (scripts/trim-soundfont.py) de MuseScore_General.sf3 v0.2 : violon, guitares nylon et acier, basses, cordes, chœur et voix, flûte à bec, batterie. Licence MIT, notices ci-dessous.
 
 # MuseScore_General.sf2
 ---
