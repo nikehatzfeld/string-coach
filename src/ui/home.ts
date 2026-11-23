@@ -1,5 +1,6 @@
 import { openMicTest } from './mic-test';
 import { openTranscriber } from './transcribe-ui';
+import { openLibraryImport } from './import-library';
 import { userSongs } from '../state/user-songs';
 import { BADGES, currentStreak, dailyMinutes, dueReviews, levelInfo, levelTitle } from '../game/progress';
 import { persist, progress, todayChallenge } from '../game/store';
@@ -69,6 +70,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
       <button id="toHarmony">🎼 Harmonie</button>
       <button id="toChords">🎸 Accords</button>
       <button id="toVoice">🎤 Studio voix</button>
+      <button id="toImportLib" title="Charger une bibliothèque de morceaux (fichier JSON)">📥 Importer</button>
       <button id="toTranscribe" title="Transformer un enregistrement en partition (reste sur ton appareil)">🎧 Transcrire</button>
       <button id="toMicTest" title="Vérifier que le micro entend ton instrument">🎤 Test micro</button>
       <button id="account" class="account" hidden></button>
@@ -158,6 +160,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
   app.querySelector('#toHarmony')!.addEventListener('click', onHarmony);
   app.querySelector('#toChords')!.addEventListener('click', () => onChords());
   app.querySelector('#toVoice')!.addEventListener('click', () => onVoice());
+  app.querySelector('#toImportLib')!.addEventListener('click', () => openLibraryImport(() => rerender()));
   app.querySelector('#toTranscribe')!.addEventListener('click', () => openTranscriber((song) => open({ kind: 'library', song }), rerender));
   app.querySelector('#toMicTest')!.addEventListener('click', () => openMicTest());
   app.querySelector('#toExercises')!.addEventListener('click', onExercises);

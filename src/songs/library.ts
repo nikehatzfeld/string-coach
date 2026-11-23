@@ -4,7 +4,7 @@ import { CHRISTMAS, CLASSICAL_MORE, FOLK_WORLD, KIDS } from './library-more';
 import PD_LIBRARY from './pd-library.json';
 import PD_GUITAR from './pd-guitar.json';
 import { easyVersion } from './simplify';
-import { LYRICS } from './lyrics';
+import { lyricsOf } from './lyrics';
 import type { InstrumentId } from './instruments';
 
 /**
@@ -343,7 +343,7 @@ export const LIBRARY: Song[] = [...BASE, ...EASY, ...EXERCISES];
 
 export const STYLES = STYLE_ORDER.filter((st) => LIBRARY.some((s) => s.style === st));
 
-const FOR_ALL = new Set(['Mes morceaux', 'Comptines', 'Chanson française', 'Noël', 'Folk & monde', 'Chants & cantiques', 'Gospel & jazz', 'Blues', 'Fêtes', 'Gammes & arpèges', 'Exercices']);
+const FOR_ALL = new Set(['Mes morceaux', 'Années 80', 'Années 90', 'Pop & rock', 'Variété française', 'Rap US', 'Rap français', 'Comptines', 'Chanson française', 'Noël', 'Folk & monde', 'Chants & cantiques', 'Gospel & jazz', 'Blues', 'Fêtes', 'Gammes & arpèges', 'Exercices']);
 
 /**
  * Répertoire par instrument : chansons, folk, Noël, blues… pour tous ; le répertoire classique
@@ -359,6 +359,8 @@ export function songFor(song: Song, inst: InstrumentId): boolean {
     // Les versions faciles servent aussi à la guitare (mélodie simplifiée).
     return inst === 'guitar' || (orig ? songFor(orig, inst) : true);
   }
+  // Voix : uniquement les chansons qui ont des paroles.
+  if (inst === 'voice') return !!lyricsOf(song);
   if (FOR_ALL.has(song.style)) return true;
   const o = song.origin;
   switch (inst) {
@@ -366,8 +368,6 @@ export function songFor(song: Song, inst: InstrumentId): boolean {
       return true;
     case 'recorder':
       return !o || ['Flute', 'Recorder', 'Oboe', 'Clarinet', 'Voice', 'Piano'].includes(o);
-    case 'voice':
-      return o === 'Voice' || !!LYRICS[song.id] || (!o && song.level <= 2);
     case 'guitar':
       // Classique : seulement les mélodies faciles écrites pour les méthodes (pas les pièces de concert).
       return !o && song.level <= 2;

@@ -21,3 +21,10 @@ export function saveUserSong(song: Song): void {
 export function deleteUserSong(id: string): void {
   localStorage.setItem(KEY, JSON.stringify(userSongs().filter((s) => s.id !== id)));
 }
+
+/** Ajoute ou remplace plusieurs morceaux d'un coup (import de bibliothèque). */
+export function saveUserSongs(songs: Song[]): void {
+  const ids = new Set(songs.map((s) => s.id));
+  const all = [...songs, ...userSongs().filter((s) => !ids.has(s.id))];
+  localStorage.setItem(KEY, JSON.stringify(all));
+}

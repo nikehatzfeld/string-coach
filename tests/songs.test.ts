@@ -137,3 +137,24 @@ describe('paroles', () => {
     expect(tex).toContain('Frè- re Ja- cques');
   });
 });
+
+describe('paroles dans la partition (voix)', () => {
+  it('chaque note chantée porte sa syllabe, dans l’ordre', async () => {
+    const { LYRICS, lyricSyllables } = await import('../src/songs/lyrics');
+    for (const id of Object.keys(LYRICS)) {
+      const song = LIBRARY.find((s) => s.id === id)!;
+      const score = alphaTab.importer.ScoreLoader.loadAlphaTex(songToAlphaTex(song, INSTRUMENTS.voice));
+      const beats = score.tracks[0].staves[0].bars.flatMap((b) => b.voices[0].beats).filter((b) => !b.isRest && !b.notes.every((n) => n.isTieDestination));
+      const syl = lyricSyllables(LYRICS[id]);
+      expect(beats.length, id).toBe(syl.length);
+      beats.forEach((b, i) => expect(b.lyrics?.[1], `${id} note ${i + 1}`).toBe(syl[i]));
+    }
+  });
+  it('la voix ne propose que des chansons avec paroles', async () => {
+    const { songFor } = await import('../src/songs/library');
+    const { lyricsOf } = await import('../src/songs/lyrics');
+    const voice = LIBRARY.filter((s) => songFor(s, 'voice'));
+    expect(voice.length).toBeGreaterThanOrEqual(17);
+    for (const s of voice) expect(lyricsOf(s), s.id).toBeTruthy();
+  });
+});

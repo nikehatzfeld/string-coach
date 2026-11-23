@@ -30,7 +30,7 @@ export class SingJudge {
     readonly notes: GameNote[],
     opts: Partial<SingOptions> = {},
   ) {
-    this.opts = { toleranceCents: 50, graceMs: 180, latencyMs: 80, ...opts };
+    this.opts = { toleranceCents: 50, graceMs: 260, latencyMs: 80, ...opts };
     this.reset();
   }
 
@@ -72,7 +72,7 @@ export class SingJudge {
       if (t > end) {
         s.done = true;
         const coverage = Math.min(1, s.acc / Math.max(1, n.duration));
-        let j: Judgment = coverage >= 0.7 ? 'perfect' : coverage >= 0.45 ? 'good' : coverage >= 0.2 ? 'ok' : 'miss';
+        let j: Judgment = coverage >= 0.6 ? 'perfect' : coverage >= 0.35 ? 'good' : coverage >= 0.15 ? 'ok' : 'miss';
         // Syllabe attaquée en retard (ou pas attaquée) : un cran de moins.
         const onTime = s.onset !== null && Math.abs(s.onset) <= grace * 1.5;
         if (!onTime && j !== 'miss') j = j === 'perfect' ? 'good' : 'ok';

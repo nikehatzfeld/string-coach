@@ -23,7 +23,7 @@ export class SingLane {
   private readonly hi: number;
   /** Ticks visibles avant / après « maintenant ». */
   past = 960 * 2;
-  future = 960 * 6;
+  future = 960 * 8;
   toleranceCents = 50;
 
   constructor(
@@ -114,7 +114,7 @@ export class SingLane {
       }
     }
     // Barres des notes (épaisses : au moins la largeur de la tolérance)
-    const barH = Math.max(16, row * (this.toleranceCents / 50));
+    const barH = Math.max(24, row * (this.toleranceCents / 50));
     for (const n of this.notes) {
       const x0 = x(n.tick);
       const x1 = x(n.tick + n.duration);

@@ -18,7 +18,7 @@ import { RecorderBoard } from './recorder-board';
 import { SingJudge } from '../game/sing';
 import { SingLane } from '../game/sing-lane';
 import { LyricsStrip } from './lyrics-strip';
-import { LYRICS, lyricSyllables } from '../songs/lyrics';
+import { lyricsOf, lyricSyllables } from '../songs/lyrics';
 import { PitchTrace } from './voice-board';
 import { recorderTip } from '../songs/recorder';
 import { chartFromSong } from '../courses/chords-content';
@@ -52,6 +52,7 @@ export function closePlayer(): void {
 export function openPlayer(app: HTMLElement, source: Source, onExit: () => void, initialMode: Mode = 'live'): void {
   closePlayer();
   const inst = INSTRUMENTS[prefs.instrument];
+  const tolerance = () => (inst.kind === 'voice' ? prefs.voiceTolerance : prefs.tolerance);
   const title = source.kind === 'library' ? source.song.title : source.name;
   const songId = sourceId(source);
   const best = progress.songs[songId];
@@ -102,7 +103,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         ${[1, 3, 5, 10, 0].map((r) => `<option value="${r}" ${prefs.repeat === r ? 'selected' : ''}>${r === 0 ? '🔁 ∞' : r === 1 ? '🔁 1 fois' : `🔁 ${r} fois`}</option>`).join('')}
       </select>
       <button id="ksBtn" class="more" aria-pressed="${prefs.keySignatures}" title="Armure à la clé, ou dièses et bémols écrits devant chaque note">Armure</button>
-      <label class="no-live ${inst.kind === 'voice' ? '' : 'more'}" title="Justesse demandée">Justesse <input id="tol" type="range" min="10" max="100" step="5" value="${prefs.tolerance}" /> <output id="tolOut">±${prefs.tolerance} cents</output></label>
+      <label class="no-live ${inst.kind === 'voice' ? '' : 'more'}" title="Justesse demandée">Justesse <input id="tol" type="range" min="10" max="100" step="5" value="${inst.kind === 'voice' ? prefs.voiceTolerance : prefs.tolerance}" /> <output id="tolOut">±${inst.kind === 'voice' ? prefs.voiceTolerance : prefs.tolerance} cents</output></label>
       <button id="stepHold" class="only-step more" aria-pressed="${prefs.stepHold}" title="Tenir chaque note sa durée écrite (au tempo choisi)">⏱ Tenir la durée</button>
       <button id="stepDetache" class="only-step more" aria-pressed="${prefs.stepDetache}" title="Chaque note doit être attaquée : ${inst.id === 'violin' ? 'coup d’archet' : inst.id === 'guitar' ? 'nouveau coup de médiator ou de doigt' : inst.id === 'recorder' ? 'coup de langue « tu »' : 'nouvelle syllabe'} ou petit silence entre deux notes">✂ Détaché</button>
       <button id="restart" class="only-step more">↻ Recommencer</button>
@@ -339,7 +340,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   }
   api.scoreLoaded.on((score) => {
     originalBpm = Math.round(score.tempo) || originalBpm;
-    setBpm(prefs.bpmBySong[songId] ?? originalBpm, false);
+    setBpm(prefs.bpmBySong[songId] ?? (inst.kind === 'voice' ? Math.min(originalBpm, 92) : originalBpm), false);
   });
   setBpm(prefs.bpmBySong[songId] ?? originalBpm, false);
   bpmInput.addEventListener('change', () => setBpm(Number(bpmInput.value)));
@@ -449,7 +450,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   const lyricIndex = new Map<alphaTab.model.Beat, number>();
   function computeLyrics() {
     lyricIndex.clear();
-    const text = source.kind === 'library' ? LYRICS[source.song.id] : undefined;
+    const text = source.kind === 'library' ? lyricsOf(source.song) : undefined;
     if (!text) return lyrics.setSyllables([]);
     const syl = lyricSyllables(text);
     let k = 0;
@@ -463,7 +464,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       if (!trace) return;
       const ms = v.trackBeats.filter((b) => !b.isRest).flatMap((b) => b.notes.map((n) => n.realValue));
       if (ms.length) trace.setRange(Math.min(...ms), Math.max(...ms));
-      trace.toleranceCents = prefs.tolerance;
+      trace.toleranceCents = tolerance();
     }, 0),
   );
 
@@ -629,7 +630,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       targets.push({ midi: Math.max(...beat.notes.map((n) => n.realValue)), beatIndex: i, ticks } as StepTarget & { ticks: number });
       beatsByTarget.push(beat);
     });
-    trainer = new StepTrainer(targets, { toleranceCents: prefs.tolerance, a4: prefs.a4, detache: prefs.stepDetache });
+    // Voix : pas d'exigence de détaché (le chant lié ne baisse pas forcément le volume entre deux syllabes).
+    trainer = new StepTrainer(targets, { toleranceCents: tolerance(), a4: prefs.a4, detache: prefs.stepDetache && inst.kind !== 'voice' });
     applyHold();
     keeper = new ScoreKeeper(targets.length);
     hadError = false;
@@ -800,11 +802,12 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   });
   const tol = $<HTMLInputElement>('tol');
   tol.addEventListener('input', () => {
-    prefs.tolerance = Number(tol.value);
+    if (inst.kind === 'voice') prefs.voiceTolerance = Number(tol.value);
+    else prefs.tolerance = Number(tol.value);
     savePrefs();
-    $('tolOut').textContent = `±${prefs.tolerance} cents`;
-    if (trainer) trainer.options.toleranceCents = prefs.tolerance;
-    if (trace) trace.toleranceCents = prefs.tolerance;
+    $('tolOut').textContent = `±${tolerance()} cents`;
+    if (trainer) trainer.options.toleranceCents = tolerance();
+    if (trace) trace.toleranceCents = tolerance();
   });
 
   // ---------- Mode jeu ----------
@@ -829,7 +832,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       const finger = f.finger ?? suggestedFinger(f.fret, inst);
       if (inst.kind !== 'strings') {
         // Flûte, voix : une piste par nom de note (Do à Si) ; la voix affiche la syllabe à chanter.
-        const syl = lyricIndex.has(beat) && source.kind === 'library' && LYRICS[source.song.id] ? lyricSyllables(LYRICS[source.song.id])[lyricIndex.get(beat)!] : undefined;
+        const lt = source.kind === 'library' ? lyricsOf(source.song) : undefined;
+        const syl = lyricIndex.has(beat) && lt ? lyricSyllables(lt)[lyricIndex.get(beat)!] : undefined;
         notes.push({
           tick: beat.absolutePlaybackStart,
           duration: beat.playbackDuration,
@@ -858,9 +862,9 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     const notes = buildGameNotes();
     if (inst.kind === 'voice') {
       // Voix : piste de chant (barres à tenir + paroles), marge de timing avant / après chaque note.
-      judge = new SingJudge(notes, { latencyMs: prefs.latencyMs, toleranceCents: Math.max(30, prefs.tolerance) });
+      judge = new SingJudge(notes, { latencyMs: prefs.latencyMs, toleranceCents: tolerance() });
       const lane = new SingLane($<HTMLCanvasElement>('highway'), notes);
-      lane.toleranceCents = Math.max(30, prefs.tolerance);
+      lane.toleranceCents = tolerance();
       highway = lane;
       highway.sync(notes[0] ? notes[0].tick - 960 * 2 : 0, ticksPerMs, false);
       gameKeeper = new ScoreKeeper(notes.length);

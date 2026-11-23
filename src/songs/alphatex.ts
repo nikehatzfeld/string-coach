@@ -2,7 +2,7 @@ import type { Instrument, InstrumentId } from './instruments';
 import { bestOctaveShift, placeMelody, positionLabel, solfege, type Placed } from './positions';
 import { backingKindFor, backingTracks, hasChords, type BackingKind } from './backing';
 import { parseNotation, type ParsedBar } from './notation';
-import { LYRICS, lyricSyllables } from './lyrics';
+import { lyricsOf, lyricSyllables } from './lyrics';
 
 export const STYLE_ORDER = [
   'Mes morceaux',
@@ -10,6 +10,12 @@ export const STYLE_ORDER = [
   'Chanson française',
   'Classique',
   'Cinéma & TV',
+  'Années 80',
+  'Années 90',
+  'Pop & rock',
+  'Variété française',
+  'Rap US',
+  'Rap français',
   'Noël',
   'Folk & monde',
   'Chants & cantiques',
@@ -45,6 +51,10 @@ export interface Song {
   famous?: boolean;
   /** Instrument d'origine de la partition importée (catalogue Mutopia : Violin, Flute, Voice, Piano…). */
   origin?: string;
+  /** Paroles importées (une syllabe par note, tirets entre syllabes d'un mot). */
+  lyrics?: string;
+  /** Grille d'accords importée (« G | D | Em | C ») pour le lecteur d'accords. */
+  chords?: string;
   /** Partition complète prête à afficher (guitare classique : basse + mélodie), prioritaire sur la notation. */
   tex?: string;
   /** Instruments pour lesquels le morceau est proposé (sinon déduit du style et de l'origine). */
@@ -84,7 +94,7 @@ const NAMES_PLACEHOLDER = '%%NOMS%%';
 
 /** 2e ligne de texte : paroles (domaine public) si le morceau en a, une syllabe par note. */
 function lyricsLine(song: Song, bars: ParsedBar[]): string {
-  const text = LYRICS[song.id];
+  const text = lyricsOf(song);
   if (!text) return '';
   const syl = lyricSyllables(text);
   let k = 0;
@@ -129,7 +139,7 @@ export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: b
     ...(song.key && opts.keySignature !== false ? [`\\ks ${song.key}`] : []),
     `\\track "${inst.label}"`,
     `\\lyrics "${NAMES_PLACEHOLDER}"`,
-    ...(LYRICS[song.id] ? [lyricsLine(song, bars)] : []),
+    ...(lyricsOf(song) ? [lyricsLine(song, bars)] : []),
     `\\staff {score tabs}`,
     `\\instrument ${inst.alphaTexInstrument}`,
     `\\tuning (${inst.tuningNames.join(' ')})`,
@@ -287,7 +297,7 @@ function melodicToAlphaTex(song: Song, inst: Instrument, opts: { backing?: boole
     ...(song.key && opts.keySignature !== false ? [`\\ks ${song.key}`] : []),
     `\\track "${inst.label}"`,
     `\\lyrics "${escape(names.join(' '))}"`,
-    ...(LYRICS[song.id] ? [lyricsLine(song, bars)] : []),
+    ...(lyricsOf(song) ? [lyricsLine(song, bars)] : []),
     `\\staff {score}`,
     `\\instrument ${inst.alphaTexInstrument}`,
   ].join('\n');

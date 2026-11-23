@@ -40,3 +40,8 @@ export function lyricSyllables(text: string): string[] {
     .filter((w) => w && !/^[,.;:!?]+$/.test(w))
     .map((w) => w.replace(/-$/, '-'));
 }
+
+/** Paroles d'un morceau : celles de la bibliothèque, sinon celles importées avec le morceau. */
+export function lyricsOf(song: { id: string; lyrics?: string }): string | undefined {
+  return LYRICS[song.id] ?? song.lyrics;
+}
