@@ -58,6 +58,10 @@ export interface Song {
   origin?: string;
   /** Instru audio personnelle (IndexedDB) jouée en play-along ; offset = instant (s) de la 1re note de la mélodie. */
   audio?: { id: string; offset: number };
+  /** Passages chantés détectés dans l'audio (s, temps de la partition) : sert à recaler des paroles. */
+  voiceSegments?: [number, number][];
+  /** Karaoké calé dans le temps (s depuis le début de la partition). */
+  timedLyrics?: { t: number; s: string; line?: boolean }[];
   /** Paroles importées (une syllabe par note, tirets entre syllabes d'un mot). */
   lyrics?: string;
   /** Grille d'accords importée (« G | D | Em | C ») pour le lecteur d'accords. */

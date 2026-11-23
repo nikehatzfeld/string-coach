@@ -1,5 +1,6 @@
 import type { Song } from '../songs/alphatex';
 import { matchChord } from './chord-detector';
+import { voiceSegments } from './karaoke';
 
 /**
  * Transcription audio → partition (Basic Pitch de Spotify, licence Apache-2.0), entièrement dans
@@ -279,6 +280,8 @@ export interface TranscribeResult {
   computedInstru: boolean;
   /** Fichier mono : impossible de retirer la voix. */
   mono: boolean;
+  /** Passages où la voix est présente (s, dans l'audio). */
+  segments: [number, number][];
 }
 
 /**
@@ -305,8 +308,9 @@ export async function transcribeSong(
     computed = true;
   }
   const notes = await pitchNotes(voiceData, onProgress);
+  const segments = voiceSegments(voiceData, 22050);
   onProgress(1, 'Terminé');
-  return { notes, instru, computedInstru: computed, mono };
+  return { notes, instru, computedInstru: computed, mono, segments };
 }
 
 export async function transcribeFile(file: File, onProgress: (p: number, msg: string) => void, maxSeconds = 240): Promise<TNote[]> {

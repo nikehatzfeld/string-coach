@@ -13,6 +13,25 @@ export class LyricsStrip {
     host.hidden = true;
   }
 
+  /** Syllabes avec débuts de lignes imposés (karaoké calé dans le temps). */
+  setLines(syl: { s: string; line?: boolean }[]): void {
+    this.lines = [];
+    let cur: string[] = [];
+    let from = 0;
+    syl.forEach((x, i) => {
+      if (x.line && cur.length) {
+        this.lines.push({ from, syl: cur });
+        cur = [];
+        from = i;
+      }
+      cur.push(x.s);
+    });
+    if (cur.length) this.lines.push({ from, syl: cur });
+    this.host.hidden = !syl.length;
+    this.index = -1;
+    this.render();
+  }
+
   /** Syllabes dans l'ordre des notes ; une phrase se termine sur une ponctuation (ou toutes les 10 syllabes). */
   setSyllables(syl: string[]): void {
     this.lines = [];

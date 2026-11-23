@@ -1,6 +1,7 @@
 import type { Song } from '../songs/alphatex';
 import { estimateTempo, notesToSong, transcribeSong, type TranscribeResult } from '../practice/transcribe';
 import { deleteAudio, saveAudio } from '../state/audio-store';
+import { alignLyrics, syllabifyLyrics } from '../practice/karaoke';
 import { deleteUserSong, saveUserSong, userSongs } from '../state/user-songs';
 import { esc } from './dom';
 
@@ -10,7 +11,7 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
   back.className = 'modal-backdrop';
   const list = () =>
     userSongs()
-      .map((s) => `<li><button class="ghost" data-open="${esc(s.id)}">▶ ${esc(s.title)}</button> <button class="ghost" data-del="${esc(s.id)}" aria-label="Supprimer">🗑</button></li>`)
+      .map((s) => `<li><button class="ghost" data-open="${esc(s.id)}">▶ ${esc(s.title)}</button> <span><button class="ghost" data-lyr="${esc(s.id)}" title="Ajouter ou modifier les paroles">✏️ Paroles</button><button class="ghost" data-del="${esc(s.id)}" aria-label="Supprimer">🗑</button></span></li>`)
       .join('');
   back.innerHTML = `
     <div class="modal tr-modal" role="dialog" aria-label="Transcrire un enregistrement">
@@ -23,6 +24,7 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
         <label class="tr-row">Instru seule <input id="trInstru" type="file" accept="audio/*" /></label>
       </details>
       <label class="tr-row">Titre <input id="trTitle" placeholder="Mon morceau" /></label>
+      <label class="tr-col">Paroles (optionnel) : colle-les telles quelles, une ligne par vers <textarea id="trLyrics" rows="5" placeholder="Colle ici les paroles…"></textarea></label>
       <label class="tr-row"><input id="trChords" type="checkbox" checked /> Ajouter les accords (accompagnement, guitare)</label>
       <div class="mic-meter big"><span class="lvl" id="trBar"></span></div>
       <p id="trMsg" class="muted">Les 4 premières minutes sont analysées. Le meilleur résultat : un instrument ou une voix bien en avant.</p>
@@ -76,6 +78,11 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
     const audioId = res.instru ? `audio-${Date.now()}` : undefined;
     const song = notesToSong(res.notes, q<HTMLInputElement>('trTitle').value || 'Ma transcription', Number(q<HTMLInputElement>('trBpm').value) || 90, ts, q<HTMLInputElement>('trChords').checked, audioId);
     if (!song.notation) return void (q('trMsg').textContent = 'Pas de mélodie exploitable.');
+    // Temps de la partition = temps de l'audio − instant de la 1re note.
+    const offset = song.audio?.offset ?? (res.notes.length ? Math.min(...res.notes.map((n) => n.start)) : 0);
+    song.voiceSegments = res.segments.map(([a, b]) => [Math.max(0, a - offset), b - offset] as [number, number]).filter(([, b]) => b > 0);
+    const text = q<HTMLTextAreaElement>('trLyrics').value.trim();
+    if (text) song.timedLyrics = alignLyrics(syllabifyLyrics(text), song.voiceSegments);
     try {
       if (audioId && res.instru) await saveAudio(audioId, res.instru);
       saveUserSong(song);
@@ -90,6 +97,23 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
     if (t === back || t.id === 'trClose') return void back.remove();
     const open = t.closest<HTMLElement>('[data-open]')?.dataset.open;
     const del = t.closest<HTMLElement>('[data-del]')?.dataset.del;
+    const lyr = t.closest<HTMLElement>('[data-lyr]')?.dataset.lyr;
+    if (lyr) {
+      const s = userSongs().find((x) => x.id === lyr);
+      if (!s) return;
+      const box = document.createElement('div');
+      box.className = 'tr-lyr-edit';
+      box.innerHTML = `<p class="hint">Paroles de « ${esc(s.title)} » : colle-les telles quelles, une ligne par vers. Elles seront calées automatiquement sur la voix.</p><textarea rows="8">${esc((s.timedLyrics ?? []).map((x, i) => `${x.line && i ? '\n' : ''}${x.s.endsWith('-') ? x.s.slice(0, -1) : `${x.s} `}`).join('').trim())}</textarea><div class="modal-actions"><button class="primary" data-lyr-save>💾 Caler et enregistrer</button></div>`;
+      t.closest('li')!.after(box);
+      box.querySelector('[data-lyr-save]')!.addEventListener('click', () => {
+        const text = box.querySelector('textarea')!.value.trim();
+        const segs = s.voiceSegments?.length ? s.voiceSegments : [[0, (s.notation.split('|').length * s.timeSignature[0] * 60) / s.tempo] as [number, number]];
+        s.timedLyrics = text ? alignLyrics(syllabifyLyrics(text), segs) : undefined;
+        saveUserSong(s);
+        box.innerHTML = `<p class="muted">✅ ${s.timedLyrics?.length ?? 0} syllabes calées.</p>`;
+      });
+      return;
+    }
     if (open) {
       const s = userSongs().find((x) => x.id === open);
       back.remove();

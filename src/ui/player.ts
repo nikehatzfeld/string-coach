@@ -493,6 +493,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   function computeLyrics() {
     lyricIndex.clear();
     const text = source.kind === 'library' ? lyricsOf(source.song) : undefined;
+    if (source.kind === 'library' && source.song.timedLyrics?.length) return lyrics.setLines(source.song.timedLyrics);
     const hasMelody = v.trackBeats.some((b) => !b.isRest && b.notes.length);
     if (!hasMelody && source.kind === 'library')
       return lyrics.setMessage(
@@ -505,6 +506,17 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     lyrics.setSyllables(syl);
   }
   api.scoreLoaded.on(() => setTimeout(computeLyrics, 0));
+  // Karaoké calé dans le temps : syllabe en cours d'après la position de lecture.
+  const timed = source.kind === 'library' ? source.song.timedLyrics : undefined;
+  if (timed?.length) {
+    const spq = 60 / (source.kind === 'library' ? source.song.tempo : 120);
+    api.playerPositionChanged.on((e) => {
+      const sec = (e.currentTick / 960) * spq;
+      let k = -1;
+      for (let i = 0; i < timed.length && timed[i].t <= sec + 0.05; i++) k = i;
+      lyrics.setIndex(k);
+    });
+  }
   // Voix : échelle verticale fixe = tessiture du morceau.
   api.scoreLoaded.on(() =>
     setTimeout(() => {
