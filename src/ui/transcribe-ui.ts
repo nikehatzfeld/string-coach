@@ -2,6 +2,7 @@ import type { Song } from '../songs/alphatex';
 import { estimateTempo, notesToSong, transcribeSong, type TranscribeResult } from '../practice/transcribe';
 import { deleteAudio, saveAudio } from '../state/audio-store';
 import { alignLyrics, syllabifyLyrics } from '../practice/karaoke';
+import { recognizeWords, wordsToText, wordsToTimedSyllables, type AsrLang, type Word } from '../practice/lyrics-asr';
 import { deleteUserSong, saveUserSong, userSongs } from '../state/user-songs';
 import { esc } from './dom';
 
@@ -24,7 +25,8 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
         <label class="tr-row">Instru seule <input id="trInstru" type="file" accept="audio/*" /></label>
       </details>
       <label class="tr-row">Titre <input id="trTitle" placeholder="Mon morceau" /></label>
-      <label class="tr-col">Paroles (optionnel) : colle-les telles quelles, une ligne par vers <textarea id="trLyrics" rows="5" placeholder="Colle ici les paroles…"></textarea></label>
+      <label class="tr-row"><input id="trAsr" type="checkbox" checked /> Reconnaître les paroles automatiquement <select id="trLang"><option value="fr">français</option><option value="en">anglais</option><option value="auto">auto</option></select></label>
+      <label class="tr-col">Paroles : reconnues automatiquement après l'analyse (à corriger si besoin), ou colle-les ici, une ligne par vers <textarea id="trLyrics" rows="5" placeholder="Les paroles apparaîtront ici…"></textarea></label>
       <label class="tr-row"><input id="trChords" type="checkbox" checked /> Ajouter les accords (accompagnement, guitare)</label>
       <div class="mic-meter big"><span class="lvl" id="trBar"></span></div>
       <p id="trMsg" class="muted">Les 4 premières minutes sont analysées. Le meilleur résultat : un instrument ou une voix bien en avant.</p>
@@ -38,6 +40,9 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
   document.body.appendChild(back);
   const q = <T extends HTMLElement>(id: string) => back.querySelector<T>(`#${id}`)!;
   let res: TranscribeResult | null = null;
+  let words: Word[] = [];
+  let recognized = '';
+  let asrError = '';
   const pick = (id: string) => q<HTMLInputElement>(id).files?.[0];
   const refresh = () => {
     const f = pick('trFile') ?? pick('trVoice');
@@ -55,6 +60,21 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
         q('trMsg').textContent = msg;
       });
       if (!res.notes.length) throw new Error('aucune note');
+      // Paroles : reconnues dans la voix si rien n'a été collé.
+      if (q<HTMLInputElement>('trAsr').checked && !q<HTMLTextAreaElement>('trLyrics').value.trim()) {
+        try {
+          words = await recognizeWords(res.voice16k, q<HTMLSelectElement>('trLang').value as AsrLang, (p, msg) => {
+            q('trBar').style.width = `${Math.round(p * 100)}%`;
+            q('trMsg').textContent = msg;
+          });
+          recognized = wordsToText(words);
+          q<HTMLTextAreaElement>('trLyrics').value = recognized;
+        } catch (e) {
+          words = [];
+          asrError = (e as Error).message || String(e);
+          console.error('Reconnaissance des paroles', e);
+        }
+      }
       q<HTMLInputElement>('trBpm').value = String(estimateTempo(res.notes));
       q('trResult').hidden = false;
       q('trSave').hidden = false;
@@ -65,7 +85,8 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
         : res.mono
           ? ' Fichier mono : impossible de retirer la voix, pas d’instru.'
           : '';
-      q('trMsg').textContent = `${res.notes.length} notes trouvées.${instruMsg} Vérifie le tempo (il peut être détecté au double ou à la moitié), puis enregistre.`;
+      const lyrMsg = q<HTMLInputElement>('trAsr').checked ? (asrError ? ` Paroles non reconnues (${asrError}) : colle-les à la main.` : words.length ? ` ${words.length} mots de paroles reconnus (relis-les et corrige si besoin).` : ' Aucune parole reconnue.') : '';
+      q('trMsg').textContent = `${res.notes.length} notes trouvées.${instruMsg}${lyrMsg} Vérifie le tempo (il peut être détecté au double ou à la moitié), puis enregistre.`;
     } catch (e) {
       const msg = String((e as Error).message || e);
       q('trMsg').textContent = /dynamically imported module|Importing a module script failed/i.test(msg)
@@ -85,7 +106,9 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
     const offset = song.audio?.offset ?? (res.notes.length ? Math.min(...res.notes.map((n) => n.start)) : 0);
     song.voiceSegments = res.segments.map(([a, b]) => [Math.max(0, a - offset), b - offset] as [number, number]).filter(([, b]) => b > 0);
     const text = q<HTMLTextAreaElement>('trLyrics').value.trim();
-    if (text) song.timedLyrics = alignLyrics(syllabifyLyrics(text), song.voiceSegments);
+    // Paroles reconnues et non modifiées : instant exact de chaque mot ; sinon calage sur les passages chantés.
+    if (text && words.length && text === recognized.trim()) song.timedLyrics = wordsToTimedSyllables(words, offset);
+    else if (text) song.timedLyrics = alignLyrics(syllabifyLyrics(text), song.voiceSegments);
     try {
       if (audioId && res.instru) await saveAudio(audioId, res.instru);
       saveUserSong(song);

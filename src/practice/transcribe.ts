@@ -282,6 +282,8 @@ export interface TranscribeResult {
   mono: boolean;
   /** Passages où la voix est présente (s, dans l'audio). */
   segments: [number, number][];
+  /** Voix isolée en mono 16 kHz (pour la reconnaissance des paroles). */
+  voice16k: Float32Array;
 }
 
 /**
@@ -309,8 +311,9 @@ export async function transcribeSong(
   }
   const notes = await pitchNotes(voiceData, onProgress);
   const segments = voiceSegments(voiceData, 22050);
+  const voice16k = voiceBuf ? await render(voiceBuf, 'voice', 16000, maxSeconds) : await render(mixBuf!, 'voice', 16000, maxSeconds);
   onProgress(1, 'Terminé');
-  return { notes, instru, computedInstru: computed, mono, segments };
+  return { notes, instru, computedInstru: computed, mono, segments, voice16k };
 }
 
 export async function transcribeFile(file: File, onProgress: (p: number, msg: string) => void, maxSeconds = 240): Promise<TNote[]> {

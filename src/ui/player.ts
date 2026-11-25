@@ -307,6 +307,27 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       })
       .catch(() => {});
   }
+  // iPhone / Safari : un son ne peut démarrer que pendant un toucher. On « débloque » l'instru au premier toucher.
+  let instruBlocked = false;
+  let instruUnlocked = false;
+  app.addEventListener(
+    'pointerdown',
+    () => {
+      if (!instru || instruUnlocked) return;
+      instruUnlocked = true;
+      const a = instru;
+      const was = a.muted;
+      a.muted = true;
+      void a
+        .play()
+        .then(() => {
+          a.pause();
+          a.muted = was;
+        })
+        .catch(() => (a.muted = was));
+    },
+    { capture: true },
+  );
   /** Seconde de l'instru qui correspond à un tick de la partition (tempo d'origine du morceau). */
   const instruTime = (tick: number) => (songAudio ? songAudio.offset + (tick / 960) * (60 / (source.kind === 'library' ? source.song.tempo : 120)) : 0);
   const syncInstru = (tick: number, playing: boolean) => {
@@ -318,14 +339,26 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     }
     const want = instruTime(tick);
     if (Math.abs(instru.currentTime - want) > 0.25) instru.currentTime = Math.max(0, want);
-    if (instru.paused) void instru.play().catch(() => {});
+    if (instru.paused)
+      void instru.play().catch(() => {
+        // Lecture refusée par le navigateur : on revient à l'accompagnement synthétique pour avoir du son.
+        if (!instruBlocked) {
+          instruBlocked = true;
+          applyBacking();
+          $('status').textContent = '🔇 Le navigateur bloque l’instru : accompagnement généré à la place. Touche l’écran puis relance la lecture pour l’instru originale.';
+        }
+      });
+    else if (instruBlocked) {
+      instruBlocked = false;
+      applyBacking();
+    }
   };
   api.playerPositionChanged.on((e) => syncInstru(e.currentTick, api.playerState === 1));
   api.playerStateChanged.on((e) => syncInstru(api.tickPosition, e.state === 1));
 
   const applyBacking = () => {
     const t = backingTracks();
-    if (instru) {
+    if (instru && !instruBlocked) {
       // Avec l'instru originale, l'accompagnement synthétique se tait.
       instru.muted = !prefs.backing;
       if (t.length) api.changeTrackMute(t, true);
@@ -493,7 +526,19 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   function computeLyrics() {
     lyricIndex.clear();
     const text = source.kind === 'library' ? lyricsOf(source.song) : undefined;
-    if (source.kind === 'library' && source.song.timedLyrics?.length) return lyrics.setLines(source.song.timedLyrics);
+    if (source.kind === 'library' && source.song.timedLyrics?.length) {
+      // Paroles calées dans le temps : chaque note reçoit la syllabe qui se chante à son instant.
+      const tl = source.song.timedLyrics;
+      const spq = 60 / source.song.tempo;
+      for (const b of v.trackBeats) {
+        if (b.isRest || !b.notes.length || b.notes.every((n) => n.isTieDestination)) continue;
+        const sec = (b.absolutePlaybackStart / 960) * spq;
+        let k = -1;
+        for (let i = 0; i < tl.length && tl[i].t <= sec + 0.2; i++) k = i;
+        if (k >= 0) lyricIndex.set(b, k);
+      }
+      return lyrics.setLines(tl);
+    }
     const hasMelody = v.trackBeats.some((b) => !b.isRest && b.notes.length);
     if (!hasMelody && source.kind === 'library')
       return lyrics.setMessage(
@@ -564,7 +609,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     return undefined;
   };
   api.playedBeatChanged.on((beat) => {
-    if (mode !== 'step' && lyricIndex.has(beat)) lyrics.setIndex(lyricIndex.get(beat)!);
+    if (mode !== 'step' && lyricIndex.has(beat) && !timed?.length) lyrics.setIndex(lyricIndex.get(beat)!);
     if (mode !== 'live' && !(mode === 'game' && prefs.gameView === 'score')) return;
     const named = (b: alphaTab.model.Beat | undefined) => (b ? beatFingerings(b).map((f) => ({ ...f, name: beatName(b, f.midi) })) : []);
     const n1 = nextSounding(beat);
@@ -892,7 +937,9 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       if (inst.kind !== 'strings') {
         // Flûte, voix : une piste par nom de note (Do à Si) ; la voix affiche la syllabe à chanter.
         const lt = source.kind === 'library' ? lyricsOf(source.song) : undefined;
-        const syl = lyricIndex.has(beat) && lt ? lyricSyllables(lt)[lyricIndex.get(beat)!] : undefined;
+        const tl = source.kind === 'library' ? source.song.timedLyrics : undefined;
+        const li = lyricIndex.get(beat);
+        const syl = li === undefined ? undefined : lt ? lyricSyllables(lt)[li] : tl?.[li]?.s;
         notes.push({
           tick: beat.absolutePlaybackStart,
           duration: beat.playbackDuration,
