@@ -67,7 +67,10 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
           : '';
       q('trMsg').textContent = `${res.notes.length} notes trouvées.${instruMsg} Vérifie le tempo (il peut être détecté au double ou à la moitié), puis enregistre.`;
     } catch (e) {
-      q('trMsg').textContent = `Analyse impossible : ${(e as Error).message || e}. Essaie un autre fichier (mp3, wav, m4a).`;
+      const msg = String((e as Error).message || e);
+      q('trMsg').textContent = /dynamically imported module|Importing a module script failed/i.test(msg)
+        ? 'L’app a été mise à jour pendant que la page était ouverte : recharge la page (Ctrl+Maj+R) puis relance l’analyse.'
+        : `Analyse impossible : ${msg}. Essaie un autre fichier (mp3, wav, m4a).`;
     } finally {
       q<HTMLButtonElement>('trGo').disabled = false;
     }

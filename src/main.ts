@@ -17,6 +17,26 @@ import { toast } from './ui/results';
 import { mountMetronome } from './ui/metronome';
 import { mountTuner } from './ui/tuner';
 
+// Après une mise à jour du site, une page restée ouverte peut demander des fichiers qui n'existent plus :
+// on recharge une fois pour prendre la nouvelle version (au lieu d'une erreur « Failed to fetch module »).
+addEventListener('vite:preloadError', (e) => {
+  try {
+    if (sessionStorage.getItem('string-coach:reloaded')) return;
+    sessionStorage.setItem('string-coach:reloaded', '1');
+  } catch {
+    /* ignore */
+  }
+  e.preventDefault();
+  location.reload();
+});
+setTimeout(() => {
+  try {
+    sessionStorage.removeItem('string-coach:reloaded');
+  } catch {
+    /* ignore */
+  }
+}, 30000);
+
 const app = document.getElementById('app')!;
 installSpatialNav();
 mountMetronome();
