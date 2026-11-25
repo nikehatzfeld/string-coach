@@ -5,6 +5,9 @@ export interface CloudData {
   progress: Progress;
   bpmBySong: Record<string, number>;
   updatedAt: number;
+  /** Morceaux personnels (sans les instrus audio, qui restent sur l'appareil). */
+  songs?: import('../state/user-songs').UserSong[];
+  deletedSongs?: string[];
 }
 
 const maxStr = (a?: string | null, b?: string | null) => (!a ? b ?? null : !b ? a : a > b ? a : b);

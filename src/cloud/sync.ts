@@ -4,6 +4,7 @@ import { saveProgress } from '../game/progress';
 import { prefs, savePrefs } from '../state/prefs';
 import { cloudEnabled, SUPABASE_ANON_KEY, SUPABASE_URL } from './config';
 import { mergeProgress, type CloudData } from './merge';
+import { deletedUserSongs, mergeUserSongs, replaceUserSongs, userSongs } from '../state/user-songs';
 
 /**
  * Comptes et synchronisation (Supabase) : connexion par lien email, une ligne « profiles » par compte
@@ -96,6 +97,10 @@ async function pull(): Promise<void> {
   const { data, error } = await c.from('profiles').select('data').eq('user_id', user.id).maybeSingle();
   if (error) return set({ state: 'error', message: error.message });
   const remote = data?.data as CloudData | undefined;
+  if (remote?.songs || remote?.deletedSongs) {
+    const deleted = [...new Set([...deletedUserSongs(), ...(remote.deletedSongs ?? [])])];
+    replaceUserSongs(mergeUserSongs(userSongs(), remote.songs ?? [], deleted), deleted);
+  }
   if (remote?.progress) {
     Object.assign(progress, mergeProgress(progress, remote.progress));
     prefs.bpmBySong = { ...remote.bpmBySong, ...prefs.bpmBySong };
@@ -110,7 +115,7 @@ async function push(): Promise<void> {
   const c = await getClient();
   if (!c || !user) return;
   set({ state: 'syncing' });
-  const payload: CloudData = { progress, bpmBySong: prefs.bpmBySong, updatedAt: Date.now() };
+  const payload: CloudData = { progress, bpmBySong: prefs.bpmBySong, updatedAt: Date.now(), songs: userSongs(), deletedSongs: deletedUserSongs() };
   const { error } = await c.from('profiles').upsert({ user_id: user.id, data: payload, updated_at: new Date().toISOString() });
   set(error ? { state: 'error', message: error.message } : { state: 'synced', message: undefined });
 }

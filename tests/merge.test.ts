@@ -20,3 +20,14 @@ describe('fusion de deux appareils', () => {
     expect(m.totals.bestCombo).toBe(30);
   });
 });
+
+describe('morceaux personnels entre appareils', () => {
+  it('le plus récent gagne, les suppressions ne reviennent pas', async () => {
+    const { mergeUserSongs } = await import('../src/state/user-songs');
+    const base = { composer: 'x', style: 'Mes morceaux' as const, level: 1 as const, tempo: 90, timeSignature: [4, 4] as [number, number], notation: 'C4:1' };
+    const local = [{ ...base, id: 'a', title: 'A v2', savedAt: 20 }, { ...base, id: 'c', title: 'C', savedAt: 5 }];
+    const remote = [{ ...base, id: 'a', title: 'A v1', savedAt: 10 }, { ...base, id: 'b', title: 'B', savedAt: 15 }, { ...base, id: 'd', title: 'D', savedAt: 1 }];
+    const m = mergeUserSongs(local, remote, ['d']);
+    expect(m.map((s) => s.title)).toEqual(['A v2', 'B', 'C']);
+  });
+});

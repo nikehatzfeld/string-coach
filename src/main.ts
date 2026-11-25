@@ -98,6 +98,7 @@ function play(source: Source, mode: 'live' | 'step' | 'game' = 'live'): void {
 }
 
 onAfterSave(schedulePush);
+addEventListener('user-songs-changed', schedulePush);
 // Après fusion avec le compte : réaffiche l'écran courant (hors lecteur).
 addEventListener('cloud-merged', () => {
   if (document.querySelector('.player')) return;
