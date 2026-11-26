@@ -1,5 +1,6 @@
 import type { Song } from './alphatex';
 import { syllabifyLyrics } from '../practice/karaoke';
+import type { SpokenLine } from '../audio/rap-voice';
 
 /**
  * Morceaux de rap ORIGINAUX écrits pour String Coach (paroles libres d'utilisation).
@@ -59,8 +60,12 @@ function build(d: RapDef): Song {
   const lines = [...d.verse, ...d.hook, ...d.verse.slice(0, 4), ...d.hook];
   const bars: string[] = [];
   const syl: string[] = [];
+  const spoken: SpokenLine[] = [];
   lines.forEach((line, i) => {
-    for (const b of barsFor(line, base, d.chords[i % d.chords.length])) {
+    const bs = barsFor(line, base, d.chords[i % d.chords.length]);
+    // Mesure 0 = intro ; le vers commence à la mesure suivante.
+    spoken.push({ bar: bars.length + 1, bars: bs.length, text: line, syl: bs.reduce((a, b) => a + b.syl.length, 0) });
+    for (const b of bs) {
       bars.push(b.notes);
       syl.push(...b.syl);
     }
@@ -77,6 +82,7 @@ function build(d: RapDef): Song {
     timeSignature: [4, 4],
     notation: [`r:1@${d.chords[0]}`, ...bars].join(' | '),
     lyrics: syl.join(' '),
+    spoken: { lang: d.lang === 'fr' ? 'fr-FR' : 'en-US', lines: spoken },
     instruments: ['voice', 'guitar'],
     source: { url: '', license: 'Création originale, libre d’utilisation' },
   };

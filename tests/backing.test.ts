@@ -30,8 +30,8 @@ describe('accompagnement', () => {
       const bars = score.tracks[0].staves[0].bars.length;
       const programs = score.tracks.slice(1).map((t) => (t.isPercussion ? 'drums' : t.playbackInfo.program));
       // Basse (acoustique ou électrique) et accords (cordes, guitare ou nappe de chœur pour le rap).
-      expect(programs.some((p) => p === 32 || p === 33)).toBe(true);
-      expect(programs.some((p) => p === 48 || p === 24 || p === 52)).toBe(true);
+      expect(programs.some((p) => p === 32 || p === 33 || p === 38)).toBe(true);
+      expect(programs.some((p) => p === 48 || p === 24 || p === 52 || p === 4)).toBe(true);
       const [num, den] = song.timeSignature;
       const barTicks = (num * 4 * 960) / den;
       for (const t of score.tracks.slice(1)) {
@@ -64,7 +64,7 @@ describe('beat hip-hop', () => {
     const r = importLibrary({ songs: [{ title: 'Rap test', style: 'Rap français', tempo: 88, chords: 'Am | F | C | G' }] });
     const tex = songToAlphaTex(r.songs[0], INSTRUMENTS.voice);
     const score = alphaTab.importer.ScoreLoader.loadAlphaTex(tex);
-    expect(score.tracks.map((t) => t.name)).toEqual(['Voix', 'Nappe', 'Basse', 'Batterie']);
+    expect(score.tracks.map((t) => t.name)).toEqual(['Voix', 'Rhodes', 'Nappe', 'Basse', 'Batterie']);
     for (const t of score.tracks.slice(1)) for (const b of t.staves[0].bars) expect(b.voices[0].beats.reduce((a, x) => a + x.playbackDuration, 0)).toBe(3840);
   });
 });

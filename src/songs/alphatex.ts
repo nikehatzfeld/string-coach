@@ -61,6 +61,8 @@ export interface Song {
   audio?: { id: string; offset: number };
   /** Passages chantés détectés dans l'audio (s, temps de la partition) : sert à recaler des paroles. */
   voiceSegments?: [number, number][];
+  /** Rap : vers dits par la synthèse vocale, mesure par mesure. */
+  spoken?: import('../audio/rap-voice').Spoken;
   /** Karaoké calé dans le temps (s depuis le début de la partition). */
   timedLyrics?: { t: number; s: string; line?: boolean }[];
   /** Paroles importées (une syllabe par note, tirets entre syllabes d'un mot). */

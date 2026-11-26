@@ -5,14 +5,14 @@ Extrait quelques instruments d'une banque de sons SoundFont (.sf2 / .sf3) pour l
     python3 -I scripts/trim-soundfont.py MuseScore_General.sf3 public/soundfont/string-coach.sf3
 
 Instruments gardés (banque, preset General MIDI) : guitares nylon et acier,
-basses acoustique et doigts, violon, ensemble de cordes, chœur « aah », voix « ooh », flûte à bec, batterie standard.
+basses acoustique, doigts et synthé, piano électrique (Rhodes), nappe chaude, violon, ensemble de cordes, chœur « aah », voix « ooh », flûte à bec, batterie standard.
 Les échantillons compressés (sf3, Ogg Vorbis) sont recopiés tels quels : seules les
 positions dans le bloc de données sont recalculées.
 """
 import struct
 import sys
 
-KEEP = [(0, 24), (0, 25), (0, 32), (0, 33), (0, 40), (0, 48), (0, 52), (0, 53), (0, 74), (128, 0)]
+KEEP = [(0, 4), (0, 24), (0, 25), (0, 32), (0, 33), (0, 38), (0, 40), (0, 48), (0, 52), (0, 53), (0, 74), (0, 89), (128, 0)]
 
 
 def chunks(data, start, end):

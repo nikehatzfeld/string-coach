@@ -171,7 +171,7 @@ describe('rap original', () => {
       expect(lyricSyllables(s.lyrics!).length, s.id).toBe(notes);
       const tex = songToAlphaTex(s, INSTRUMENTS.voice);
       const score = alphaTab.importer.ScoreLoader.loadAlphaTex(tex);
-      expect(score.tracks.map((t) => t.name), s.id).toEqual(['Voix', 'Nappe', 'Basse', 'Batterie']);
+      expect(score.tracks.map((t) => t.name), s.id).toEqual(['Voix', 'Rhodes', 'Nappe', 'Basse', 'Batterie']);
     }
   });
 });

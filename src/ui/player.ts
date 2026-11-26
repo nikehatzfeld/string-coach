@@ -16,6 +16,7 @@ import { prefs, savePrefs } from '../state/prefs';
 import { openMicTest } from './mic-test';
 import { RecorderBoard } from './recorder-board';
 import { isRap } from '../songs/rap-originals';
+import { RapVoice, speechSupported, voicesFor } from '../audio/rap-voice';
 import { loadAudio } from '../state/audio-store';
 import { SingJudge } from '../game/sing';
 import { SingLane } from '../game/sing-lane';
@@ -56,6 +57,10 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   const inst = INSTRUMENTS[prefs.instrument];
   // Rap : le chant est jugé sur le placement (flow), pas sur la justesse.
   const rapFlow = inst.kind === 'voice' && source.kind === 'library' && isRap(source.song.style);
+  // Rap : les vers sont dits par une vraie voix (synthèse vocale) à la place des notes « ooh ».
+  const spoken = rapFlow && source.kind === 'library' ? source.song.spoken : undefined;
+  const rapVoice = spoken && source.kind === 'library' && speechSupported() ? new RapVoice(spoken, source.song.tempo) : null;
+  if (rapVoice) rapVoice.voiceName = prefs.rapVoice;
   const tolerance = () => (rapFlow ? 1200 : inst.kind === 'voice' ? prefs.voiceTolerance : prefs.tolerance);
   const title = source.kind === 'library' ? source.song.title : source.name;
   const songId = sourceId(source);
@@ -93,6 +98,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       <button id="metro" class="only-live more" aria-pressed="false">Métronome</button>
       <button id="countin" class="only-live more" aria-pressed="false">Décompte</button>
       <button id="backing" class="more" aria-pressed="${prefs.backing}" hidden title="Fond musical : accords, basse et batterie">🎶 Accompagnement</button>
+      ${rapVoice ? '<select id="rapVoiceSel" title="Voix du rappeur (synthèse vocale de ton appareil)" aria-label="Voix du rappeur"></select>' : ''}
       <select id="viewMode" class="no-game more" aria-label="Affichage" ${inst.kind !== 'strings' ? 'hidden' : ''}>
         <option value="score">${inst.id === 'violin' ? 'Partition + doigtés' : 'Partition'}</option>
         <option value="score-tab">Partition + tablature${inst.id === 'violin' ? ' (demi-tons)' : ''}</option>
@@ -359,9 +365,33 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     }
   };
   api.playerPositionChanged.on((e) => syncInstru(e.currentTick, api.playerState === 1));
+  const rapVoiceOn = () => mode === 'live' || (mode === 'game' && gameRunning && prefs.guide);
+  if (rapVoice) {
+    api.playerPositionChanged.on((e) => rapVoice.update(e.currentTick, api.playerState === 1 && rapVoiceOn(), api.playbackSpeed));
+    api.playerStateChanged.on((e) => e.state !== 1 && rapVoice.stop());
+    const sel = document.getElementById('rapVoiceSel') as HTMLSelectElement | null;
+    const fill = () => {
+      if (!sel) return;
+      const vs = voicesFor(spoken!.lang);
+      sel.hidden = !vs.length;
+      sel.innerHTML = vs.map((v) => `<option value="${esc(v.name)}" ${v.name === rapVoice.voiceName ? 'selected' : ''}>🗣 ${esc(v.name.replace(/^(Microsoft|Google)\s*/, '').replace(/\s*\(.*\)$/, '').slice(0, 28))}</option>`).join('');
+      if (!rapVoice.voiceName && vs[0]) rapVoice.voiceName = vs[0].name;
+    };
+    fill();
+    speechSynthesis.addEventListener('voiceschanged', fill);
+    sel?.addEventListener('change', () => {
+      rapVoice.voiceName = prefs.rapVoice = sel.value;
+      savePrefs();
+    });
+  }
   api.playerStateChanged.on((e) => syncInstru(api.tickPosition, e.state === 1));
 
+  /** Rap avec voix parlée : la piste « Voix » (notes ooh) se tait. */
+  const muteRapMelody = () => {
+    if (rapVoice && api.score?.tracks[0]) api.changeTrackMute([api.score.tracks[0]], true);
+  };
   const applyBacking = () => {
+    muteRapMelody();
     const t = backingTracks();
     if (instru && !instruBlocked) {
       // Avec l'instru originale, l'accompagnement synthétique se tait.
@@ -370,7 +400,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       return;
     }
     if (!t.length) return;
-    api.changeTrackVolume(t, BACKING_VOLUME);
+    // Plus fort quand rien d'autre ne joue (rap, ou jeu sans guide) : c'est la musique qu'on accompagne.
+    api.changeTrackVolume(t, rapVoice || (mode === 'game' && !prefs.guide) ? 0.6 : BACKING_VOLUME);
     api.changeTrackMute(t, !prefs.backing);
   };
   api.playerReady.on(applyBacking);
@@ -1050,6 +1081,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     api.stop();
     const track = api.score?.tracks[Number(trackSel.value) || 0];
     if (track) api.changeTrackMute([track], !prefs.guide);
+    applyBacking();
     // Métronome seulement s'il n'y a ni mélodie guide ni accompagnement pour donner le tempo.
     api.metronomeVolume = prefs.guide || (prefs.backing && backingTracks().length) ? 0 : 0.8;
     await countdown();
@@ -1064,6 +1096,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     api.metronomeVolume = 0;
     const track = api.score?.tracks[Number(trackSel.value) || 0];
     if (track) api.changeTrackMute([track], false);
+    applyBacking();
+    rapVoice?.stop();
     stopMic();
     const start = document.getElementById('gStart');
     const stop = document.getElementById('gStop');
@@ -1405,6 +1439,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
 
   setSuggestedTempo(() => Number(bpmInput.value) || null);
   cleanup = () => {
+    rapVoice?.stop();
     instru?.pause();
     if (instruUrl) URL.revokeObjectURL(instruUrl);
     stopVoice();

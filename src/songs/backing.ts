@@ -155,9 +155,13 @@ export function backingTracks(bars: ParsedBar[], timeSignature: [number, number]
 }
 
 /**
- * Beat hip-hop (4/4), en croches : grosse caisse sur 1, 3 et le « et » de 3, caisse claire sur 2 et 4,
- * charleston sur toutes les croches (ouvert sur le dernier « et ») ; basse syncopée sur la fondamentale ;
- * nappe de chœur tenue sur chaque accord.
+ * Beat hip-hop (4/4) en doubles croches, qui varie d'une mesure à l'autre :
+ * - batterie boom-bap : grosse caisse syncopée (2 motifs alternés), caisse claire sur 2 et 4 avec notes fantômes,
+ *   charleston en croches accentuées (doubles croches en fin de mesure), break toutes les 4 mesures, cymbale à chaque section ;
+ * - basse synthé (façon 808) sur la fondamentale, avec rebond à l'octave ;
+ * - piano électrique (Rhodes) en accords de 7e plaqués de façon syncopée ;
+ * - nappe chaude tenue, discrète.
+ * La première mesure (intro) ne garde que la nappe, le Rhodes et le charleston.
  */
 function beatTracks(bars: ParsedBar[]): string {
   const grid = chordsByPulse(bars, 1, 4);
@@ -165,32 +169,94 @@ function beatTracks(bars: ParsedBar[]): string {
   const SNARE = 38;
   const HAT = 42;
   const OPEN = 46;
-  const drums = grid.map((row) => {
+  const CRASH = 49;
+  const RIM = 37;
+  // Une case = une double croche (16 par mesure) ; chaque case : [instruments, nuance].
+  type Cell = [number[], string];
+  const KICKS_A = [0, 3, 8, 10];
+  const KICKS_B = [0, 6, 8, 11, 14];
+  const drums = grid.map((row, b) => {
     if (!row.some(Boolean)) return 'r.1';
-    const hits: number[][] = [[KICK, HAT], [HAT], [SNARE, HAT], [HAT], [KICK, HAT], [KICK, HAT], [SNARE, HAT], [OPEN]];
-    return hits.map((h) => `(${h.join(' ')}).8`).join(' ');
+    const cells: Cell[] = Array.from({ length: 16 }, (_, k) => [k % 2 === 0 ? [HAT] : [], k % 4 === 0 ? 'mf' : 'p']);
+    const intro = b === 0;
+    if (!intro) {
+      const kicks = b % 2 === 1 ? KICKS_A : KICKS_B;
+      for (const k of kicks) cells[k][0].push(KICK);
+      cells[4][0].push(SNARE);
+      cells[12][0].push(SNARE);
+      cells[4][1] = cells[12][1] = 'f';
+      cells[7][0].push(RIM); // note fantôme
+      if (b % 4 === 0) {
+        // Break en fin de groupe de 4 mesures : roulement de caisse claire.
+        for (const k of [13, 14, 15]) cells[k] = [[SNARE], k === 15 ? 'f' : 'mp'];
+      } else {
+        cells[14][0] = [OPEN];
+        cells[13][0].push(HAT);
+        cells[15][0].push(HAT);
+      }
+      if (b % 8 === 1) cells[0][0].push(CRASH);
+    }
+    // Regroupe les cases vides avec la précédente (durées plus longues, partition lisible).
+    const out: string[] = [];
+    let dyn = '';
+    for (let k = 0; k < 16; ) {
+      let len = 1;
+      while (k + len < 16 && !cells[k + len][0].length && len < (k % 4 === 0 ? 4 : k % 2 === 0 ? 2 : 1)) len++;
+      const [hits, d] = cells[k];
+      const dur = len === 4 ? '4' : len === 2 ? '8' : len === 3 ? '8' : '16';
+      const fx = [len === 3 ? 'd' : '', hits.length && d !== dyn ? `dy ${d}` : ''].filter(Boolean).join(' ');
+      if (hits.length) dyn = d;
+      out.push(`${hits.length ? `(${hits.join(' ')})` : 'r'}.${dur}${fx ? `{${fx}}` : ''}`);
+      k += len;
+    }
+    return out.join(' ');
   });
-  const bass = grid.map((row) => {
-    if (!row.some(Boolean)) return 'r.1';
+  const bass = grid.map((row, b) => {
+    if (!row.some(Boolean) || b === 0) return 'r.1';
     const at = (beat: number) => row[beat] ?? row[0];
-    const n = (c: ChordShape | null, oct = 0) => (c ? `${texNote(bassNote(c) + oct)}` : 'r');
-    // Croches : 1 (noire pointée) · « et » de 2 · 3 (noire) · « et » de 3 · 4 (croche) · silence
-    return [`${n(at(0))}.4{d}`, `${n(at(1))}.8`, `${n(at(2))}.4`, `${n(at(2), 12)}.8`, `${n(at(3))}.8`].join(' ');
+    const n = (c: ChordShape | null, oct = 0) => (c ? `${texNote(bassNote(c) - 12 + oct)}` : 'r');
+    return b % 2 === 1
+      ? [`${n(at(0))}.4{d}`, `${n(at(0))}.16`, `${n(at(0), 12)}.16`, `${n(at(2))}.4{d}`, `${n(at(3), 7)}.8`].join(' ')
+      : [`${n(at(0))}.4`, 'r.8', `${n(at(1))}.8`, `${n(at(2))}.4{d}`, `${n(at(3), 12)}.16`, `${n(at(3))}.16`].join(' ');
+  });
+  /** Accord enrichi (7e) pour le Rhodes, joué dans le médium. */
+  const rhodes = (c: ChordShape) => {
+    const minor = c.intervals[1] === 3;
+    const iv = c.intervals.length > 3 ? c.intervals : [...c.intervals, minor ? 10 : 11];
+    let base = 52 + c.root;
+    if (base > 58) base -= 12;
+    return `(${iv.map((i) => texNote(base + i)).join(' ')})`;
+  };
+  const keys = grid.map((row, b) => {
+    if (!row.some(Boolean)) return 'r.1';
+    const c0 = row[0] ?? row.find(Boolean)!;
+    const c2 = row[2] ?? c0;
+    if (b === 0) return `${rhodes(c0)}.1{dy mp}`;
+    // 1 (noire pointée) · « et » de 2 (croche, accent) · 3 tenu · « a » de 4 (anticipation)
+    return `${rhodes(c0)}.4{d dy mp} ${rhodes(c0)}.8 r.8 ${rhodes(c2)}.4{d}`;
   });
   const pad = grid.map((row) => {
     const parts: string[] = [];
     let i = 0;
+    let first = true;
     while (i < row.length) {
       let j = i + 1;
       while (j < row.length && row[j] === row[i]) j++;
-      parts.push(...splitDuration(j - i).map((d) => (row[i] ? `(${voicing(row[i]!).map(texNote).join(' ')}).${d}` : `r.${d}`)));
+      parts.push(
+        ...splitDuration(j - i).map((d) => {
+          const t = row[i] ? `(${voicing(row[i]!).map((m) => texNote(m + 12)).join(' ')}).${d}${first ? '{dy pp}' : ''}` : `r.${d}`;
+          first = false;
+          return t;
+        }),
+      );
       i = j;
     }
     return parts.join(' ');
   });
   return [
-    `\\track "Nappe" \\staff {score} \\instrument choiraahs\n${pad.join(' |\n')}`,
-    `\\track "Basse" \\staff {score} \\instrument electricbassfinger\n${bass.join(' |\n')}`,
+    `\\track "Rhodes" \\staff {score} \\instrument electricpiano1\n${keys.join(' |\n')}`,
+    `\\track "Nappe" \\staff {score} \\instrument pad2warm\n${pad.join(' |\n')}`,
+    `\\track "Basse" \\staff {score} \\instrument synthbass1\n${bass.join(' |\n')}`,
     `\\track "Batterie" \\instrument percussion \\staff {score}\n${drums.join(' |\n')}`,
   ].join('\n');
 }
