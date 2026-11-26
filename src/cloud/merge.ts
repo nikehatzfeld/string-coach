@@ -1,4 +1,5 @@
 import type { Progress, SongRecord } from '../game/progress';
+import { mergeAcademy } from '../academy/coach';
 
 /** Données synchronisées d'un compte. */
 export interface CloudData {
@@ -8,6 +9,9 @@ export interface CloudData {
   /** Morceaux personnels (sans les instrus audio, qui restent sur l'appareil). */
   songs?: import('../state/user-songs').UserSong[];
   deletedSongs?: string[];
+  /** Profils de la famille et progression de chacun (le profil principal est dans `progress`). */
+  profiles?: import('../state/profiles').Profile[];
+  others?: Record<string, Progress>;
 }
 
 const maxStr = (a?: string | null, b?: string | null) => (!a ? b ?? null : !b ? a : a > b ? a : b);
@@ -62,5 +66,6 @@ export function mergeProgress(a: Progress, b: Progress): Progress {
     challengeDoneDay: maxStr(a.challengeDoneDay, b.challengeDoneDay),
     validated: { ...(b.validated ?? {}), ...(a.validated ?? {}) },
     course,
+    ...(a.academy || b.academy ? { academy: mergeAcademy(a.academy, b.academy) } : {}),
   };
 }

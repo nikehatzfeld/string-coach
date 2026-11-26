@@ -18,7 +18,7 @@ export interface Placed {
 }
 
 /** Violon : demi-ton où se pose le 1er doigt dans chaque position. */
-const VIOLIN_BASE: Record<number, number> = { 1: 2, 2: 4, 3: 5, 4: 7, 5: 9, 6: 10, 7: 12 };
+const VIOLIN_BASE: Record<number, number> = { 1: 2, 2: 4, 3: 5, 4: 7, 5: 9, 6: 10, 7: 12, 8: 14, 9: 15, 10: 17 };
 
 export function fingerFor(fret: number, position: number, inst: Instrument): number | null {
   if (fret === 0) return 0;

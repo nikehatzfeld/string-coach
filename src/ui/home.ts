@@ -32,7 +32,7 @@ const filters: Filters = { style: null, level: null, search: '', full: false, fa
 
 export type OpenFn = (s: Source, mode?: 'live' | 'step' | 'game') => void;
 
-export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () => void = () => {}, onExercises: () => void = () => {}, onHarmony: () => void = () => {}, onChords: () => void = () => {}, onVoice: () => void = () => {}): Promise<void> {
+export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () => void = () => {}, onExercises: () => void = () => {}, onHarmony: () => void = () => {}, onChords: () => void = () => {}, onVoice: () => void = () => {}, onAcademy: () => void = () => {}): Promise<void> {
   const [imports, vault] = await Promise.all([listImports(), loadVault()]);
   const lvl = levelInfo(progress.xp);
   const streak = currentStreak(progress);
@@ -66,7 +66,8 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
   app.innerHTML = `
     <header class="top home-top">
       <div class="brand"><span class="logo">🎻</span><h1>String Coach</h1></div>
-      <button id="toCourse" class="primary">🎓 Cours</button>
+      ${prefs.instrument === 'violin' ? '<button id="toAcademy" class="primary" title="Évaluation, séance du jour adaptée, tableau de bord">🧭 Mon parcours</button>' : ''}
+      <button id="toCourse" ${prefs.instrument === 'violin' ? '' : 'class="primary"'}>🎓 Cours</button>
       <button id="toExercises">💪 Exercices</button>
       <button id="toHarmony">🎼 Harmonie</button>
       <button id="toChords">🎸 Accords</button>
@@ -159,7 +160,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
       </section>
     </main>`;
 
-  const rerender = () => renderHome(app, open, onCourse, onExercises, onHarmony, onChords, onVoice);
+  const rerender = () => renderHome(app, open, onCourse, onExercises, onHarmony, onChords, onVoice, onAcademy);
   app.querySelector('#toHarmony')!.addEventListener('click', onHarmony);
   app.querySelector('#toChords')!.addEventListener('click', () => onChords());
   app.querySelector('#toVoice')!.addEventListener('click', () => onVoice());
@@ -168,6 +169,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
   app.querySelector('#toMicTest')!.addEventListener('click', () => openMicTest());
   app.querySelector('#toExercises')!.addEventListener('click', onExercises);
   app.querySelector('#toCourse')!.addEventListener('click', onCourse);
+  app.querySelector('#toAcademy')?.addEventListener('click', onAcademy);
   bindAccount(app.querySelector<HTMLButtonElement>('#account')!);
 
   on(app, '[data-inst]', 'click', (b) => {

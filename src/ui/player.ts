@@ -2,7 +2,10 @@ import type * as alphaTab from '@coderline/alphatab';
 import { synth } from '@coderline/alphatab';
 import { sectionsFor, songToAlphaTex, type Section, type Song } from '../songs/alphatex';
 import { fingerNote, INSTRUMENTS } from '../songs/instruments';
-import { freqToMidiFloat, midiName } from '../songs/notation';
+import { centsToNearestOctave, freqToMidiFloat, midiName } from '../songs/notation';
+import { centsStats, summarize, type NoteLog } from '../academy/metrics';
+import { logAttempt } from '../academy/store';
+import { playHook } from '../academy/hook';
 import { fingerLabel, fingerVariant, placeMelody, positionLabel, solfege, type Placed } from '../songs/positions';
 import { MicPitchDetector, type PitchReading } from '../practice/pitch-detector';
 import { StepTrainer, type StepTarget, type TrainerUpdate } from '../practice/step-trainer';
@@ -755,6 +758,14 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   let keeper = new ScoreKeeper(0);
   let errorSince: number | null = null;
   let hadError = false;
+  // Mesures fines (justesse, stabilité, placement) note par note, pour le coach violon.
+  let noteLog: NoteLog[] = [];
+  let holdCents: number[] = [];
+  let targetSince = 0;
+  const fingerInfo = (beat: alphaTab.model.Beat | undefined) => {
+    const p = beat ? placements.get(beat) : undefined;
+    return p ? { finger: p.finger, string: p.string } : {};
+  };
   let stepAssisted = false;
 
   function setupTrainer() {
@@ -774,6 +785,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     trainer = new StepTrainer(targets, { toleranceCents: tolerance(), a4: prefs.a4, detache: prefs.stepDetache && inst.kind !== 'voice' });
     applyHold();
     keeper = new ScoreKeeper(targets.length);
+    noteLog = [];
+    holdCents = [];
     hadError = false;
     errorSince = null;
     stepAssisted = false;
@@ -818,6 +831,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       return;
     }
     const beat = beatsByTarget[trainer.index];
+    holdCents = [];
+    targetSince = performance.now();
     const name = beatName(beat, t.midi);
     const octave = Math.floor(t.midi / 12) - 1;
     $('tNote').innerHTML = `${name}<small>${octave}</small>`;
@@ -866,9 +881,15 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         setVerdict(`Trop haut (${heard}, +${Math.round(u.cents!)} cents)`, 'bad');
         break;
       case 'holding':
+        if (u.cents !== null) holdCents.push(u.cents);
         setVerdict(prefs.stepHold && u.hold !== undefined ? `Juste, tiens la note… ${'▮'.repeat(Math.round(u.hold * 8))}${'▯'.repeat(8 - Math.round(u.hold * 8))}` : 'Juste, tiens la note…', 'near');
         break;
       case 'validated': {
+        if (u.cents !== null) holdCents.push(u.cents);
+        const st = centsStats(holdCents);
+        const tg = trainer?.targets[u.index];
+        if (tg) noteLog.push({ midi: tg.midi, cents: st?.mean ?? null, spread: st?.spread, findMs: Math.round(performance.now() - targetSince), ...fingerInfo(beatsByTarget[u.index]) });
+        holdCents = [];
         const j: Judgment = hadError ? 'ok' : 'perfect';
         keeper.register(j);
         hadError = false;
@@ -896,6 +917,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   });
   const skip = () => {
     if (!trainer || trainer.finished) return;
+    if (trainer.current) noteLog.push({ midi: trainer.current.midi, cents: null, miss: true });
     keeper.register('miss');
     hadError = false;
     trainer.skip();
@@ -1059,6 +1081,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     if (!judge?.notes.length) return;
     judge.reset();
     gameKeeper = new ScoreKeeper(judge.notes.length);
+    noteLog = [];
     judge.opts.latencyMs = prefs.latencyMs;
     updateGameHud();
     const ok = await startMic((r) => {
@@ -1066,6 +1089,17 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       const heard = r.freq ? freqToMidiFloat(r.freq, prefs.a4) : null;
       if (highway instanceof SingLane) highway.heard = heard;
       for (const ev of judge.update(heard, highway.tick, highway.speed, r.rms)) {
+        const lane = ev.note.lane;
+        noteLog.push(
+          ev.judgment === 'miss'
+            ? { midi: ev.note.midi, cents: null, miss: true }
+            : {
+                midi: ev.note.midi,
+                cents: heard !== null ? Math.round(centsToNearestOctave((heard - ev.note.midi) * 100)) : null,
+                deltaMs: Math.round(ev.deltaMs),
+                ...(inst.id === 'violin' ? { string: inst.tuning.length - lane, finger: Number.parseInt(ev.note.label, 10) || 0 } : {}),
+              },
+        );
         gameKeeper.register(ev.judgment);
         highway.feedback(ev.note, ev.judgment);
         flash(ev.judgment, ev.note.name);
@@ -1161,6 +1195,15 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   async function finish(m: 'step' | 'game', k: ScoreKeeper, assisted: boolean) {
     const accuracy = k.finalAccuracy();
     const stars = assisted ? Math.min(1, k.stars()) as 0 | 1 : k.stars();
+    // Coach violon : chaque passage nourrit le niveau par domaine et le diagnostic.
+    const playedAt = Number(bpmInput.value);
+    const result = { songId, mode: m, accuracy, stars, bpm: playedAt, log: noteLog };
+    if (inst.id === 'violin' && source.kind === 'library' && !songId.startsWith('assess-') && !assisted) {
+      const sm = summarize(noteLog);
+      logAttempt({ id: songId, t: Date.now(), bpm: playedAt, acc: accuracy, stars, mode: m, m: { intonation: sm.intonation, bias: sm.bias, stability: sm.stability, timing: sm.timing, rush: sm.rush, find: sm.find, byFinger: sm.byFinger, byString: sm.byString } });
+    }
+    const hook = playHook();
+    if (hook && (await hook(result))) return;
     const outcome = recordResult(
       progress,
       {
@@ -1192,7 +1235,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     }
     // Exercice : validé avec 3 étoiles au tempo cible ou plus vite.
     const ex = source.kind === 'library' ? (source.song as Partial<Exercise>) : null;
-    if (ex?.targetBpm && songId.startsWith('ex-') && !section) {
+    if (ex?.targetBpm && /^(ex|tx|vn)-/.test(songId) && !section) {
       const playedBpm = Number(bpmInput.value) - (outcome.tempoChange > 0 ? outcome.tempoChange : 0);
       if (stars === 3 && playedBpm >= ex.targetBpm && !progress.validated?.[songId]) {
         progress.validated = { ...(progress.validated ?? {}), [songId]: new Date().toISOString().slice(0, 10) };

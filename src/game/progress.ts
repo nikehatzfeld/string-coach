@@ -1,3 +1,4 @@
+import { profileKey } from '../state/profiles';
 /**
  * Progression du joueur : XP, niveaux, série de jours, objectif quotidien,
  * records par morceau, badges et défi du jour. Logique pure (testable),
@@ -50,6 +51,8 @@ export interface Progress {
   course?: Record<string, CourseState>;
   /** Exercices validés (3 étoiles au tempo cible) : identifiant → jour. */
   validated?: Record<string, string>;
+  /** Parcours violon : niveau par domaine, essais, diagnostic. */
+  academy?: import('../academy/coach').AcademyState;
 }
 
 export interface CourseState {
@@ -302,10 +305,26 @@ export function recordResult(p: Progress, r: ResultInput, challenge: Challenge |
 
 // ---------- Sauvegarde ----------
 const KEY = 'string-coach:progress';
+/** Progression stockée d'un profil (le profil actif par défaut). */
+export function loadProgressOf(id: string): Progress | null {
+  try {
+    const raw = localStorage.getItem(profileKey(KEY, id));
+    return raw ? { ...emptyProgress(), ...JSON.parse(raw) } : null;
+  } catch {
+    return null;
+  }
+}
+export function saveProgressOf(id: string, p: Progress): void {
+  try {
+    localStorage.setItem(profileKey(KEY, id), JSON.stringify(p));
+  } catch {
+    /* ignore */
+  }
+}
 
 export function loadProgress(): Progress {
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(profileKey(KEY));
     if (raw) return { ...emptyProgress(), ...JSON.parse(raw) };
   } catch {
     /* stockage indisponible */
@@ -315,7 +334,7 @@ export function loadProgress(): Progress {
 
 export function saveProgress(p: Progress): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify(p));
+    localStorage.setItem(profileKey(KEY), JSON.stringify(p));
   } catch {
     /* ignore */
   }

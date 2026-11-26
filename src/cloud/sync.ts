@@ -1,6 +1,7 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { progress } from '../game/store';
-import { saveProgress } from '../game/progress';
+import { emptyProgress, loadProgressOf, saveProgress, saveProgressOf, type Progress } from '../game/progress';
+import { activeProfileId, profiles, saveProfiles } from '../state/profiles';
 import { prefs, savePrefs } from '../state/prefs';
 import { cloudEnabled, SUPABASE_ANON_KEY, SUPABASE_URL } from './config';
 import { mergeProgress, type CloudData } from './merge';
@@ -101,10 +102,26 @@ async function pull(): Promise<void> {
     const deleted = [...new Set([...deletedUserSongs(), ...(remote.deletedSongs ?? [])])];
     replaceUserSongs(mergeUserSongs(userSongs(), remote.songs ?? [], deleted), deleted);
   }
-  if (remote?.progress) {
-    Object.assign(progress, mergeProgress(progress, remote.progress));
+  if (remote?.profiles) {
+    // Profils : union (les noms de cet appareil gardent la main).
+    const local = profiles();
+    saveProfiles([...local, ...remote.profiles.filter((r) => !local.some((l) => l.id === r.id))]);
+  }
+  const active = activeProfileId();
+  const remoteOf = (id: string): Progress | undefined => (id === 'main' ? remote?.progress : remote?.others?.[id]);
+  for (const p of profiles()) {
+    const r = remoteOf(p.id);
+    if (!r) continue;
+    if (p.id === active) {
+      Object.assign(progress, mergeProgress(progress, r));
+      saveProgress(progress);
+    } else {
+      const l = loadProgressOf(p.id);
+      saveProgressOf(p.id, l ? mergeProgress(l, r) : r);
+    }
+  }
+  if (remote?.bpmBySong) {
     prefs.bpmBySong = { ...remote.bpmBySong, ...prefs.bpmBySong };
-    saveProgress(progress);
     savePrefs();
   }
   await push();
@@ -115,7 +132,11 @@ async function push(): Promise<void> {
   const c = await getClient();
   if (!c || !user) return;
   set({ state: 'syncing' });
-  const payload: CloudData = { progress, bpmBySong: prefs.bpmBySong, updatedAt: Date.now(), songs: userSongs(), deletedSongs: deletedUserSongs() };
+  const active = activeProfileId();
+  const of = (id: string): Progress => (id === active ? progress : (loadProgressOf(id) ?? emptyProgress()));
+  const list = profiles();
+  const others = Object.fromEntries(list.filter((p) => p.id !== 'main').map((p) => [p.id, of(p.id)]));
+  const payload: CloudData = { progress: of('main'), others, profiles: list, bpmBySong: prefs.bpmBySong, updatedAt: Date.now(), songs: userSongs(), deletedSongs: deletedUserSongs() };
   const { error } = await c.from('profiles').upsert({ user_id: user.id, data: payload, updated_at: new Date().toISOString() });
   set(error ? { state: 'error', message: error.message } : { state: 'synced', message: undefined });
 }

@@ -4,6 +4,7 @@ import { initCloud, schedulePush } from './cloud/sync';
 import { renderHome } from './ui/home';
 import { consumeMarkDone, renderCourse } from './ui/course';
 import { renderExercises } from './ui/exercises';
+import { renderAcademy } from './ui/academy';
 import { renderHarmony } from './ui/harmony';
 import { renderChords } from './ui/chords';
 import { closeVoiceStudio, renderVoiceStudio } from './ui/voice-studio';
@@ -54,7 +55,7 @@ onPracticeBadges((badges) => {
   for (const b of badges) toast(`<span class="bicon">${b.icon}</span> Badge débloqué : <strong>${esc(b.name)}</strong>`);
 });
 
-let returnTo: 'home' | 'course' | 'exercises' | 'harmony' | 'chords' = 'home';
+let returnTo: 'home' | 'course' | 'exercises' | 'harmony' | 'chords' | 'academy' = 'home';
 
 function home(): void {
   closePlayer();
@@ -62,7 +63,7 @@ function home(): void {
   closeVoiceStudio();
   returnTo = 'home';
   closeImprov();
-  renderHome(app, play, course, exercises, harmony, chords, voiceStudio);
+  renderHome(app, play, course, exercises, harmony, chords, voiceStudio, academyView);
   window.scrollTo({ top: 0 });
 }
 
@@ -113,6 +114,13 @@ function improv(preset: ImprovPreset): void {
   window.scrollTo({ top: 0 });
 }
 
+function academyView(): void {
+  closePlayer();
+  returnTo = 'academy';
+  renderAcademy(app, play, home);
+  window.scrollTo({ top: 0 });
+}
+
 function exercises(): void {
   closePlayer();
   returnTo = 'exercises';
@@ -121,7 +129,7 @@ function exercises(): void {
 }
 
 function play(source: Source, mode: 'live' | 'step' | 'game' = 'live'): void {
-  openPlayer(app, source, () => (returnTo === 'course' ? course() : returnTo === 'exercises' ? exercises() : home()), mode);
+  openPlayer(app, source, () => (returnTo === 'course' ? course() : returnTo === 'exercises' ? exercises() : returnTo === 'academy' ? academyView() : home()), mode);
   window.scrollTo({ top: 0 });
 }
 
@@ -132,6 +140,7 @@ addEventListener('cloud-merged', () => {
   if (document.querySelector('.player')) return;
   if (returnTo === 'course') course();
   else if (returnTo === 'exercises') exercises();
+  else if (returnTo === 'academy') academyView();
   else home();
 });
 initCloud().catch(() => {});
