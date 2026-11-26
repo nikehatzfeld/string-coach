@@ -39,6 +39,8 @@ export interface Prefs {
   micId: string;
   /** Justesse demandée pour la voix (cents) : plus large que pour un instrument. */
   voiceTolerance: number;
+  /** Banque de sons : « musescore » (qualité) ou « sonivox » (légère, compatible). */
+  soundfont: 'musescore' | 'sonivox';
   /** La de référence en Hz (440 standard ; calibrable sur l'accordage de l'instrument). */
   a4: number;
 }
@@ -66,6 +68,7 @@ const DEFAULTS: Prefs = {
   micId: '',
   a4: 440,
   voiceTolerance: 60,
+  soundfont: 'musescore',
 };
 
 function load(): Prefs {

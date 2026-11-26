@@ -1,4 +1,5 @@
 import * as alphaTab from '@coderline/alphatab';
+import { prefs } from '../state/prefs';
 
 export type ViewMode = 'score-tab' | 'score' | 'tab';
 
@@ -19,7 +20,7 @@ export class ScoreView {
       display: { staveProfile: alphaTab.StaveProfile.ScoreTab, scale: 1.1 },
       player: {
         playerMode: alphaTab.PlayerMode.EnabledSynthesizer,
-        soundFont: `${import.meta.env.BASE_URL}soundfont/string-coach.sf3`,
+        soundFont: `${import.meta.env.BASE_URL}soundfont/${prefs.soundfont === 'sonivox' ? 'sonivox.sf2' : 'string-coach.sf3'}`,
         enableCursor: true,
         enableAnimatedBeatCursor: true,
         enableElementHighlighting: true,

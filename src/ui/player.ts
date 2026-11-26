@@ -113,6 +113,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       <button id="stepDetache" class="only-step more" aria-pressed="${prefs.stepDetache}" title="Chaque note doit être attaquée : ${inst.id === 'violin' ? 'coup d’archet' : inst.id === 'guitar' ? 'nouveau coup de médiator ou de doigt' : inst.id === 'recorder' ? 'coup de langue « tu »' : 'nouvelle syllabe'} ou petit silence entre deux notes">✂ Détaché</button>
       <button id="restart" class="only-step more">↻ Recommencer</button>
       <button id="micTest" class="more">🎤 Test micro</button>
+      <label class="more" title="Si le son est étouffé ou absent, essaie l’autre banque de sons">🔈 Sons <select id="sfSel"><option value="musescore" ${prefs.soundfont === 'musescore' ? 'selected' : ''}>Qualité</option><option value="sonivox" ${prefs.soundfont === 'sonivox' ? 'selected' : ''}>Compatible</option></select></label>
       <label class="no-live more" title="Fréquence du La : 440 Hz standard, ou celle de ton accordage">La = <input id="a4" type="number" min="415" max="466" step="0.5" value="${prefs.a4}" /> Hz</label>
       <label class="no-live more">🎤 <select id="micSel" aria-label="Micro"><option value="">Micro par défaut</option></select></label>
     </div>
@@ -903,6 +904,12 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     if (source.kind !== 'library') return;
     const c = chartFromSong(source.song);
     if (c) dispatchEvent(new CustomEvent('open-chords', { detail: c }));
+  });
+  $('sfSel').addEventListener('change', () => {
+    prefs.soundfont = $<HTMLSelectElement>('sfSel').value as 'musescore' | 'sonivox';
+    savePrefs();
+    // Nouvelle banque : on recharge le lecteur.
+    location.reload();
   });
   $('micTest').addEventListener('click', () => {
     stopMic();
