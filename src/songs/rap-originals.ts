@@ -68,9 +68,10 @@ function build(d: RapDef): Song {
   // Une mesure d'intro (beat seul) pour se caler.
   return {
     id: `rap-${d.id}`,
-    title: d.title,
+    title: `${d.title}${d.lang === 'en' ? ' (EN)' : ''}`,
     composer: d.lang === 'fr' ? 'String Coach (création originale)' : 'String Coach (original)',
-    style: d.lang === 'fr' ? 'Rap français' : 'Rap US',
+    // Catégorie à part, facile à repérer ; la langue est indiquée dans le titre.
+    style: 'Raps originaux',
     level: d.level,
     tempo: d.tempo,
     timeSignature: [4, 4],
@@ -239,4 +240,4 @@ const DEFS: RapDef[] = [
 export const RAP_ORIGINALS: Song[] = DEFS.map(build);
 
 /** Style rap : le chant est jugé sur le placement (le flow), pas sur la justesse. */
-export const isRap = (style: string): boolean => style === 'Rap français' || style === 'Rap US';
+export const isRap = (style: string): boolean => style === 'Rap français' || style === 'Rap US' || style === 'Raps originaux';

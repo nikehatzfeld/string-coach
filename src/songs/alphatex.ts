@@ -6,6 +6,7 @@ import { lyricsOf, lyricSyllables } from './lyrics';
 import { harmonize, needsHarmony } from './harmonize';
 
 export const STYLE_ORDER = [
+  'Raps originaux',
   'Mes morceaux',
   'Comptines',
   'Chanson française',

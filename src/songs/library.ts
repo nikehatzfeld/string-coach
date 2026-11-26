@@ -345,7 +345,7 @@ export const LIBRARY: Song[] = [...BASE, ...EASY, ...EXERCISES];
 export const STYLES = STYLE_ORDER.filter((st) => LIBRARY.some((s) => s.style === st));
 
 /** Genres de chansons (filtres mis en avant pour la voix). */
-export const VOCAL_GENRES = ['Rap US', 'Rap français', 'R&B & soul', 'Pop & rock', 'Années 80', 'Années 90', 'Variété française', 'Chanson française', 'Reggae', 'Électro & dance', 'Comédies musicales', 'Gospel & jazz', 'Comptines', 'Noël', 'Folk & monde'] as const;
+export const VOCAL_GENRES = ['Raps originaux', 'Rap US', 'Rap français', 'R&B & soul', 'Pop & rock', 'Années 80', 'Années 90', 'Variété française', 'Chanson française', 'Reggae', 'Électro & dance', 'Comédies musicales', 'Gospel & jazz', 'Comptines', 'Noël', 'Folk & monde'] as const;
 const FOR_ALL = new Set(['Mes morceaux', 'Années 80', 'Années 90', 'Pop & rock', 'Variété française', 'Rap US', 'Rap français', 'R&B & soul', 'Reggae', 'Électro & dance', 'Comédies musicales', 'Comptines', 'Chanson française', 'Noël', 'Folk & monde', 'Chants & cantiques', 'Gospel & jazz', 'Blues', 'Fêtes', 'Gammes & arpèges', 'Exercices']);
 
 /**

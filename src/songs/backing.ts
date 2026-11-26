@@ -51,7 +51,7 @@ export type BackingKind = 'band' | 'strings' | 'beat';
 
 /** Style d'accompagnement selon le genre du morceau. */
 export function backingKindFor(style: string): BackingKind {
-  if (['Rap US', 'Rap français', 'R&B & soul', 'Électro & dance'].includes(style)) return 'beat';
+  if (['Raps originaux', 'Rap US', 'Rap français', 'R&B & soul', 'Électro & dance'].includes(style)) return 'beat';
   return ['Folk & monde', 'Gospel & jazz', 'Blues', 'Fêtes', 'Pop & rock', 'Années 80', 'Années 90', 'Variété française', 'Reggae'].includes(style) ? 'band' : 'strings';
 }
 
