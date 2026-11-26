@@ -15,6 +15,7 @@ import { persist, progress, setPracticeActive, todayChallenge } from '../game/st
 import { prefs, savePrefs } from '../state/prefs';
 import { openMicTest } from './mic-test';
 import { RecorderBoard } from './recorder-board';
+import { isRap } from '../songs/rap-originals';
 import { loadAudio } from '../state/audio-store';
 import { SingJudge } from '../game/sing';
 import { SingLane } from '../game/sing-lane';
@@ -53,7 +54,9 @@ export function closePlayer(): void {
 export function openPlayer(app: HTMLElement, source: Source, onExit: () => void, initialMode: Mode = 'live'): void {
   closePlayer();
   const inst = INSTRUMENTS[prefs.instrument];
-  const tolerance = () => (inst.kind === 'voice' ? prefs.voiceTolerance : prefs.tolerance);
+  // Rap : le chant est jugé sur le placement (flow), pas sur la justesse.
+  const rapFlow = inst.kind === 'voice' && source.kind === 'library' && isRap(source.song.style);
+  const tolerance = () => (rapFlow ? 1200 : inst.kind === 'voice' ? prefs.voiceTolerance : prefs.tolerance);
   const title = source.kind === 'library' ? source.song.title : source.name;
   const songId = sourceId(source);
   const best = progress.songs[songId];
@@ -104,7 +107,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         ${[1, 3, 5, 10, 0].map((r) => `<option value="${r}" ${prefs.repeat === r ? 'selected' : ''}>${r === 0 ? '🔁 ∞' : r === 1 ? '🔁 1 fois' : `🔁 ${r} fois`}</option>`).join('')}
       </select>
       <button id="ksBtn" class="more" aria-pressed="${prefs.keySignatures}" title="Armure à la clé, ou dièses et bémols écrits devant chaque note">Armure</button>
-      <label class="no-live ${inst.kind === 'voice' ? '' : 'more'}" title="Justesse demandée">Justesse <input id="tol" type="range" min="10" max="100" step="5" value="${inst.kind === 'voice' ? prefs.voiceTolerance : prefs.tolerance}" /> <output id="tolOut">±${inst.kind === 'voice' ? prefs.voiceTolerance : prefs.tolerance} cents</output></label>
+      ${rapFlow ? '<span class="muted" title="Pour le rap, le jeu et le pas à pas jugent le placement des syllabes, pas la hauteur">🎤 Rap : seul le placement compte</span>' : ''}
+      <label class="no-live ${inst.kind === 'voice' ? '' : 'more'}" ${rapFlow ? 'style="display:none"' : ''} title="Justesse demandée">Justesse <input id="tol" type="range" min="10" max="100" step="5" value="${inst.kind === 'voice' ? prefs.voiceTolerance : prefs.tolerance}" /> <output id="tolOut">±${inst.kind === 'voice' ? prefs.voiceTolerance : prefs.tolerance} cents</output></label>
       <button id="stepHold" class="only-step more" aria-pressed="${prefs.stepHold}" title="Tenir chaque note sa durée écrite (au tempo choisi)">⏱ Tenir la durée</button>
       <button id="stepDetache" class="only-step more" aria-pressed="${prefs.stepDetache}" title="Chaque note doit être attaquée : ${inst.id === 'violin' ? 'coup d’archet' : inst.id === 'guitar' ? 'nouveau coup de médiator ou de doigt' : inst.id === 'recorder' ? 'coup de langue « tu »' : 'nouvelle syllabe'} ou petit silence entre deux notes">✂ Détaché</button>
       <button id="restart" class="only-step more">↻ Recommencer</button>
@@ -568,7 +572,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       if (!trace) return;
       const ms = v.trackBeats.filter((b) => !b.isRest).flatMap((b) => b.notes.map((n) => n.realValue));
       if (ms.length) trace.setRange(Math.min(...ms), Math.max(...ms));
-      trace.toleranceCents = tolerance();
+      trace.toleranceCents = rapFlow ? 150 : tolerance();
     }, 0),
   );
 
@@ -911,7 +915,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     savePrefs();
     $('tolOut').textContent = `±${tolerance()} cents`;
     if (trainer) trainer.options.toleranceCents = tolerance();
-    if (trace) trace.toleranceCents = tolerance();
+    if (trace) trace.toleranceCents = rapFlow ? 150 : tolerance();
   });
 
   // ---------- Mode jeu ----------
@@ -970,7 +974,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       // Voix : piste de chant (barres à tenir + paroles), marge de timing avant / après chaque note.
       judge = new SingJudge(notes, { latencyMs: prefs.latencyMs, toleranceCents: tolerance() });
       const lane = new SingLane($<HTMLCanvasElement>('highway'), notes);
-      lane.toleranceCents = tolerance();
+      lane.toleranceCents = rapFlow ? 50 : tolerance();
       highway = lane;
       highway.sync(notes[0] ? notes[0].tick - 960 * 2 : 0, ticksPerMs, false);
       gameKeeper = new ScoreKeeper(notes.length);

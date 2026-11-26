@@ -4,6 +4,7 @@ import { CHRISTMAS, CLASSICAL_MORE, FOLK_WORLD, KIDS } from './library-more';
 import PD_LIBRARY from './pd-library.json';
 import PD_GUITAR from './pd-guitar.json';
 import { easyVersion } from './simplify';
+import { RAP_ORIGINALS } from './rap-originals';
 import { lyricsOf } from './lyrics';
 import type { InstrumentId } from './instruments';
 
@@ -330,7 +331,7 @@ const FAMOUS: [string, boolean][] = [
 ];
 
 const GUITAR_CLASSICAL: Song[] = PD_GUITAR as unknown as Song[];
-const BASE: Song[] = [...[...CORE, ...KIDS, ...CLASSICAL_MORE, ...CHRISTMAS, ...FOLK_WORLD].filter(keepShort), ...FULL, ...GUITAR_CLASSICAL];
+const BASE: Song[] = [...[...CORE, ...KIDS, ...CLASSICAL_MORE, ...CHRISTMAS, ...FOLK_WORLD].filter(keepShort), ...FULL, ...GUITAR_CLASSICAL, ...RAP_ORIGINALS];
 const famousIds = new Map(FAMOUS);
 const EASY: Song[] = [];
 for (const s of BASE) {

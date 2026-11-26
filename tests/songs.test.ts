@@ -158,3 +158,20 @@ describe('paroles dans la partition (voix)', () => {
     for (const s of voice) expect(lyricsOf(s), s.id).toBeTruthy();
   });
 });
+
+describe('rap original', () => {
+  it('8 morceaux, une syllabe par note, mesures complètes, paroles affichées', async () => {
+    const { RAP_ORIGINALS } = await import('../src/songs/rap-originals');
+    const { lyricSyllables } = await import('../src/songs/lyrics');
+    expect(RAP_ORIGINALS).toHaveLength(8);
+    for (const s of RAP_ORIGINALS) {
+      const bars = parseNotation(s.notation);
+      for (const b of bars) expect(barBeats(b), s.id).toBeCloseTo(4);
+      const notes = bars.flat().filter((e) => e.kind === 'note').length;
+      expect(lyricSyllables(s.lyrics!).length, s.id).toBe(notes);
+      const tex = songToAlphaTex(s, INSTRUMENTS.voice);
+      const score = alphaTab.importer.ScoreLoader.loadAlphaTex(tex);
+      expect(score.tracks.map((t) => t.name), s.id).toEqual(['Voix', 'Nappe', 'Basse', 'Batterie']);
+    }
+  });
+});

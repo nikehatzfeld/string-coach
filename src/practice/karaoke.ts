@@ -53,7 +53,10 @@ export function syllabifyWord(word: string): string[] {
 }
 
 /** Paroles brutes → syllabes, ligne par ligne (tiret = le mot continue). */
-export function syllabifyLyrics(text: string): { s: string; line: boolean }[] {
+/**
+ * @param elide « e » muets avalés comme en rap : « man-che » → « manche », « pa-tien-ce » → « pa-tience ».
+ */
+export function syllabifyLyrics(text: string, elide = false): { s: string; line: boolean }[] {
   const out: { s: string; line: boolean }[] = [];
   for (const rawLine of text.split(/\r?\n/)) {
     const line = rawLine.replace(/\[.*?\]|\(.*?\)/g, ' ').trim(); // [Refrain], (x2)…
@@ -62,11 +65,22 @@ export function syllabifyLyrics(text: string): { s: string; line: boolean }[] {
     for (const w of line.split(/\s+/)) {
       if (!/[\p{L}\p{N}]/u.test(w)) continue;
       // Élisions et mots composés : chaque morceau est un mot.
-      const pieces = w.split(/(?<=['’-])/).filter(Boolean);
+      // « j’apprends » : l’élision se colle au morceau suivant (une seule syllabe chantée) ; « peut-être » : deux mots.
+      const raw = w.split(/(?<=['’-])/).filter(Boolean);
+      const pieces: string[] = [];
+      for (let k = 0; k < raw.length; k++) {
+        if (/['’]$/.test(raw[k]) && k + 1 < raw.length) {
+          raw[k + 1] = raw[k] + raw[k + 1];
+          continue;
+        }
+        pieces.push(raw[k]);
+      }
       for (const p of pieces) {
         const core = p.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}'’-]+$/gu, '');
         if (!core) continue;
-        const syl = /^\p{N}+$/u.test(core) ? [core] : syllabifyWord(core);
+        let syl = /^\p{N}+$/u.test(core) ? [core] : syllabifyWord(core);
+        // Dernière syllabe en « e » muet (consonne(s) + e / es / ent) : collée à la précédente.
+        if (elide && syl.length > 1 && /^[^aeiouyàâäéèêëîïôöùûüœæ]*(e|es|ent)$/i.test(syl[syl.length - 1])) syl = [...syl.slice(0, -2), syl[syl.length - 2] + syl[syl.length - 1]];
         syl.forEach((s, k) => {
           out.push({ s: k < syl.length - 1 ? `${s}-` : s, line: first });
           first = false;

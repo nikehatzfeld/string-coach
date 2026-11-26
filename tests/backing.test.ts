@@ -29,8 +29,9 @@ describe('accompagnement', () => {
       expect(score.tracks.length).toBeGreaterThanOrEqual(3);
       const bars = score.tracks[0].staves[0].bars.length;
       const programs = score.tracks.slice(1).map((t) => (t.isPercussion ? 'drums' : t.playbackInfo.program));
-      expect(programs).toEqual(expect.arrayContaining([32]));
-      expect(programs.some((p) => p === 48 || p === 24)).toBe(true);
+      // Basse (acoustique ou électrique) et accords (cordes, guitare ou nappe de chœur pour le rap).
+      expect(programs.some((p) => p === 32 || p === 33)).toBe(true);
+      expect(programs.some((p) => p === 48 || p === 24 || p === 52)).toBe(true);
       const [num, den] = song.timeSignature;
       const barTicks = (num * 4 * 960) / den;
       for (const t of score.tracks.slice(1)) {
