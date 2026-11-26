@@ -1,6 +1,7 @@
 import { importLibrary, type ImportReport } from '../songs/library-import';
 import { generateWithGrok, grokKey, grokModel, listGrokModels, setGrokKey, setGrokModel } from '../practice/grok';
 import { saveUserSongs } from '../state/user-songs';
+import { midiToSong } from '../songs/midi-import';
 import { esc } from './dom';
 
 /** Fenêtre d'import d'une bibliothèque (fichier JSON « string-coach-library », par exemple produit par Grok). */
@@ -10,8 +11,8 @@ export function openLibraryImport(onDone: () => void): void {
   back.innerHTML = `
     <div class="modal tr-modal" role="dialog" aria-label="Importer une bibliothèque">
       <h2>📥 Importer une bibliothèque</h2>
-      <p class="hint">Fichier <code>.json</code> au format String Coach (voir le guide <em>docs/format-bibliotheque.md</em>), ou colle directement le texte ci-dessous. Les morceaux sont vérifiés, puis gardés sur cet appareil (style choisi, ou « Mes morceaux »).</p>
-      <input id="libFile" type="file" accept=".json,application/json,text/plain" />
+      <p class="hint">Un fichier <strong>MIDI</strong> (.mid) que tu as téléchargé, un fichier <code>.json</code> au format String Coach, ou colle le texte ci-dessous. Les morceaux sont vérifiés, puis gardés sur cet appareil (style choisi, ou « Mes morceaux »).</p>
+      <label class="tr-row">Fichier JSON ou MIDI (.mid) <input id="libFile" type="file" accept=".json,.mid,.midi,application/json,audio/midi,audio/x-midi,text/plain" /></label>
       <textarea id="libText" rows="8" placeholder='{ "format": "string-coach-library", "version": 1, "songs": [ … ] }'></textarea>
       <div class="modal-actions"><button id="libGo" class="primary">Vérifier et importer</button><button id="libClose" class="ghost">Fermer</button></div>
       <details class="tr-adv" id="grokBox" ${grokKey() ? 'open' : ''}><summary>✨ Générer avec Grok (ta clé API xAI)</summary>
@@ -72,7 +73,18 @@ export function openLibraryImport(onDone: () => void): void {
   });
   q('libFile').addEventListener('change', async () => {
     const f = q<HTMLInputElement>('libFile').files?.[0];
-    if (f) q<HTMLTextAreaElement>('libText').value = await f.text();
+    if (!f) return;
+    // MIDI : converti directement en morceau (mélodie + accords), gardé sur l'appareil.
+    if (/\.midi?$/i.test(f.name)) {
+      try {
+        const song = midiToSong(await f.arrayBuffer(), f.name.replace(/\.midi?$/i, ''));
+        showReport({ songs: [song], errors: [], warnings: [] });
+      } catch (e) {
+        q('libReport').innerHTML = `<p class="bad">MIDI illisible : ${esc((e as Error).message)}</p>`;
+      }
+      return;
+    }
+    q<HTMLTextAreaElement>('libText').value = await f.text();
   });
   q('libGo').addEventListener('click', () => {
     const text = q<HTMLTextAreaElement>('libText').value.trim();

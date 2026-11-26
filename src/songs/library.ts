@@ -354,6 +354,11 @@ const FOR_ALL = new Set(['Mes morceaux', 'Années 80', 'Années 90', 'Pop & rock
  */
 export function songFor(song: Song, inst: InstrumentId): boolean {
   if (song.instruments) return song.instruments.includes(inst);
+  // Morceaux personnels sans instrument précisé : chanson (paroles, instru) → voix ; sinon instruments mélodiques.
+  if (/^(user|lib|midi)-/.test(song.id)) {
+    const vocal = !!(lyricsOf(song) || song.timedLyrics?.length || song.audio || (VOCAL_GENRES as readonly string[]).includes(song.style));
+    return vocal ? inst === 'voice' || (inst === 'guitar' && !!song.chords) : inst !== 'voice';
+  }
   const ex = song as Song & { only?: InstrumentId };
   if (ex.only) return ex.only === inst;
   if (song.id.endsWith('~facile')) {

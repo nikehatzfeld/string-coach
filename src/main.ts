@@ -37,6 +37,14 @@ setTimeout(() => {
   }
 }, 30000);
 
+// iPhone : jouer le son même quand le bouton silencieux est activé (Safari 16.4+).
+try {
+  const nav = navigator as Navigator & { audioSession?: { type: string } };
+  if (nav.audioSession) nav.audioSession.type = 'playback';
+} catch {
+  /* non pris en charge */
+}
+
 const app = document.getElementById('app')!;
 installSpatialNav();
 mountMetronome();

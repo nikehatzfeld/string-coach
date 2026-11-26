@@ -67,12 +67,12 @@ export function melodyLine(notes: TNote[]): TNote[] {
 }
 
 /** Notation compacte (notation.ts) quantifiée à la double croche, accords par mesure si demandé. */
-export function notesToNotation(all: TNote[], bpm: number, ts: [number, number] = [4, 4], withChords = true): string {
-  const mel = melodyLine(all);
+export function notesToNotation(all: TNote[], bpm: number, ts: [number, number] = [4, 4], withChords = true, opts: { t0?: number; melody?: TNote[] } = {}): string {
+  const mel = opts.melody ? melodyLine(opts.melody) : melodyLine(all);
   if (!mel.length) return '';
   const six = 60 / bpm / 4; // durée d'une double croche
   const barLen = (ts[0] * 16) / ts[1];
-  const t0 = mel[0].start;
+  const t0 = opts.t0 ?? mel[0].start;
   const q = (t: number) => Math.max(0, Math.round((t - t0) / six));
   const ev = mel.map((n, i) => {
     const s = q(n.start);

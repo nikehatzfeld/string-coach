@@ -5,6 +5,7 @@ import { alignLyrics, syllabifyLyrics } from '../practice/karaoke';
 import { recognizeWords, wordsToText, wordsToTimedSyllables, type AsrLang, type Word } from '../practice/lyrics-asr';
 import { deleteUserSong, saveUserSong, userSongs } from '../state/user-songs';
 import { esc } from './dom';
+import { prefs } from '../state/prefs';
 
 /** Fenêtre de transcription : fichier audio/vidéo → partition personnelle (gardée sur l'appareil). */
 export function openTranscriber(onOpen: (song: Song) => void, onChange: () => void): void {
@@ -102,6 +103,8 @@ export function openTranscriber(onOpen: (song: Song) => void, onChange: () => vo
     const audioId = res.instru ? `audio-${Date.now()}` : undefined;
     const song = notesToSong(res.notes, q<HTMLInputElement>('trTitle').value || 'Ma transcription', Number(q<HTMLInputElement>('trBpm').value) || 90, ts, q<HTMLInputElement>('trChords').checked, audioId);
     if (!song.notation) return void (q('trMsg').textContent = 'Pas de mélodie exploitable.');
+    // Une transcription sert d'abord à chanter ; elle reste aussi disponible pour l'instrument en cours.
+    song.instruments = [...new Set(['voice' as const, prefs.instrument])];
     // Temps de la partition = temps de l'audio − instant de la 1re note.
     const offset = song.audio?.offset ?? (res.notes.length ? Math.min(...res.notes.map((n) => n.start)) : 0);
     song.voiceSegments = res.segments.map(([a, b]) => [Math.max(0, a - offset), b - offset] as [number, number]).filter(([, b]) => b > 0);

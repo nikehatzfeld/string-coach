@@ -124,7 +124,13 @@ export function importLibrary(json: unknown): ImportReport {
         lyrics = undefined;
       } else if (syl !== n) warnings.push(`${name} : ${syl} syllabes pour ${n} notes, le calage sera approximatif`);
     }
-    const instruments = (s.instruments ?? []).filter((x) => IDS.includes(x));
+    let instruments = (s.instruments ?? []).filter((x) => IDS.includes(x));
+    // Sans instrument précisé : chanson → voix (+ guitare pour les accords) ; morceau instrumental → violon, flûte, guitare.
+    if (!instruments.length) {
+      const vocalStyle = ['Rap US', 'Rap français', 'R&B & soul', 'Pop & rock', 'Années 80', 'Années 90', 'Variété française', 'Chanson française', 'Reggae', 'Électro & dance', 'Comédies musicales'].includes(normalizeStyle(s.style));
+      instruments = vocalStyle || lyrics ? ['voice', 'guitar'] : ['violin', 'recorder', 'guitar'];
+      if (['Comptines', 'Noël'].includes(normalizeStyle(s.style))) instruments = [...IDS];
+    }
     const style: Style = normalizeStyle(s.style);
     songs.push({
       id: `lib-${slug(`${s.title}-${s.artist ?? ''}`)}`,
