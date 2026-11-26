@@ -69,7 +69,7 @@ export function openMicTest(): void {
     const sel = q<HTMLSelectElement>('mtSel');
     if (!sel) return;
     const devs = (await navigator.mediaDevices?.enumerateDevices().catch(() => [])) ?? [];
-    const ins = devs.filter((d) => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default');
+    const ins = devs.filter((d) => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications');
     sel.innerHTML =
       '<option value="">Micro par défaut</option>' + ins.map((d, i) => `<option value="${esc(d.deviceId)}" ${d.deviceId === prefs.micId ? 'selected' : ''}>${esc(d.label || `Micro ${i + 1}`)}</option>`).join('');
   }

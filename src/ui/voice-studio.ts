@@ -428,7 +428,7 @@ export function renderVoiceStudio(app: HTMLElement, back: () => void, tab: Tab =
     // ---- Deux chanteurs ----
     void (async () => {
       const devs = (await navigator.mediaDevices?.enumerateDevices().catch(() => [])) ?? [];
-      const ins = devs.filter((d) => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default');
+      const ins = devs.filter((d) => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications');
       const opts = (sel: number) =>
         `<option value="">Micro par défaut</option>` + ins.map((d, i) => `<option value="${esc(d.deviceId)}" ${i === sel ? 'selected' : ''}>${esc(d.label || `Micro ${i + 1}`)}</option>`).join('');
       $('mA').innerHTML = opts(-1);

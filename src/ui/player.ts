@@ -882,7 +882,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   const micSel = $<HTMLSelectElement>('micSel');
   async function fillMics() {
     const devs = (await navigator.mediaDevices?.enumerateDevices().catch(() => [])) ?? [];
-    const ins = devs.filter((d) => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default');
+    const ins = devs.filter((d) => d.kind === 'audioinput' && d.deviceId && d.deviceId !== 'default' && d.deviceId !== 'communications');
     micSel.innerHTML = '<option value="">Micro par défaut</option>' + ins.map((d, i) => `<option value="${esc(d.deviceId)}" ${d.deviceId === prefs.micId ? 'selected' : ''}>${esc(d.label || `Micro ${i + 1}`)}</option>`).join('');
   }
   void fillMics();
@@ -1396,7 +1396,12 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     }
   };
   $('voiceBtn').addEventListener('click', () => setVoice(!prefs.voice));
-  if (prefs.voice) setVoice(true);
+  // Les commandes vocales ouvrent le micro : Windows baisse alors le son des autres applications
+  // (« atténuation des communications »). Elles ne se relancent donc plus toutes seules : un clic sur 🗣 Voix.
+  if (prefs.voice) {
+    prefs.voice = false;
+    savePrefs();
+  }
 
   setSuggestedTempo(() => Number(bpmInput.value) || null);
   cleanup = () => {

@@ -74,6 +74,8 @@ const DEFAULTS: Prefs = {
 function load(): Prefs {
   try {
     const saved = JSON.parse(localStorage.getItem(KEY) ?? '{}');
+    // Micro « communications » de Windows : il déclenche l'atténuation des autres sons ; on revient au micro par défaut.
+    if (saved.micId === 'communications') saved.micId = '';
     return { ...DEFAULTS, ...saved, views: { ...DEFAULTS.views, ...(saved.views ?? {}) } };
   } catch {
     return { ...DEFAULTS };
