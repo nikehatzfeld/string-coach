@@ -4,6 +4,7 @@ import { sectionsFor, songToAlphaTex, type Section, type Song } from '../songs/a
 import { fingerNote, INSTRUMENTS } from '../songs/instruments';
 import { centsToNearestOctave, freqToMidiFloat, midiName } from '../songs/notation';
 import { centsStats, summarize, type NoteLog } from '../academy/metrics';
+import { critique } from '../academy/critique';
 import { logAttempt } from '../academy/store';
 import { playHook } from '../academy/hook';
 import { fingerLabel, fingerVariant, placeMelody, positionLabel, solfege, type Placed } from '../songs/positions';
@@ -763,6 +764,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       const heardEl = document.getElementById('sHeard');
       if (heardEl) heardEl.title = `Micro : ${info.label || 'par défaut'}`;
       setPracticeActive(true);
+      startRecording(m.mediaStream);
       return true;
     } catch (err) {
       pending = false;
@@ -772,8 +774,40 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       return false;
     }
   }
+  // ---------- Enregistrement de la prise (reste sur l'appareil) ----------
+  let recorder: MediaRecorder | null = null;
+  let recChunks: Blob[] = [];
+  let takeUrl = '';
+  let takeReady: Promise<string> | null = null;
+  function startRecording(stream: MediaStream | null) {
+    if (!stream || typeof MediaRecorder === 'undefined') return;
+    try {
+      recChunks = [];
+      takeReady = null;
+      recorder = new MediaRecorder(stream);
+      recorder.ondataavailable = (e) => e.data.size && recChunks.push(e.data);
+      recorder.start(1000);
+    } catch {
+      recorder = null;
+    }
+  }
+  function stopRecording() {
+    const r = recorder;
+    recorder = null;
+    if (!r || r.state === 'inactive') return;
+    takeReady = new Promise((res) => {
+      r.onstop = () => {
+        if (takeUrl) URL.revokeObjectURL(takeUrl);
+        takeUrl = recChunks.length ? URL.createObjectURL(new Blob(recChunks, { type: r.mimeType || 'audio/webm' })) : '';
+        res(takeUrl);
+      };
+    });
+    r.stop();
+  }
+
   function stopMic() {
     if (!mic) return;
+    stopRecording();
     mic.stop();
     mic = null;
     setPracticeActive(false);
@@ -916,7 +950,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         if (u.cents !== null) holdCents.push(u.cents);
         const st = centsStats(holdCents);
         const tg = trainer?.targets[u.index];
-        if (tg) noteLog.push({ midi: tg.midi, cents: st?.mean ?? null, spread: st?.spread, findMs: Math.round(performance.now() - targetSince), ...fingerInfo(beatsByTarget[u.index]) });
+        if (tg) noteLog.push({ midi: tg.midi, cents: st?.mean ?? null, spread: st?.spread, findMs: Math.round(performance.now() - targetSince), bar: (beatsByTarget[u.index]?.voice.bar.index ?? -1) + 1 || undefined, ...fingerInfo(beatsByTarget[u.index]) });
         holdCents = [];
         const j: Judgment = hadError ? 'ok' : 'perfect';
         keeper.register(j);
@@ -945,7 +979,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   });
   const skip = () => {
     if (!trainer || trainer.finished) return;
-    if (trainer.current) noteLog.push({ midi: trainer.current.midi, cents: null, miss: true });
+    if (trainer.current) noteLog.push({ midi: trainer.current.midi, cents: null, miss: true, bar: (beatsByTarget[trainer.index]?.voice.bar.index ?? -1) + 1 || undefined });
     keeper.register('miss');
     hadError = false;
     trainer.skip();
@@ -1037,6 +1071,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
           duration: beat.playbackDuration,
           midi: f.midi,
           lane: [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6][f.midi % 12],
+          bar: beat.voice.bar.index + 1,
           label: inst.kind === 'voice' && syl ? syl.replace(/[-,.;:!?]+$/, '') : beatName(beat, f.midi).replace(/♯|♭/, ''),
           name: f.name ?? beatName(beat, f.midi),
         });
@@ -1047,6 +1082,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         duration: beat.playbackDuration,
         midi: f.midi,
         lane: inst.tuning.length - f.string,
+        bar: beat.voice.bar.index + 1,
         // Violon : doigt ; guitare : case (comme sur la tablature).
         label: inst.id === 'violin' ? (f.label ?? String(finger ?? f.fret)) : String(f.fret),
         name: f.name,
@@ -1120,9 +1156,10 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         const lane = ev.note.lane;
         noteLog.push(
           ev.judgment === 'miss'
-            ? { midi: ev.note.midi, cents: null, miss: true }
+            ? { midi: ev.note.midi, cents: null, miss: true, bar: ev.note.bar }
             : {
                 midi: ev.note.midi,
+                bar: ev.note.bar,
                 cents: heard !== null ? Math.round(centsToNearestOctave((heard - ev.note.midi) * 100)) : null,
                 deltaMs: Math.round(ev.deltaMs),
                 ...(inst.id === 'violin' ? { string: inst.tuning.length - lane, finger: Number.parseInt(ev.note.label, 10) || 0 } : {}),
@@ -1232,6 +1269,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     }
     const hook = playHook();
     if (hook && (await hook(result))) return;
+    const analysis = assisted ? null : critique(noteLog, m, inst.id === 'violin');
+    const recordingUrl = takeReady ? await Promise.race([takeReady, new Promise<string>((r) => setTimeout(() => r(''), 1500))]) : '';
     const outcome = recordResult(
       progress,
       {
@@ -1283,6 +1322,8 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       accuracy,
       maxCombo: k.maxCombo,
       counts: k.counts,
+      analysis,
+      recordingUrl,
       outcome,
       xpTotal: progress.xp,
     });
@@ -1511,6 +1552,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
   setSuggestedTempo(() => Number(bpmInput.value) || null);
   cleanup = () => {
     rapVoice?.stop();
+    if (takeUrl) URL.revokeObjectURL(takeUrl);
     instru?.pause();
     if (instruUrl) URL.revokeObjectURL(instruUrl);
     stopVoice();

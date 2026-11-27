@@ -13,6 +13,10 @@ export interface ResultView {
   xpTotal: number;
   /** Message sur le tempo (montée ou baisse automatique). */
   tempoNote?: string;
+  /** Bilan critique du passage (mesures du micro). */
+  analysis?: import('../academy/critique').Critique | null;
+  /** Enregistrement de la prise (URL locale). */
+  recordingUrl?: string;
 }
 
 /** Fenêtre de fin de morceau. Renvoie l'action choisie. */
@@ -36,6 +40,7 @@ export function showResults(r: ResultView): Promise<'replay' | 'library'> {
       </div>
       ${r.tempoNote ? `<p class="tempo-note">${esc(r.tempoNote)}</p>` : ''}
       <p class="res-detail">${r.counts.perfect} parfaites · ${r.counts.good + r.counts.ok} correctes · ${r.counts.miss} ratées</p>
+      ${analysisHtml(r)}
       <div class="xp-box">
         <div class="xp-line"><span>+${r.outcome.xpGained} XP${r.outcome.challengeCompleted ? ' (dont 100 du défi du jour 🎯)' : ''}</span><span>Niveau ${lvl.level}</span></div>
         <div class="xp-bar"><div class="xp-fill" style="width:${levelUp ? 0 : (before.into / before.needed) * 100}%" data-to="${(lvl.into / lvl.needed) * 100}"></div></div>
@@ -135,4 +140,18 @@ export function toast(html: string, ms = 3500): void {
   document.body.appendChild(t);
   setTimeout(() => t.classList.add('out'), ms);
   setTimeout(() => t.remove(), ms + 400);
+}
+
+/** Bilan détaillé : écoute de la prise, indicateurs, points forts, à reprendre, notes précises. */
+function analysisHtml(r: ResultView): string {
+  const a = r.analysis;
+  if (!a && !r.recordingUrl) return '';
+  const bar = (v: number) => `<span class="an-bar"><span style="width:${v}%;background:${v >= 80 ? 'var(--ok)' : v >= 60 ? 'var(--accent)' : 'var(--bad)'}"></span></span>`;
+  return `<details class="analysis" open><summary>🔍 Bilan détaillé</summary>
+    ${r.recordingUrl ? `<p class="an-rec">🎙 Ta prise : <audio controls src="${r.recordingUrl}"></audio></p>` : ''}
+    ${a ? `<div class="an-scores">${a.scores.map((s) => `<div><span>${esc(s.label)}</span>${bar(s.value)}<strong>${s.value}</strong></div>`).join('')}</div>
+    ${a.good.length ? `<h4>👍 Ce qui est bien</h4><ul>${a.good.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${a.fix.length ? `<h4>🛠 À reprendre</h4><ul>${a.fix.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
+    ${a.worst.length ? `<h4>📍 Notes à revoir</h4><ul>${a.worst.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}` : ''}
+  </details>`;
 }

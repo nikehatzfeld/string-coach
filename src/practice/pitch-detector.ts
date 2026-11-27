@@ -37,6 +37,10 @@ export class MicPitchDetector {
   private timer = 0;
   private readonly opts: MicOptions;
   private noiseFloor = 0.002;
+  /** Flux du micro (pour enregistrer la prise en même temps). */
+  get mediaStream(): MediaStream | null {
+    return this.stream;
+  }
   private resumeOnGesture = () => this.ctx?.state === 'suspended' && this.ctx.resume();
 
   constructor(opts: Partial<MicOptions> = {}) {

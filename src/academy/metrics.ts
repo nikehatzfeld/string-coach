@@ -16,6 +16,8 @@ export interface NoteLog {
   finger?: number;
   string?: number;
   miss?: boolean;
+  /** Mesure (1 = première). */
+  bar?: number;
 }
 
 export interface Metrics {

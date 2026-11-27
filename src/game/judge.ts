@@ -13,6 +13,8 @@ export interface GameNote {
   /** Nom de la note avec ♯ ou ♭. */
   name?: string;
   judged?: Judgment;
+  /** Mesure (1 = première). */
+  bar?: number;
 }
 
 export interface JudgeEvent {
