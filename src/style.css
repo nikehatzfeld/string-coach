@@ -791,3 +791,23 @@ div.acad-item button { flex: none; }
 .stage.current .st-n { background: var(--grad); color: #1b1000; }
 .stage.locked { opacity: 0.6; }
 @media (max-width: 640px) { .skill { grid-template-columns: 7.5rem 1fr 1.6rem; } }
+
+/* ---------- Accueil épuré ---------- */
+.home-top .main-actions { display: flex; gap: 0.5rem; }
+.menu { position: relative; }
+.menu > summary { list-style: none; cursor: pointer; min-height: 44px; min-width: 44px; display: grid; place-items: center; border-radius: 12px; background: var(--panel-2); border: 1px solid var(--border); font-size: 1.2rem; }
+.menu > summary::-webkit-details-marker { display: none; }
+.menu[open] > summary { background: var(--accent); color: #1b1300; }
+.menu-pop { position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; display: grid; gap: 0.3rem; min-width: 260px; padding: 0.5rem; background: var(--panel-solid); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 18px 40px rgba(0,0,0,0.45); }
+.menu-pop button { text-align: left; background: transparent; border-color: transparent; }
+.menu-pop button:hover { background: var(--panel-2); }
+details.badges-strip > summary, details.files-box > summary { list-style: none; cursor: pointer; }
+details.badges-strip > summary::-webkit-details-marker, details.files-box > summary::-webkit-details-marker { display: none; }
+details.badges-strip > summary h2::after, details.files-box > summary h2::after { content: '▸'; color: var(--muted); margin-left: auto; }
+details[open].badges-strip > summary h2::after, details[open].files-box > summary h2::after { content: '▾'; }
+.ver-note { font-size: 0.78rem; }
+/* Accordeur et métronome : pastilles discrètes (le libellé n'apparaît qu'au survol). */
+.tuner-fab, .metro-fab { width: 46px; height: 46px; padding: 0; justify-content: center; border-radius: 50%; opacity: 0.85; }
+.tuner-fab small, .metro-fab .fab-label { display: none; }
+.tuner-fab:hover, .metro-fab:hover { opacity: 1; }
+.metro-fab.running { width: auto; border-radius: 23px; padding: 0 0.7rem; }

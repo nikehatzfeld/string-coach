@@ -106,13 +106,13 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         <button id="bpmDown" aria-label="Ralentir de 5 BPM">−</button>
         <label>♩ = <input id="bpm" type="number" min="30" max="240" step="1" inputmode="numeric" aria-label="Tempo en BPM" /> BPM</label>
         <button id="bpmUp" aria-label="Accélérer de 5 BPM">+</button>
-        <input id="bpmRange" type="range" min="30" max="240" step="1" aria-label="Tempo" />
-        <button id="bpmReset" class="ghost" title="Tempo d'origine">↺</button>
+        <input id="bpmRange" class="more" type="range" min="30" max="240" step="1" aria-label="Tempo" />
+        <button id="bpmReset" class="ghost more" title="Tempo d'origine">↺</button>
       </div>
       <select id="section" aria-label="Partie à travailler" hidden></select>
       <span id="rangeBox" class="range-box" hidden>mes. <input id="rFrom" type="number" min="1" inputmode="numeric" aria-label="Première mesure" /> à <input id="rTo" type="number" min="1" inputmode="numeric" aria-label="Dernière mesure" /> <button id="rOk" class="primary" title="Travailler ces mesures en boucle">🔁</button></span>
  ${inst.id === 'guitar' && source.kind === 'library' && chartFromSong(source.song) ? '<button id="chordsBtn" title="Jouer les accords du morceau (grattage, capo, micro)">🎸 Accords</button>' : ''}
-      <button id="voiceBtn" aria-pressed="false" title="Commandes vocales (mains libres)">🗣 Voix</button>
+      <button id="voiceBtn" class="more" aria-pressed="false" title="Commandes vocales (mains libres)">🗣 Voix</button>
       <button id="moreBtn" class="ghost more-btn" aria-expanded="false" aria-label="Plus de réglages">⚙</button>
       <button id="loop" class="only-live more" aria-pressed="false">Boucle</button>
       <button id="metro" class="only-live more" aria-pressed="false">Métronome</button>
@@ -123,7 +123,7 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         <option value="orig" ${prefs.violinVersion === 'orig' ? 'selected' : ''}>Version originale</option>
         <option value="pos1" ${prefs.violinVersion === 'pos1' ? 'selected' : ''}>1re position uniquement</option>
         <option value="pos3" ${prefs.violinVersion === 'pos3' ? 'selected' : ''}>Jusqu’en 3e position</option>
-      </select>${versionNote ? `<span class="muted">${esc(versionNote)}</span>` : ''}` : ''}
+      </select>${versionNote ? `<span class="muted ver-note">${esc(versionNote)}</span>` : ''}` : ''}
       ${rapVoice ? '<select id="rapVoiceSel" title="Voix du rappeur (synthèse vocale de ton appareil)" aria-label="Voix du rappeur"></select>' : ''}
       <select id="viewMode" class="no-game more" aria-label="Affichage" ${inst.kind !== 'strings' ? 'hidden' : ''}>
         <option value="score">${inst.id === 'violin' ? 'Partition + doigtés' : 'Partition'}</option>
@@ -131,11 +131,11 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
         <option value="tab">Tablature${inst.id === 'violin' ? ' (demi-tons)' : ''}</option>
       </select>
       <select id="track" class="more" aria-label="Piste" hidden></select>
-      <button id="circleBtn" class="no-game" aria-pressed="${prefs.showCircle}" title="Cercle des notes : gamme, degrés, note à jouer">◯ Cercle</button>
+      <button id="circleBtn" class="no-game more" aria-pressed="${prefs.showCircle}" title="Cercle des notes : gamme, degrés, note à jouer">◯ Cercle</button>
       <button id="neckBtn" class="no-game more" aria-pressed="${prefs.showNeck}">Manche</button>
-      <button id="zoomOut" class="no-game" aria-label="Dézoomer">A−</button>
-      <button id="zoomIn" class="no-game" aria-label="Zoomer">A+</button>
-      <select id="repeat" class="no-live" aria-label="Répétitions" title="Répéter l'exercice">
+      <button id="zoomOut" class="no-game more" aria-label="Dézoomer">A−</button>
+      <button id="zoomIn" class="no-game more" aria-label="Zoomer">A+</button>
+      <select id="repeat" class="no-live more" aria-label="Répétitions" title="Répéter l'exercice">
         ${[1, 3, 5, 10, 0].map((r) => `<option value="${r}" ${prefs.repeat === r ? 'selected' : ''}>${r === 0 ? '🔁 ∞' : r === 1 ? '🔁 1 fois' : `🔁 ${r} fois`}</option>`).join('')}
       </select>
       <button id="ksBtn" class="more" aria-pressed="${prefs.keySignatures}" title="Armure à la clé, ou dièses et bémols écrits devant chaque note">Armure</button>

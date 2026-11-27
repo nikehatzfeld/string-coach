@@ -28,6 +28,7 @@ interface Filters {
   /** Seulement les morceaux complets. */
   full: boolean;
 }
+let menuCloser = false;
 const filters: Filters = { style: null, level: null, search: '', full: false, famous: false };
 
 export type OpenFn = (s: Source, mode?: 'live' | 'step' | 'game') => void;
@@ -66,19 +67,15 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
   app.innerHTML = `
     <header class="top home-top">
       <div class="brand"><span class="logo">🎻</span><h1>String Coach</h1></div>
-      ${prefs.instrument === 'violin' ? '<button id="toAcademy" class="primary" title="Évaluation, séance du jour adaptée, tableau de bord">🧭 Mon parcours</button>' : ''}
-      <button id="toCourse" ${prefs.instrument === 'violin' ? '' : 'class="primary"'}>🎓 Cours</button>
-      <button id="toExercises">💪 Exercices</button>
-      <button id="toHarmony">🎼 Harmonie</button>
-      <button id="toChords">🎸 Accords</button>
-      <button id="toVoice">🎤 Studio voix</button>
-      <button id="toImportLib" title="Charger une bibliothèque de morceaux (fichier JSON)">📥 Importer</button>
-      <button id="toTranscribe" title="Transformer un enregistrement en partition (reste sur ton appareil)">🎧 Transcrire</button>
-      <button id="toMicTest" title="Vérifier que le micro entend ton instrument">🎤 Test micro</button>
-      <button id="account" class="account" hidden></button>
       <div class="seg" role="group" aria-label="Instrument">
         ${INSTRUMENT_IDS.map((id) => `<button data-inst="${id}" aria-pressed="${prefs.instrument === id}">${INSTRUMENTS[id].icon} ${INSTRUMENTS[id].label}</button>`).join('')}
       </div>
+      <div class="main-actions">${mainActions()}</div>
+      <details class="menu">
+        <summary aria-label="Plus d’outils">☰</summary>
+        <div class="menu-pop">${menuActions()}</div>
+      </details>
+      <button id="account" class="account" hidden></button>
     </header>
     <main class="home">
       <section class="dash">
@@ -108,12 +105,12 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
         }
       </section>
 
-      <section class="badges-strip" aria-label="Badges">
-        <h2>Badges <span class="muted">${earned} / ${BADGES.length}</span></h2>
+      <details class="badges-strip" aria-label="Badges">
+        <summary><h2>🏅 Badges <span class="muted">${earned} / ${BADGES.length}</span></h2></summary>
         <div class="badges">
           ${BADGES.map((b) => `<span class="badge ${progress.badges[b.id] ? 'on' : ''}" title="${esc(b.name)} : ${esc(b.description)}" tabindex="0"><span class="bicon">${b.icon}</span><span class="bname">${esc(b.name)}</span></span>`).join('')}
         </div>
-      </section>
+      </details>
 
       ${reviews.length ? `<section><h2>🔁 À réviser aujourd'hui <span class="muted">révisions espacées : J+1, J+3, J+7, J+14, puis tous les mois</span></h2><div class="grid">${reviews.map((s) => songCard(s)).join('')}</div></section>` : ''}
       ${recent.length ? `<section><h2>Reprendre</h2><div class="grid">${recent.map((s) => songCard(s)).join('')}</div></section>` : ''}
@@ -130,19 +127,18 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
             .join('')}
         </div>
         ${filters.style || filters.level || filters.full || filters.famous || filters.search ? `<div class="filters"><button class="chip reset-filters" data-reset>✕ Tout afficher (${mine.length} morceaux)</button><span class="muted">Filtres actifs : ${[filters.search && `« ${esc(filters.search)} »`, filters.style, filters.level && LEVEL_LABEL[filters.level], filters.full && 'morceaux complets', filters.famous && 'incontournables'].filter(Boolean).join(', ')}</span></div>` : ''}
-        <div class="filters chips levels">
-          ${[0, 1, 2, 3, 4, 5].map((l) => `<button class="chip" data-level="${l}" aria-pressed="${(filters.level ?? 0) === l}">${l ? LEVEL_LABEL[l] : 'Tous niveaux'}</button>`).join('')}
-          <button class="chip" data-full aria-pressed="${filters.full}">📜 Morceaux complets</button>
-          <button class="chip" data-famous aria-pressed="${filters.famous}">⭐ Incontournables + versions faciles</button>
+        <div class="filters">
+          <select id="lvlSel" aria-label="Niveau">${[0, 1, 2, 3, 4, 5].map((l) => `<option value="${l}" ${(filters.level ?? 0) === l ? 'selected' : ''}>${l ? LEVEL_LABEL[l] : 'Tous niveaux'}</option>`).join('')}</select>
+          <select id="kindSel" aria-label="Sélection"><option value="">Tous les morceaux</option><option value="famous" ${filters.famous ? 'selected' : ''}>⭐ Incontournables + versions faciles</option><option value="full" ${filters.full ? 'selected' : ''}>📜 Morceaux complets</option></select>
           <span class="count">${songs.length} morceau${songs.length > 1 ? 'x' : ''}</span>
         </div>
         <div class="grid">${songs.map((s) => songCard(s)).join('')}</div>
       </section>
 
+      <details class="files-box"><summary><h2>📁 Mes fichiers et coffre <span class="muted">sur cet appareil</span></h2></summary>
       <section id="vault" class="vault">${vaultHtml(vault)}</section>
 
       <section>
-        <h2>📁 Mes fichiers <span class="muted">sur cet appareil</span></h2>
         <p class="hint">Guitar Pro (.gp, .gp5, .gpx), MusicXML (.xml, .musicxml, .mxl) ou alphaTex. Ils restent sur cet appareil.</p>
         <label class="drop" tabindex="0">
           <input id="file" type="file" accept=".gp,.gp3,.gp4,.gp5,.gpx,.xml,.musicxml,.mxl,.tex,.txt" multiple hidden />
@@ -158,6 +154,7 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
             .join('')}
         </div>
       </section>
+      </details>
     </main>`;
 
   const rerender = () => renderHome(app, open, onCourse, onExercises, onHarmony, onChords, onVoice, onAcademy);
@@ -171,6 +168,13 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
   app.querySelector('#toCourse')!.addEventListener('click', onCourse);
   app.querySelector('#toAcademy')?.addEventListener('click', onAcademy);
   bindAccount(app.querySelector<HTMLButtonElement>('#account')!);
+  // Menu ☰ : se ferme après un choix ou un clic ailleurs.
+  const menu = app.querySelector<HTMLDetailsElement>('.menu')!;
+  menu.querySelectorAll('.menu-pop button').forEach((b) => b.addEventListener('click', () => (menu.open = false)));
+  if (!menuCloser) {
+    menuCloser = true;
+    document.addEventListener('click', (e) => document.querySelectorAll<HTMLDetailsElement>('details.menu[open]').forEach((d) => !d.contains(e.target as Node) && (d.open = false)));
+  }
 
   on(app, '[data-inst]', 'click', (b) => {
     prefs.instrument = b.dataset.inst as InstrumentId;
@@ -202,8 +206,14 @@ export async function renderHome(app: HTMLElement, open: OpenFn, onCourse: () =>
     filters.famous = !filters.famous;
     rerender();
   });
-  on(app, '[data-level]', 'click', (b) => {
-    filters.level = Number(b.dataset.level) || null;
+  app.querySelector<HTMLSelectElement>('#lvlSel')!.addEventListener('change', (e) => {
+    filters.level = Number((e.target as HTMLSelectElement).value) || null;
+    rerender();
+  });
+  app.querySelector<HTMLSelectElement>('#kindSel')!.addEventListener('change', (e) => {
+    const v = (e.target as HTMLSelectElement).value;
+    filters.famous = v === 'famous';
+    filters.full = v === 'full';
     rerender();
   });
   const searchEl = app.querySelector<HTMLInputElement>('#search')!;
@@ -361,4 +371,33 @@ function styleChips(songs: Song[], voice: boolean): [string, number][] {
   for (const s of songs) count.set(s.style, (count.get(s.style) ?? 0) + 1);
   const order: string[] = voice ? [...VOCAL_GENRES, ...STYLE_ORDER.filter((s) => !(VOCAL_GENRES as readonly string[]).includes(s))] : [...STYLE_ORDER];
   return order.filter((s) => count.get(s) || (voice && (VOCAL_GENRES as readonly string[]).includes(s))).map((s) => [s, count.get(s) ?? 0]);
+}
+
+/** Actions principales, selon l'instrument (le reste est dans le menu ☰). */
+function mainActions(): string {
+  switch (prefs.instrument) {
+    case 'violin':
+      return '<button id="toAcademy" class="primary" title="Évaluation, séance du jour adaptée, tableau de bord">🧭 Mon parcours</button>';
+    case 'guitar':
+      return '<button id="toCourse" class="primary">🎓 Cours</button><button id="toChords">🎸 Accords</button>';
+    case 'voice':
+      return '<button id="toVoice" class="primary">🎤 Studio voix</button><button id="toCourse">🎓 Cours</button>';
+    default:
+      return '<button id="toCourse" class="primary">🎓 Cours</button>';
+  }
+}
+
+function menuActions(): string {
+  const items: [string, string, string][] = [
+    ['toCourse', '🎓 Cours', ''],
+    ['toExercises', '💪 Exercices', ''],
+    ['toHarmony', '🎼 Harmonie et improvisation', ''],
+    ['toChords', '🎸 Accords', ''],
+    ['toVoice', '🎤 Studio voix', ''],
+    ['toImportLib', '📥 Importer des morceaux', 'Charger une bibliothèque (JSON) ou un fichier MIDI'],
+    ['toTranscribe', '🎧 Transcrire un enregistrement', 'Transformer un mp3 en partition (reste sur ton appareil)'],
+    ['toMicTest', '🎤 Tester le micro', 'Vérifier que le micro entend ton instrument'],
+  ];
+  const shown = mainActions();
+  return items.filter(([id]) => !shown.includes(`"${id}"`)).map(([id, label, title]) => `<button id="${id}" title="${title}">${label}</button>`).join('');
 }
