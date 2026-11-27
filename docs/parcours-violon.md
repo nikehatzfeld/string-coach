@@ -33,3 +33,24 @@ Code : `src/academy/` (logique pure, testée) et `src/ui/academy.ts` (écran).
 ## Profils (`state/profiles.ts`)
 - Progression par profil : clé `string-coach:progress@<id>`, le profil principal garde la clé d'origine.
 - Tous les profils sont synchronisés avec le compte (`others` dans les données Supabase).
+
+## Répertoire violon
+- Styles gardés : classique, airs traditionnels, Noël, comptines, musiques de films (plus de chansons, cantiques, jazz ni blues). Les doublons sont masqués.
+- Versions simplifiées (`songs/position-version.ts`) :
+  - « 1re position » (Sol3 à Si5) ;
+  - « jusqu'en 3e » (jusqu'au Ré6).
+
+  Le morceau est transposé vers la tonalité la plus simple. Choix dans le lecteur : auto selon le niveau du parcours, originale, 1re ou 3e.
+- Chaque note porte un doigté ; la corde à vide est notée « 0 ».
+
+## Parcours à la carte
+- « Choisir mes morceaux » : les morceaux cochés reviennent à tour de rôle comme morceau du jour.
+- « Tous les exercices » : recherche et filtres par domaine et par palier.
+
+## Bilan critique (`academy/critique.ts`)
+- La prise est enregistrée pendant le pas à pas et le jeu ; elle reste sur l'appareil.
+- En fin de passage : notes de justesse, stabilité et rythme, ce qui est bien, ce qui est à reprendre, et les notes à revoir (mesure, doigt, corde).
+- Une corde à vide fausse est signalée comme un problème d'accordage, pas de doigts.
+
+## À venir
+- Analyse vidéo, en option : posture, tenue d'archet, coude, violon horizontal (détection du corps, en local).
