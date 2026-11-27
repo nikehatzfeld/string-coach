@@ -53,6 +53,8 @@ export interface Song {
   /** Exercice joué sur une seule corde (1 = la plus aiguë) ou dans une position imposée. */
   string?: number;
   position?: number;
+  /** Version simplifiée : position maximale de la main gauche (1 ou 3). */
+  maxPosition?: number;
   /** Incontournable (filtre « ⭐ Incontournables » de l'accueil). */
   famous?: boolean;
   /** Instrument d'origine de la partition importée (catalogue Mutopia : Violin, Flute, Voice, Piano…). */
@@ -196,7 +198,7 @@ export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: b
     while (m < floor) m += 12;
     return m;
   };
-  const placed = placeMelody(sounding.map((e) => fold((e.midi as number) + shift + (shiftByEvent.get(e) ?? 0))), inst, { onlyString: song.string, position: song.position });
+  const placed = placeMelody(sounding.map((e) => fold((e.midi as number) + shift + (shiftByEvent.get(e) ?? 0))), inst, { onlyString: song.string, position: song.position, maxPosition: song.maxPosition });
   const usesShifts = placed.some((p) => p.position !== 1);
 
   // 1re passe : effets de chaque événement. Un changement de position est annoncé sur l'événement
@@ -227,6 +229,8 @@ export function songToAlphaTex(song: Song, inst: Instrument, opts: { backing?: b
           else prev.effects.push(`txt "→ ${positionLabel(p.position, inst)}"`);
           lastPosition = p.position;
         }
+        // Violon : la corde à vide est notée « 0 » (comme dans les méthodes), pour qu'aucune note ne reste sans doigté.
+        if (p.finger === 0 && inst.id === 'violin' && !effects.some((e) => e.startsWith('txt'))) effects.push('txt "0"');
         lastString = p.string;
         tok.p = p;
         tok.string = p.string;

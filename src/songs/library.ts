@@ -369,11 +369,11 @@ export function songFor(song: Song, inst: InstrumentId): boolean {
   }
   // Voix : les chansons qui ont des paroles ; pour les genres chantés (rap…), aussi les instrus seules (grille d'accords).
   if (inst === 'voice') return !!lyricsOf(song) || !!song.audio || !!song.timedLyrics?.length || (!!song.chords && (VOCAL_GENRES as readonly string[]).includes(song.style));
+  // Violon : classique, airs traditionnels, Noël, comptines, musiques de films (pas de chansons ni de cantiques).
+  if (inst === 'violin') return !DUPLICATE.has(song.id) && (VIOLIN_STYLES.has(song.style) || (song.style === 'Chants & cantiques' && !!song.famous));
   if (FOR_ALL.has(song.style)) return true;
   const o = song.origin;
   switch (inst) {
-    case 'violin':
-      return true;
     case 'recorder':
       return !o || ['Flute', 'Recorder', 'Oboe', 'Clarinet', 'Voice', 'Piano'].includes(o);
     case 'guitar':
@@ -382,3 +382,16 @@ export function songFor(song: Song, inst: InstrumentId): boolean {
   }
 }
 const BY_ID = new Map(LIBRARY.map((s) => [s.id, s]));
+const VIOLIN_STYLES = new Set(['Classique', 'Folk & monde', 'Noël', 'Comptines', 'Cinéma & TV', 'Gammes & arpèges', 'Exercices', 'Mes morceaux']);
+/** Doublons (même titre et compositeur, apostrophes et casse ignorées) : on garde le premier. */
+const DUPLICATE = (() => {
+  const seen = new Set<string>();
+  const dup = new Set<string>();
+  const norm = (x: string) => x.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[’'`]/g, "'").toLowerCase().replace(/\s+/g, ' ').trim();
+  for (const s of LIBRARY) {
+    const k = `${norm(s.title)}|${norm(s.composer)}`;
+    if (seen.has(k)) dup.add(s.id);
+    else seen.add(k);
+  }
+  return dup;
+})();

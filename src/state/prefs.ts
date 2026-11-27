@@ -43,6 +43,8 @@ export interface Prefs {
   rapVoice: string;
   /** Banque de sons : « musescore » (qualité) ou « sonivox » (légère, compatible). */
   soundfont: 'musescore' | 'sonivox';
+  /** Violon : version des morceaux (auto = selon le niveau du parcours). */
+  violinVersion: 'auto' | 'orig' | 'pos1' | 'pos3';
   /** La de référence en Hz (440 standard ; calibrable sur l'accordage de l'instrument). */
   a4: number;
 }
@@ -72,6 +74,7 @@ const DEFAULTS: Prefs = {
   voiceTolerance: 60,
   rapVoice: '',
   soundfont: 'musescore',
+  violinVersion: 'auto',
 };
 
 function load(): Prefs {

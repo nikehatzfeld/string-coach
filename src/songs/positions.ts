@@ -76,6 +76,8 @@ export interface PlaceOptions {
   onlyString?: number;
   /** Tout jouer dans cette position (si possible) : spider, exercices de position. */
   position?: number;
+  /** Ne pas monter au-delà de cette position (versions « 1re position » / « jusqu'en 3e »). */
+  maxPosition?: number;
 }
 
 export function placeMelody(midis: number[], inst: Instrument, opts: PlaceOptions = {}): Placed[] {
@@ -88,11 +90,11 @@ export function placeMelody(midis: number[], inst: Instrument, opts: PlaceOption
     const auto = placeMelodyAuto(midis, inst);
     return midis.map((m, i) => placeIn(m, opts.position!, inst) ?? auto[i]);
   }
-  return placeMelodyAuto(midis, inst);
+  return placeMelodyAuto(midis, inst, opts.maxPosition);
 }
 
-function placeMelodyAuto(midis: number[], inst: Instrument): Placed[] {
-  const positions = positionsOf(inst);
+function placeMelodyAuto(midis: number[], inst: Instrument, maxPosition?: number): Placed[] {
+  const positions = positionsOf(inst).filter((p) => !maxPosition || p <= maxPosition);
   const INF = Number.POSITIVE_INFINITY;
   const options = midis.map((m) => positions.map((p) => placeIn(m, p, inst)));
   let cost = positions.map((p, j) => {

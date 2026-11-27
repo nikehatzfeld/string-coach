@@ -1,7 +1,7 @@
 import { DOMAINS, STAGES, VIOLIN_PATH, byStage, type Domain, type VExercise } from '../academy/curriculum';
 import { currentStage, diagnose, globalLevel, levelOf, pathPosition, planSession, stageStatus, suggestedBpm, type SessionItem } from '../academy/coach';
 import { EXPERIENCE, nextProbe, placementSkills, placementStage, probeExercise, totalProbes, PASS, type Placement } from '../academy/assessment';
-import { academy, saveAcademy } from '../academy/store';
+import { academy, saveAcademy, togglePiece } from '../academy/store';
 import { setPlayHook, type PlayResult } from '../academy/hook';
 import { LIBRARY, songFor } from '../songs/library';
 import { progress } from '../game/store';
@@ -15,7 +15,9 @@ import type { OpenFn } from './home';
  * Parcours violon : tableau de bord personnel (niveau par domaine, diagnostic, position dans le parcours),
  * séance du jour adaptée, carte des 12 paliers, évaluation de départ et profils de la famille.
  */
-type View = { kind: 'dash' } | { kind: 'stage'; n: number } | { kind: 'assess-intro' } | { kind: 'assess-done'; placement: Placement } | { kind: 'profiles' };
+type View = { kind: 'dash' } | { kind: 'stage'; n: number } | { kind: 'assess-intro' } | { kind: 'assess-done'; placement: Placement } | { kind: 'profiles' } | { kind: 'pieces' } | { kind: 'browse' };
+let pieceFilter = { q: '', level: 0, style: '' };
+let browseFilter = { q: '', domain: '' as Domain | '', stage: 0, todo: false };
 let view: View = { kind: 'dash' };
 
 const dom = (d: Domain) => DOMAINS.find((x) => x.id === d)!;
@@ -42,6 +44,8 @@ export function renderAcademy(app: HTMLElement, open: OpenFn, back: () => void, 
   if (v.kind === 'profiles') return renderProfiles(head('👪 Profils', () => rerender({ kind: 'dash' })), rerender);
   if (v.kind === 'assess-intro') return renderAssessIntro(head('🧭 Évaluation', () => rerender({ kind: 'dash' })), open, rerender);
   if (v.kind === 'assess-done') return renderAssessDone(head('🧭 Résultats', () => rerender({ kind: 'dash' })), v.placement, rerender);
+  if (v.kind === 'pieces') return renderPieces(head('🎵 Choisir mes morceaux', () => rerender({ kind: 'dash' })), open, rerender);
+  if (v.kind === 'browse') return renderBrowse(head('🔎 Tous les exercices', () => rerender({ kind: 'dash' })), open, rerender);
   if (v.kind === 'stage') return renderStage(head(`Palier ${v.n} · ${STAGES[v.n - 1].name}`, () => rerender({ kind: 'dash' })), v.n, open);
 
   const main = head('🎻 Mon parcours violon', back);
@@ -53,6 +57,7 @@ export function renderAcademy(app: HTMLElement, open: OpenFn, back: () => void, 
   const plan = planSession(val, st);
   const diag = diagnose(st);
   const cs = currentStage(val, st);
+  const pod = pieceOfTheDay(lvl.stage);
 
   main.innerHTML = `
     ${
@@ -74,7 +79,7 @@ export function renderAcademy(app: HTMLElement, open: OpenFn, back: () => void, 
     <section>
       <h2>📅 Séance du jour <span class="muted">${plan.reduce((a, x) => a + x.minutes, 0)} min</span>
         <select id="aMin" aria-label="Durée">${[15, 20, 30, 45].map((m) => `<option ${st.minutes === m ? 'selected' : ''}>${m}</option>`).join('')}</select> <span class="muted">min</span></h2>
-      <ol class="acad-plan">${plan.map((it, i) => planRow(it, i)).join('')}</ol>
+      <ol class="acad-plan">${plan.map((it, i) => planRow(it, i)).join('')}${pod ? `<li><button class="acad-item" data-piece="${esc(pod.id)}"><span class="ai-icon">🎵</span><span class="ai-body"><strong>${esc(pod.title)}</strong><span class="muted">Morceau du jour · ${st.pieces.includes(pod.id) ? 'dans ta liste' : 'conseillé à ton niveau'} · version adaptée à ton niveau</span></span></button></li>` : ''}</ol>
       <button id="aRun" class="primary">▶ Lancer la séance</button>
     </section>
     <section>
@@ -95,12 +100,14 @@ export function renderAcademy(app: HTMLElement, open: OpenFn, back: () => void, 
       <div class="acad-map">${STAGES.map((s) => stageRow(s.n, cs)).join('')}</div>
     </section>
     <section>
-      <h2>🎵 Mes morceaux</h2>
+      <h2>🎵 Mes morceaux <button id="aPick" class="chip">＋ Choisir mes morceaux</button></h2>
       ${piecesBlock(lvl.stage)}
     </section>
-    <p class="row"><button id="aReassess" class="ghost">🧭 Refaire l'évaluation</button></p>`;
+    <p class="row"><button id="aBrowse">🔎 Tous les exercices, à la carte</button><button id="aReassess" class="ghost">🧭 Refaire l'évaluation</button></p>`;
 
   const runItem = (it: SessionItem, list?: SessionItem[], idx = 0) => startExercise(it.ex, it.bpm, it.mode, open, list, idx);
+  main.querySelector('#aPick')!.addEventListener('click', () => rerender({ kind: 'pieces' }));
+  main.querySelector('#aBrowse')!.addEventListener('click', () => rerender({ kind: 'browse' }));
   main.querySelector('#aAssess')?.addEventListener('click', () => rerender({ kind: 'assess-intro' }));
   main.querySelector('#aReassess')?.addEventListener('click', () => rerender({ kind: 'assess-intro' }));
   main.querySelector('#aSkip')?.addEventListener('click', () => {
@@ -299,4 +306,79 @@ function renderProfiles(main: HTMLElement, rerender: (v?: View) => void): void {
 /** Vue courante à la réouverture (après un exercice, on revient là où on était). */
 export function resetAcademyView(): void {
   view = { kind: 'dash' };
+}
+
+const violinPieces = () => LIBRARY.filter((s) => s.style !== 'Exercices' && s.style !== 'Gammes & arpèges' && songFor(s, 'violin'));
+
+/** Morceau du jour : le morceau choisi joué il y a le plus longtemps, sinon une suggestion au niveau. */
+function pieceOfTheDay(stage: number) {
+  const st = academy();
+  const recs = progress.songs;
+  const mine = st.pieces.map((id) => LIBRARY.find((s) => s.id === id)).filter((s): s is (typeof LIBRARY)[number] => !!s);
+  if (mine.length) return [...mine].sort((a, b) => (recs[a.id]?.lastPlayed ?? 0) - (recs[b.id]?.lastPlayed ?? 0))[0];
+  const maxLevel = Math.min(5, Math.max(1, Math.ceil(stage / 2.4)));
+  return violinPieces().find((s) => s.level === maxLevel && s.famous && (recs[s.id]?.stars ?? 0) < 3) ?? violinPieces().find((s) => s.level <= maxLevel);
+}
+
+function renderPieces(main: HTMLElement, open: OpenFn, rerender: (v?: View) => void): void {
+  const st = academy();
+  const all = violinPieces();
+  const styles = [...new Set(all.map((s) => s.style))];
+  const f = pieceFilter;
+  const list = all.filter((s) => (!f.level || s.level === f.level) && (!f.style || s.style === f.style) && (!f.q || `${s.title} ${s.composer}`.toLowerCase().includes(f.q.toLowerCase())));
+  main.innerHTML = `<p class="hint">Coche les morceaux que tu veux travailler : ils entrent dans ta séance du jour (un par séance, à tour de rôle). Chaque morceau s'ouvre dans la version adaptée à ton niveau (1re position, jusqu'en 3e, ou originale).</p>
+    <div class="filters"><input id="pq" type="search" placeholder="🔎 Titre ou compositeur" value="${esc(f.q)}" />
+    <select id="pl"><option value="0">Tous niveaux</option>${[1, 2, 3, 4, 5].map((l) => `<option value="${l}" ${f.level === l ? 'selected' : ''}>Niveau ${l}</option>`).join('')}</select>
+    <select id="ps"><option value="">Tous styles</option>${styles.map((x) => `<option ${f.style === x ? 'selected' : ''}>${esc(x)}</option>`).join('')}</select>
+    <span class="count">${list.length} morceaux · ${st.pieces.length} choisis</span></div>
+    <div class="acad-list">${list
+      .slice(0, 200)
+      .map(
+        (s) => `<div class="acad-item ${st.pieces.includes(s.id) ? 'ok' : ''}"><button class="ghost" data-tog="${esc(s.id)}" title="Je travaille ce morceau">${st.pieces.includes(s.id) ? '✅' : '⬜'}</button>
+        <span class="ai-body"><strong>${esc(s.title)}</strong><span class="muted">${esc(s.composer)} · ${esc(s.style)} · niveau ${s.level}</span></span>
+        <button data-play="${esc(s.id)}" title="Écouter / jouer">▶</button></div>`,
+      )
+      .join('')}</div>`;
+  const q = main.querySelector<HTMLInputElement>('#pq')!;
+  q.addEventListener('change', () => ((pieceFilter.q = q.value), rerender({ kind: 'pieces' })));
+  main.querySelector('#pl')!.addEventListener('change', (e) => ((pieceFilter.level = Number((e.target as HTMLSelectElement).value)), rerender({ kind: 'pieces' })));
+  main.querySelector('#ps')!.addEventListener('change', (e) => ((pieceFilter.style = (e.target as HTMLSelectElement).value), rerender({ kind: 'pieces' })));
+  on(main, '[data-tog]', 'click', (b) => {
+    togglePiece(b.dataset.tog!);
+    rerender({ kind: 'pieces' });
+  });
+  on(main, '[data-play]', 'click', (b) => {
+    const s = LIBRARY.find((x) => x.id === b.dataset.play);
+    if (s) open({ kind: 'library', song: s }, 'live');
+  });
+}
+
+/** À la carte : tous les exercices du parcours, filtrables, au choix de l'élève. */
+function renderBrowse(main: HTMLElement, open: OpenFn, rerender: (v?: View) => void): void {
+  const st = academy();
+  const val = validated();
+  const f = browseFilter;
+  const list = VIOLIN_PATH.filter((e) => (!f.domain || e.domain === f.domain) && (!f.stage || e.stage === f.stage) && (!f.todo || !val[e.id]) && (!f.q || `${e.title} ${e.how}`.toLowerCase().includes(f.q.toLowerCase())));
+  main.innerHTML = `<p class="hint">Choisis librement ce que tu veux travailler. Le tempo proposé tient compte de ton niveau ; chaque passage compte pour ton tableau de bord.</p>
+    <div class="filters"><input id="bq" type="search" placeholder="🔎 Ex. « Ré majeur », « démanché », « trille »" value="${esc(f.q)}" />
+    <select id="bd"><option value="">Tous domaines</option>${DOMAINS.map((d) => `<option value="${d.id}" ${f.domain === d.id ? 'selected' : ''}>${d.icon} ${esc(d.label)}</option>`).join('')}</select>
+    <select id="bs"><option value="0">Tous paliers</option>${STAGES.map((x) => `<option value="${x.n}" ${f.stage === x.n ? 'selected' : ''}>Palier ${x.n} · ${esc(x.name)}</option>`).join('')}</select>
+    <label><input id="bt" type="checkbox" ${f.todo ? 'checked' : ''}/> À faire seulement</label>
+    <span class="count">${list.length} exercices</span></div>
+    <div class="acad-list">${list
+      .slice(0, 150)
+      .map(
+        (e) => `<button class="acad-item ${val[e.id] ? 'ok' : ''}" data-ex="${e.id}"><span class="ai-icon">${val[e.id] ? '✅' : dom(e.domain).icon}</span>
+        <span class="ai-body"><strong>${esc(e.title)}</strong><span class="muted">Palier ${e.stage}${e.core ? ' · ⭐ clé' : ''} · ${esc(e.how)} · 🎯 ${e.targetBpm}</span></span></button>`,
+      )
+      .join('')}${list.length > 150 ? `<p class="muted">… ${list.length - 150} de plus : affine la recherche.</p>` : ''}</div>`;
+  const q = main.querySelector<HTMLInputElement>('#bq')!;
+  q.addEventListener('change', () => ((browseFilter.q = q.value), rerender({ kind: 'browse' })));
+  main.querySelector('#bd')!.addEventListener('change', (e) => ((browseFilter.domain = (e.target as HTMLSelectElement).value as Domain), rerender({ kind: 'browse' })));
+  main.querySelector('#bs')!.addEventListener('change', (e) => ((browseFilter.stage = Number((e.target as HTMLSelectElement).value)), rerender({ kind: 'browse' })));
+  main.querySelector('#bt')!.addEventListener('change', (e) => ((browseFilter.todo = (e.target as HTMLInputElement).checked), rerender({ kind: 'browse' })));
+  on(main, '[data-ex]', 'click', (b) => {
+    const ex = VIOLIN_PATH.find((e) => e.id === b.dataset.ex)!;
+    startExercise(ex, suggestedBpm(ex, st), st.attempts.some((a) => a.id === ex.id && a.acc >= 0.8) ? 'game' : 'step', open);
+  });
 }

@@ -19,6 +19,9 @@ import { prefs, savePrefs } from '../state/prefs';
 import { openMicTest } from './mic-test';
 import { RecorderBoard } from './recorder-board';
 import { isRap } from '../songs/rap-originals';
+import { positionVersion, versionLabel } from '../songs/position-version';
+import { academy } from '../academy/store';
+import { globalLevel } from '../academy/coach';
 import { RapVoice, speechSupported, voicesFor } from '../audio/rap-voice';
 import { loadAudio } from '../state/audio-store';
 import { SingJudge } from '../game/sing';
@@ -58,6 +61,20 @@ export function closePlayer(): void {
 export function openPlayer(app: HTMLElement, source: Source, onExit: () => void, initialMode: Mode = 'live'): void {
   closePlayer();
   const inst = INSTRUMENTS[prefs.instrument];
+  // Violon : version 1re position / jusqu'en 3e (transposée si besoin), selon le choix ou le niveau du parcours.
+  const baseSong = source.kind === 'library' ? source.song : null;
+  const versionable = !!baseSong && inst.id === 'violin' && baseSong.style !== 'Exercices' && !baseSong.string && !baseSong.position && !/~pos\d$/.test(baseSong.id) && baseSong.level <= 4;
+  let versionNote = '';
+  if (versionable && baseSong) {
+    const st = academy();
+    const auto = !st.placed && !st.attempts.length ? null : globalLevel(st).stage < 5 ? 1 : globalLevel(st).stage < 7 ? 3 : null;
+    const want = prefs.violinVersion === 'pos1' ? 1 : prefs.violinVersion === 'pos3' ? 3 : prefs.violinVersion === 'auto' ? auto : null;
+    const ver = want ? (positionVersion(baseSong, want) ?? (want === 1 ? positionVersion(baseSong, 3) : null)) : null;
+    if (ver) {
+      source = { kind: 'library', song: ver };
+      versionNote = versionLabel(baseSong, ver);
+    }
+  }
   // Rap : le chant est jugé sur le placement (flow), pas sur la justesse.
   const rapFlow = inst.kind === 'voice' && source.kind === 'library' && isRap(source.song.style);
   // Rap : les vers sont dits par une vraie voix (synthèse vocale) à la place des notes « ooh ».
@@ -101,6 +118,12 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
       <button id="metro" class="only-live more" aria-pressed="false">Métronome</button>
       <button id="countin" class="only-live more" aria-pressed="false">Décompte</button>
       <button id="backing" class="more" aria-pressed="${prefs.backing}" hidden title="Fond musical : accords, basse et batterie">🎶 Accompagnement</button>
+      ${versionable ? `<select id="verSel" title="Version du morceau : sans démanché, ou jusqu’en 3e position (transposée si besoin)${versionNote ? ` · ${versionNote}` : ''}" aria-label="Version">
+        <option value="auto" ${prefs.violinVersion === 'auto' ? 'selected' : ''}>🎻 Version auto (selon mon niveau)</option>
+        <option value="orig" ${prefs.violinVersion === 'orig' ? 'selected' : ''}>Version originale</option>
+        <option value="pos1" ${prefs.violinVersion === 'pos1' ? 'selected' : ''}>1re position uniquement</option>
+        <option value="pos3" ${prefs.violinVersion === 'pos3' ? 'selected' : ''}>Jusqu’en 3e position</option>
+      </select>${versionNote ? `<span class="muted">${esc(versionNote)}</span>` : ''}` : ''}
       ${rapVoice ? '<select id="rapVoiceSel" title="Voix du rappeur (synthèse vocale de ton appareil)" aria-label="Voix du rappeur"></select>' : ''}
       <select id="viewMode" class="no-game more" aria-label="Affichage" ${inst.kind !== 'strings' ? 'hidden' : ''}>
         <option value="score">${inst.id === 'violin' ? 'Partition + doigtés' : 'Partition'}</option>
@@ -368,6 +391,11 @@ export function openPlayer(app: HTMLElement, source: Source, onExit: () => void,
     }
   };
   api.playerPositionChanged.on((e) => syncInstru(e.currentTick, api.playerState === 1));
+  document.getElementById('verSel')?.addEventListener('change', (e) => {
+    prefs.violinVersion = (e.target as HTMLSelectElement).value as typeof prefs.violinVersion;
+    savePrefs();
+    if (baseSong) openPlayer(app, { kind: 'library', song: baseSong }, onExit, mode);
+  });
   const rapVoiceOn = () => mode === 'live' || (mode === 'game' && gameRunning && prefs.guide);
   if (rapVoice) {
     api.playerPositionChanged.on((e) => rapVoice.update(e.currentTick, api.playerState === 1 && rapVoiceOn(), api.playbackSpeed));
